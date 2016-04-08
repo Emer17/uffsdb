@@ -1,8 +1,13 @@
 # uffsdb
 A simple teaching DBMS
 
-# how to comipile
+# how to compile
  uffsdb/Fonte/make
+
+#Ps: how to compile on Fedora
+	dnf install byacc flex
+	dnf install flex-static
+	uffsdb/Fonte/make
 
 # how to execute
  `uffsdb/Fonte/./uffsdb`
