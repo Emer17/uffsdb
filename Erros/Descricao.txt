@@ -1,0 +1,42 @@
+BUGS UFFSDB
+
+		1)Repetição de mensagem
+
+ao se conectar a um banco (uffsdb por exemplo), aparece duplicado na tela:
+uffsdb=# uffsdb=# 
+
+quando tentamos criar uma tabela utilizando mais de uma linha, o erro tambem acontece: 
+OBS: este caso acontece quando utilizamos crtl+c e crtl+v. fazendo manualmente, essa primeira linha resulta em erro.
+
+uffsdb=create table velejador(            //enter
+ERROR: syntax error.
+uffsdb=# ERROR: syntax error.
+uffsdb=# ERROR: syntax error.
+
+		2)organizaçao estranha na tela:
+
+copie as linhas seguintes e cole no terminal do uffsdb:
+create table classe(
+cod integer primary key,
+descr varchar(30)
+);
+
+o que irá aparecer na tela é:
+
+nautica=# create table classe(
+cod integer primary key,
+descr varchar(30)
+);nautica(# nautica(# nautica(# 
+CREATE TABLE
+		
+		3)erro ao sair do banco
+dentro do banco "nautica", usei o comando \q. O terminal parece ficar esperando um comando e nada acontece. Usei Ctrl+c para poder sair.
+			(Aconteceu apenas uma vez. Talvez não seja um erro. Pode ter acontecido em função de alguma linha acima.)
+
+
+
+		IMPORTANTE
+A partir daqui, NAO USAREI mais o banco nautica por que, a tabela reserva tem atributos que são, ao mesmo tempo, PK e FK. Ainda não é ṕossivel fazer isso
+no uffsdb, tornando esse banco inutilizavel para os nossos testes.
+Mesmo assim, os arquivos nautica.sql e nautica-uffsdb.sql estao na pasta. Esses arquivos sao referentes ao Postgres e ao uffsdb, respectivamente.
+
