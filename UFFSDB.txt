@@ -1,1 +1,0 @@
-./Debug/Fonte_database.c.o ./Debug/Fonte_uffsdb.c.o ./Debug/Fonte_dictionary.c.o ./Debug/Fonte_sqlcommands.c.o ./Debug/Fonte_misc.c.o ./Debug/Fonte_buffer.c.o ./Debug/interface_parser.c.o ./Debug/interface_y.tab.c.o ./Debug/interface_lex.yy.c.o
