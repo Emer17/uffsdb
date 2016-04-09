@@ -14,7 +14,7 @@
   #include "misc.h"
 #endif
 
-char connectDB(char *db_name) {
+char connectDB( const char *db_name ) {
 	FILE *DB;
 	int i;
 	char vec_name 				[QTD_DB][TAMANHO_NOME_BANCO],
@@ -56,50 +56,56 @@ int createDB( const char *db_name ) {
 	char * aux_name_tolower = NULL;
 	char valid;
 
-    if( (DB = fopen("data/DB.dat","a+b")) == NULL ) {
+    if( (DB = fopen("data/DB.dat", "a+b")) == NULL ) {
        	printf("ERROR: cannot open file\n");
 		return 0;
     }
 	
     if( strlen(db_name) >= TAMANHO_NOME_BANCO-1 ) {		
-    	printf( "WARNING: database name is too long, maximum number of characters is %d\n", TAMANHO_NOME_BANCO );
+    	printf( "WARNING: database name is too long, maximum number of characters allowed is %d\n", TAMANHO_NOME_BANCO );
 		// Não é uma boa idéia truncar o nome do banco. Acusar erro seria uma alternativa melhor.
     	//db_name[LEN_DB_NAME-1] = '\0';
 		return 0;
     }
 
-	int db_amount;
-    for( db_amount = 0; fgetc(DB) != EOF; db_amount++ ) {
-    	fseek( DB, -1, 1 );
+	int db_count;
+    for( db_count = 0; fgetc(DB) != EOF; db_count++ ) {
+    	fseek( DB, -1, SEEK_CUR );
 
     	fread( &valid, sizeof(char), 1, DB );
-        fread( vec_name[db_amount], sizeof(char), TAMANHO_NOME_BANCO, DB );
-        fread( vec_directory[db_amount], sizeof(char), TAMANHO_NOME_BANCO, DB );
+        fread( vec_name[db_count], sizeof(char), TAMANHO_NOME_BANCO, DB );
+        fread( vec_directory[db_count], sizeof(char), TAMANHO_NOME_BANCO, DB );
 
-        if( objcmp( vec_name[db_amount], db_name ) == 0 ) {
+        if( objcmp( vec_name[db_count], db_name ) == 0 ) { // Se há conflito de nomes
         	if( valid ) {
 	        	fclose( DB );
-				if( objcmp( db_name, "uffsdb" ) != 0 ) { 			// banco de dados ja existe
+				if( objcmp( db_name, "uffsdb" ) != 0 ) {
 	        		printf( "ERROR: database already exists\n" );
 				}
 	            return 0;
 	        }
         }
+	
+#ifdef DEBUG
+		printf( "Valido: %d\n", ( int )valid );
+		printf( "Nome do banco: %s\n", vec_name[ db_count ] );
+		printf( "Nome do diretorio: %s\n\n", vec_directory[ db_count ] );
+#endif	
     }
 
-    if( db_amount >= QTD_DB ) {
+
+    if( db_count >= QTD_DB ) {
     	fclose( DB );
     	printf( "ERROR: The amount of databases in this machine exceeded the limit.\n" );
     	return 0;
     }
 
-    data_base * SGBD;
+    data_base * SGBD = NULL;
 
 	SGBD = (data_base *)malloc( sizeof(data_base) );
 	int len = strlen( db_name );
 	memset( SGBD->db_name, 0, TAMANHO_NOME_BANCO );
 	memset( SGBD->db_directory, 0, TAMANHO_NOME_BANCO );
-
 
 	SGBD->valid = 1;
 	strcpylower( SGBD->db_name, db_name );
@@ -107,26 +113,31 @@ int createDB( const char *db_name ) {
 	strcat( SGBD->db_directory, "/" );
 	SGBD->db_name[len] = '\0';
 	SGBD->db_directory[len+1] = '\0';
-	fwrite( SGBD ,sizeof(data_base), 1, DB );
+	fwrite( SGBD, sizeof( data_base ), 1, DB );
 
     aux_name_tolower = (char *)malloc( sizeof(char) * (strlen(db_name) + 1) );
     strcpylower( aux_name_tolower, db_name );
     strcat( create, aux_name_tolower );
     free( aux_name_tolower );
+	free( SGBD );
 
 	if( system(create) == -1 ) {			//verifica se foi possivel criar o diretorio
-		printf( "ERROR: It was not possible to create the database\n" );
+		printf( "ERROR: It was not possible to create the database\n" );		
 		fclose( DB );
 		return 0;
 	}
 
     fclose( DB );
+	
+	/*
     free( SGBD );
-
+	
     if( objcmp(db_name, "uffsdb") != 0 ) {
         printf( "CREATE DATABASE\n" );
 	}
+	*/
 	
+	printf( "CREATE DATABASE\n" );
 	return 1;
 }
 

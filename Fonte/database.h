@@ -1,12 +1,12 @@
 /* createDB: Recebe um nome para criar um banco de dados
  *           cria o banco, caso ainda não exista
  */
-void createDB(char *);
+void createDB( const char * );
 
 /* connectDB: Recebe o nome de um banco de dadados
  *            conecta-se com o banco, caso exista
  */
-char connectDB(char *);
+char connectDB( const char * );
 
 /* dbInit: cria o banco de dados padrão
  *         com o nome "ibetres", caso não exista

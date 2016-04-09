@@ -31,9 +31,8 @@ int cabecalho(tp_table *s, int num_reg) {
     return aux;
 }
 ///////
-int drawline(tp_buffer *buffpoll, tp_table *s, struct fs_objects objeto, int p, int num_page) {
-     
-    if (num_page > QTD_PAGINAS || p > TAMANHO_PAGINA) {
+int drawline( tp_buffer *buffpoll, tp_table *s, struct fs_objects objeto, int p, int num_page ) {     
+    if ( num_page > QTD_PAGINAS || p > TAMANHO_PAGINA ) {
         return ERRO_DE_PARAMETRO;
     }
     int *pos_ini, aux = (p * tamTupla(s,objeto)) , num_reg = objeto.qtdCampos;
@@ -45,48 +44,51 @@ int drawline(tp_buffer *buffpoll, tp_table *s, struct fs_objects objeto, int p, 
     
     count = pos_aux = bit_pos = 0;
     
-    for(count = 0; count < num_reg; count++) {
+    for( count = 0; count < num_reg; count++ ) {
         pos_aux = *(pos_ini);
         bit_pos = 0;
 
-        switch(s[count].tipo) {
+        switch( s[count].tipo ) {
             case 'S':
                 x = 0;
-                while(buffpoll[num_page].data[pos_aux] != '\0'){
-            
-                    printf("%c", buffpoll[num_page].data[pos_aux]);
-                    if ((buffpoll[num_page].data[pos_aux++] & 0xc0) != 0x80) bit_pos++; //Conta apenas bits que possam ser impressos (UTF8)
-                x++;
+                while( buffpoll[num_page].data[pos_aux] != '\0' ) {
+                    printf( "%c", buffpoll[num_page].data[pos_aux] );
+					
+					//Conta apenas bits que possam ser impressos (UTF8)
+                    if ( (buffpoll[num_page].data[pos_aux++] & 0xc0) != 0x80 ) {
+						bit_pos++; 
+					}
+					
+					x++;
                 }
                 
-                cria_campo((TAMANHO_NOME_CAMPO - (bit_pos)), 0, (char*)' ', (30 - x));
+                cria_campo( (TAMANHO_NOME_CAMPO - (bit_pos)), 0, (char*)' ', (30 - x) );
                 break;
             
             case 'I':
-                while(pos_aux < *(pos_ini) + s[count].tam){
+                while( pos_aux < *(pos_ini) + s[count].tam ) {
                     ci.cnum[bit_pos++] = buffpoll[num_page].data[pos_aux++];
                 }
-                printf("%d", ci.num); //Controla o número de casas até a centena
+                printf( "%d", ci.num ); //Controla o número de casas até a centena
                 cria_campo((TAMANHO_NOME_CAMPO - (bit_pos)), 0, (char*)' ', 28);
                 break;
                 
             case 'D':
-                while(pos_aux < *(pos_ini) + s[count].tam){
+                while( pos_aux < *(pos_ini) + s[count].tam ) {
                     cd.double_cnum[bit_pos++] = buffpoll[num_page].data[pos_aux++]; // Cópias os bytes do double para área de memória da union
                 }
-                printf("%.3lf", cd.dnum);
+                printf( "%.3lf", cd.dnum );
                 cria_campo((TAMANHO_NOME_CAMPO - (bit_pos)), 0, (char*)' ', 24);
                 break;
             
             case 'C': 
-                printf("%c", buffpoll[num_page].data[pos_aux]);
-                if(s[count].tam < strlen(s[count].nome)){
+                printf( "%c", buffpoll[num_page].data[pos_aux] );
+                if( s[count].tam < strlen(s[count].nome) ) {
                     bit_pos = strlen(s[count].nome);
-                }
-                else{
+                } else {
                     bit_pos = s[count].tam;
                 }
-                cria_campo((bit_pos - 1), 0, (char*)' ', 29);   
+                cria_campo( (bit_pos - 1), 0, (char*)' ', 29 );
                 break;
             
             default: 
@@ -95,7 +97,7 @@ int drawline(tp_buffer *buffpoll, tp_table *s, struct fs_objects objeto, int p, 
         }
         *(pos_ini) += s[count].tam;     
     }
-    printf("\n");
+    printf( "\n" );
     return SUCCESS;
 }
 ////
@@ -136,38 +138,41 @@ void help() {
 }
 ////
 int objcmp( const char *obj, const char *str ) {
-	char *object, *string;
+	char * object = NULL; 
+	char * string = NULL;	
+
+	object = (char *)malloc( sizeof(char) * TAMANHO_NOME_CAMPO );
+	string = (char *)malloc( sizeof(char) * TAMANHO_NOME_CAMPO );
+	memset( object, '\0', TAMANHO_NOME_CAMPO );
+	memset( string, '\0', TAMANHO_NOME_CAMPO );
+
 	int i;
-
-	object = (char *)malloc(sizeof(char)*TAMANHO_NOME_CAMPO);
-	string = (char *)malloc(sizeof(char)*TAMANHO_NOME_CAMPO);
-	memset(object, '\0', TAMANHO_NOME_CAMPO);
-	memset(string, '\0', TAMANHO_NOME_CAMPO);
-
-	for (i = 0; i < strlen(obj); i++)
-		object[i] = tolower(obj[i]);
+	for( i = 0; i < strlen(obj); i++ ) {
+		object[i] = tolower(obj[i]);		
+	}
 	object[i] = '\0';
 
-	for (i = 0; i < strlen(str); i++)
-		string[i] = tolower(str[i]);
+	for( i = 0; i < strlen( str ); i++ ) {
+		string[i] = tolower( str[i] );
+	}
 	string[i] = '\0';
 
-	i = strcmp(object, string);
+	i = strcmp( object, string );
 
-	free(object);
-	free(string);
+	free( object );
+	free( string );
 
 	return i;
 }
 
 void strcpylower( char *dest, const char *src ) {
-	int n = strlen(src),
-		i = 0;
+	int n = strlen( src );
+	int i = 0;
 
 	do {
-		*dest++ = tolower(*src++);
-		if (i++ == n) break;
-	} while (*src != '\0');
+		*dest++ = tolower( *src++ );
+		if( i++ == n ) break;
+	} while( *src != '\0' );
 
 	*dest = '\0';
 }
@@ -179,7 +184,6 @@ void strncpylower(char *dest, char *src, int length) {
 		dest[i] = tolower(src[i]);
 		i++;
 	}
-
 	dest[i] = '\0';
 }
 ///

@@ -30,38 +30,37 @@ rc_insert GLOBAL_DATA;
  */
 rc_parser GLOBAL_PARSER;
 
-void connect(char *nome) {
+void connect( const char *nome ) {
     int r;
-    r = connectDB(nome);
-	if (r == SUCCESS) {
-        connected.db_name = malloc(sizeof(char)*((strlen(nome)+1)));
+    r = connectDB( nome );
+	if ( r == SUCCESS ) {
+        connected.db_name = malloc( sizeof(char) * ( strlen(nome) + 1 ) );
 
-        strcpylower(connected.db_name, nome);
+        strcpylower( connected.db_name, nome );
 
         connected.conn_active = 1;
-        printf("You are now connected to database \"%s\" as user \"uffsdb\".\n", nome);
+        printf( "You are now connected to database \"%s\" as user \"uffsdb\".\n", nome );
     } else {
-    	printf("ERROR: Failed to establish connection with database named \"%s\". (Error code: %d)\n", nome, r);
+    	printf( "ERROR: Failed to establish connection with database named \"%s\". (Error code: %d)\n", nome, r );
     }
 }
 
-void invalidCommand(char *command) {
-    printf("ERROR: Invalid command '%s'. Type \"help\" for help.\n", command);
+void invalidCommand( const char *command ) {
+    printf( "ERROR: Invalid command '%s'. Type \"help\" for help.\n", command );
 }
 
 void notConnected() {
     printf("ERROR: you are not connected to any database.\n");
 }
 
-void setObjName(char **nome) {
-    if (GLOBAL_PARSER.mode != 0) {
-        GLOBAL_DATA.objName = malloc(sizeof(char)*((strlen(*nome)+1)));
+void setObjName( char **nome ) {
+    if ( GLOBAL_PARSER.mode != 0 ) {
+        GLOBAL_DATA.objName = malloc( sizeof(char) * ( strlen(*nome) + 1 ) );
 
-        strcpylower(GLOBAL_DATA.objName, *nome);
-        GLOBAL_DATA.objName[strlen(*nome)] = '\0';
+        strcpylower( GLOBAL_DATA.objName, *nome );
+        GLOBAL_DATA.objName[ strlen(*nome) ] = '\0';
         GLOBAL_PARSER.step++;
-    } else
-        return;
+    }
 }
 
 void setColumnInsert(char **nome) {
@@ -199,7 +198,7 @@ void clearGlobalStructs() {
     GLOBAL_PARSER.step              = 0;
 }
 
-void setMode(char mode) {
+void setMode( const char mode ) {
     GLOBAL_PARSER.mode = mode;
     GLOBAL_PARSER.step++;
 }
