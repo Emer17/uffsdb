@@ -11,13 +11,13 @@ char connectDB(char *);
 /* dbInit: cria o banco de dados padrão
  *         com o nome "ibetres", caso não exista
  */
-void dbInit();
+int dbInit( char *db );
 
 /* dropDatabase: Recebe o nome de um banco de dados
  *               deleta o banco caso o banco exista
  *               e o usuário esteja conectado em outro banco
  */
-void dropDatabase(char *);
+void dropDatabase( const char * );
 
 /* showDB: lista todos os bancos do SGBD "\l"
  *

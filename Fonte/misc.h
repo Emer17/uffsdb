@@ -8,9 +8,9 @@ int cabecalho(tp_table *, int );
 int drawline(tp_buffer *, tp_table *, struct fs_objects, int , int);
 void help();
 void contr();
-int objcmp(char *, char *);
-void strcpylower(char *, char *);
-void strncpylower(char *, char *, int);
+int objcmp( const char *, const char * );
+void strcpylower( const char *, const char * );
+void strncpylower( char *, const char *, int );
 /* ----------------------------------------------------------------------------------------------
     Objetivo:   Verifica se o nome da tabela 'nomeTabela' está nos primeiros bytes de 'linha'
     Parametros: Nome da tabela, char linha.

@@ -181,7 +181,7 @@ int verificaChaveFK(char *nomeTabela,column *c, char *nomeCampo, char *valorCamp
     for(x = 0; erro == SUCCESS; x++)
         erro = colocaTuplaBuffer(bufferpoll, x, tabela, objeto);
 
-    for (page = 0; page < PAGES; page++) {
+    for (page = 0; page < QTD_PAGINAS; page++) {
         if (pagina) free(pagina);
         pagina = getPage(bufferpoll, tabela, objeto, page);
         if (!pagina) break;
@@ -272,7 +272,7 @@ int verificaChavePK(char *nomeTabela, column *c, char *nomeCampo, char *valorCam
         erro = colocaTuplaBuffer(bufferpoll, x, tabela, objeto);
 
     page = 0;
-    for (page = 0; page < PAGES; page++) {
+    for (page = 0; page < QTD_PAGINAS; page++) {
         if (pagina) free(pagina);
         pagina = getPage(bufferpoll, tabela, objeto, page);
         if (!pagina) break;
@@ -410,7 +410,7 @@ int finalizaInsert(char *nome, column *c){
         return ERRO_DE_PARAMETRO;
     }
 
-    char directory[LEN_DB_NAME*2];
+    char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, dicio.nArquivo);
 
@@ -691,8 +691,8 @@ int procuraSchemaArquivo(struct fs_objects objeto){
     tp_table *esquema = (tp_table *)malloc(sizeof(tp_table)*objeto.qtdCampos);
     memset(esquema, 0, sizeof(tp_table)*objeto.qtdCampos);
 
-    char directory[LEN_DB_NAME*2];
-    memset(&directory, '\0', LEN_DB_NAME*2);
+    char directory[TAMANHO_NOME_BANCO*2];
+    memset(&directory, '\0', TAMANHO_NOME_BANCO*2);
 
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_schema.dat");
@@ -749,8 +749,8 @@ int procuraSchemaArquivo(struct fs_objects objeto){
     fclose(newSchema);
     fclose(schema);
 
-    char directoryex[LEN_DB_NAME*4];
-    memset(&directoryex, '\0', LEN_DB_NAME*4);
+    char directoryex[TAMANHO_NOME_BANCO*4];
+    memset(&directoryex, '\0', TAMANHO_NOME_BANCO*4);
     strcpy(directoryex, connected.db_directory);
     strcat(directoryex, "fs_schema.dat");
 
@@ -810,8 +810,8 @@ int excluirTabela(char *nomeTabela) {
 
     FILE *dicionario;
 
-    char directory[LEN_DB_NAME*2];
-    memset(directory, '\0', LEN_DB_NAME*2);
+    char directory[TAMANHO_NOME_BANCO*2];
+    memset(directory, '\0', TAMANHO_NOME_BANCO*2);
 
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_object.dat");

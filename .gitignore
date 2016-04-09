@@ -1,3 +1,11 @@
 prog
 *.dat
 *.o
+.codelite/
+.clang/
+.git/
+Debug/
+*.workspace
+*.project
+/Makefile
+

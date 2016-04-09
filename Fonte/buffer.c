@@ -16,15 +16,15 @@
 // INICIALIZACAO DO BUFFER
 tp_buffer * initbuffer(){
 
-    tp_buffer *bp = (tp_buffer*)malloc(sizeof(tp_buffer)*PAGES);
-    memset(bp, 0, sizeof(tp_buffer)*PAGES);
+    tp_buffer *bp = (tp_buffer*)malloc(sizeof(tp_buffer)*QTD_PAGINAS);
+    memset(bp, 0, sizeof(tp_buffer)*QTD_PAGINAS);
 
     int i;
     tp_buffer *temp = bp;
 
     if(bp == NULL)
         return ERRO_DE_ALOCACAO;
-    for (i = 0;i < PAGES; i++){
+    for (i = 0;i < QTD_PAGINAS; i++){
         temp->db=0;
         temp->pc=0;
         temp->nrec=0;
@@ -58,7 +58,7 @@ int printbufferpoll(tp_buffer *buffpoll, tp_table *s,struct fs_objects objeto, i
 // RETORNA PAGINA DO BUFFER
 column * getPage(tp_buffer *buffer, tp_table *campos, struct fs_objects objeto, int page){
 
-    if(page >= PAGES)
+    if(page >= QTD_PAGINAS)
         return ERRO_PAGINA_INVALIDA;
 
     if(buffer[page].nrec == 0) //Essa página não possui registros
@@ -148,7 +148,7 @@ char *getTupla(tp_table *campos,struct fs_objects objeto, int from){ //Pega uma 
 
     from = from * tamTpl;
 
-	char directory[LEN_DB_NAME*2];
+	char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, objeto.nArquivo);
 
@@ -190,9 +190,9 @@ int colocaTuplaBuffer(tp_buffer *buffer, int from, tp_table *campos, struct fs_o
     }
 
     int i=0, found=0;
-    while (!found && i < PAGES) {//Procura pagina com espaço para a tupla.
+    while (!found && i < QTD_PAGINAS) {//Procura pagina com espaço para a tupla.
 
-        if(SIZE - buffer[i].position > tamTupla(campos, objeto)) {// Se na pagina i do buffer tiver espaço para a tupla, coloca tupla.
+        if(TAMANHO_PAGINA - buffer[i].position > tamTupla(campos, objeto)) {// Se na pagina i do buffer tiver espaço para a tupla, coloca tupla.
             setTupla(buffer, tupla, tamTupla(campos, objeto), i);
             found = 1;
             buffer[i].position += tamTupla(campos, objeto); // Atualiza proxima posição vaga dentro da pagina.

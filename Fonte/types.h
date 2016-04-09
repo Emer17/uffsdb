@@ -33,7 +33,7 @@ typedef struct tp_buffer{ // Estrutura utilizada para armazenar o buffer.
    unsigned char db;        //Dirty bit
    unsigned char pc;        //Pin counter
    unsigned int nrec;       //Número de registros armazenados na página.
-   char data[SIZE];         // Dados
+   char data[TAMANHO_PAGINA];         // Dados
    unsigned int position;   // Próxima posição válida na página.
 }tp_buffer;
 
@@ -60,12 +60,12 @@ typedef struct rc_parser {
 
 typedef struct data_base {
 	char 		valid;
-	char 		db_name[LEN_DB_NAME];
-	char 		db_directory[LEN_DB_NAME];
+	char 		db_name[TAMANHO_NOME_BANCO];
+	char 		db_directory[TAMANHO_NOME_BANCO];
 }data_base;
 
 typedef struct db_connected {
-	char db_directory[LEN_DB_NAME*2];
+	char db_directory[TAMANHO_NOME_BANCO*2];
     char *db_name;
     int conn_active;
 }db_connected;

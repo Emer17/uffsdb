@@ -33,7 +33,7 @@ int cabecalho(tp_table *s, int num_reg) {
 ///////
 int drawline(tp_buffer *buffpoll, tp_table *s, struct fs_objects objeto, int p, int num_page) {
      
-    if (num_page > PAGES || p > SIZE) {
+    if (num_page > QTD_PAGINAS || p > TAMANHO_PAGINA) {
         return ERRO_DE_PARAMETRO;
     }
     int *pos_ini, aux = (p * tamTupla(s,objeto)) , num_reg = objeto.qtdCampos;
@@ -135,7 +135,7 @@ void help() {
 	printf("\t\t\t\t\t\t  imprmir todos os valores de uma tabela\n");
 }
 ////
-int objcmp(char *obj, char *str) {
+int objcmp( const char *obj, const char *str ) {
 	char *object, *string;
 	int i;
 
@@ -160,7 +160,7 @@ int objcmp(char *obj, char *str) {
 	return i;
 }
 
-void strcpylower(char *dest, char *src) {
+void strcpylower( char *dest, const char *src ) {
 	int n = strlen(src),
 		i = 0;
 

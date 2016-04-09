@@ -17,10 +17,10 @@
 char connectDB(char *db_name) {
 	FILE *DB;
 	int i;
-	char vec_name 				[QTD_DB][LEN_DB_NAME],
-		 vec_directory 			[QTD_DB][LEN_DB_NAME],
+	char vec_name 				[QTD_DB][TAMANHO_NOME_BANCO],
+		 vec_directory 			[QTD_DB][TAMANHO_NOME_BANCO],
 		 valid,
-		 directory 				[LEN_DB_NAME*2] = "data/";
+		 directory 				[TAMANHO_NOME_BANCO*2] = "data/";
 
     if((DB = fopen("data/DB.dat","rb")) == NULL) {
        	return ERRO_ABRIR_ARQUIVO;
@@ -30,8 +30,8 @@ char connectDB(char *db_name) {
     	fseek(DB, -1, 1);
 
     	fread(&valid			,sizeof(char), 			 1, DB);
-        fread(vec_name[i]  		,sizeof(char), LEN_DB_NAME, DB);
-        fread(vec_directory[i] 	,sizeof(char), LEN_DB_NAME, DB);
+        fread(vec_name[i]  		,sizeof(char), TAMANHO_NOME_BANCO, DB);
+        fread(vec_directory[i] 	,sizeof(char), TAMANHO_NOME_BANCO, DB);
 
         if(objcmp(vec_name[i], db_name) == 0) {				//verifica se encontrou o banco
         	if(valid) {
@@ -48,92 +48,97 @@ char connectDB(char *db_name) {
 
 }
 
-void createDB(char *db_name) {
-	FILE *DB;
-	int i, len;
-	char vec_name 				[QTD_DB][LEN_DB_NAME],
-		 vec_directory 			[QTD_DB][LEN_DB_NAME],
-		 create 				[LEN_DB_NAME+6] = "mkdir data/",
-         *aux_name_tolower,
-         valid;
+int createDB( const char *db_name ) {
+	FILE * DB;	
+	char vec_name [QTD_DB][TAMANHO_NOME_BANCO];
+	char vec_directory [QTD_DB][TAMANHO_NOME_BANCO];
+	char create	[TAMANHO_NOME_BANCO+6] = "mkdir data/";
+	char * aux_name_tolower = NULL;
+	char valid;
 
-    if((DB = fopen("data/DB.dat","a+b")) == NULL) {
+    if( (DB = fopen("data/DB.dat","a+b")) == NULL ) {
        	printf("ERROR: cannot open file\n");
-		return;
+		return 0;
+    }
+	
+    if( strlen(db_name) >= TAMANHO_NOME_BANCO-1 ) {		
+    	printf( "WARNING: database name is too long, maximum number of characters is %d\n", TAMANHO_NOME_BANCO );
+		// Não é uma boa idéia truncar o nome do banco. Acusar erro seria uma alternativa melhor.
+    	//db_name[LEN_DB_NAME-1] = '\0';
+		return 0;
     }
 
-    if(strlen(db_name) >= LEN_DB_NAME-1) {
-    	printf("WARNING: database name is too long, it will be truncated\n");
-    	db_name[LEN_DB_NAME-1] = '\0';
-    }
+	int db_amount;
+    for( db_amount = 0; fgetc(DB) != EOF; db_amount++ ) {
+    	fseek( DB, -1, 1 );
 
-    for(i=0; fgetc (DB) != EOF; i++) {
-    	fseek(DB, -1, 1);
+    	fread( &valid, sizeof(char), 1, DB );
+        fread( vec_name[db_amount], sizeof(char), TAMANHO_NOME_BANCO, DB );
+        fread( vec_directory[db_amount], sizeof(char), TAMANHO_NOME_BANCO, DB );
 
-    	fread(&valid			,sizeof(char), 			 1, DB);
-        fread(vec_name[i]  		,sizeof(char), LEN_DB_NAME, DB);
-        fread(vec_directory[i] 	,sizeof(char), LEN_DB_NAME, DB);
-
-        if(objcmp(vec_name[i], db_name) == 0) {
-        	if(valid) {
-	        	fclose(DB);
-				if(objcmp(db_name, "uffsdb") != 0) 			// banco de dados ja existe
-	        		printf("ERROR: database already exists\n");
-	            return;
+        if( objcmp( vec_name[db_amount], db_name ) == 0 ) {
+        	if( valid ) {
+	        	fclose( DB );
+				if( objcmp( db_name, "uffsdb" ) != 0 ) { 			// banco de dados ja existe
+	        		printf( "ERROR: database already exists\n" );
+				}
+	            return 0;
 	        }
         }
     }
 
-    if(i >= QTD_DB) {
-    	fclose(DB);
-    	printf("ERROR: The amount of databases in this machine exceeded the limit.\n");
-    	return;
+    if( db_amount >= QTD_DB ) {
+    	fclose( DB );
+    	printf( "ERROR: The amount of databases in this machine exceeded the limit.\n" );
+    	return 0;
     }
 
-    data_base *SGBD;
+    data_base * SGBD;
 
-	SGBD = (data_base*)malloc(sizeof(data_base));
-	len = strlen(db_name);
-	memset(SGBD->db_name 		, 0, LEN_DB_NAME);
-	memset(SGBD->db_directory 	, 0, LEN_DB_NAME);
+	SGBD = (data_base *)malloc( sizeof(data_base) );
+	int len = strlen( db_name );
+	memset( SGBD->db_name, 0, TAMANHO_NOME_BANCO );
+	memset( SGBD->db_directory, 0, TAMANHO_NOME_BANCO );
 
 
 	SGBD->valid = 1;
-	strcpylower(SGBD->db_name		, db_name);
-	strcpylower(SGBD->db_directory	, db_name);
-	strcat(SGBD->db_directory	, "/");
-	SGBD->db_name[len] 			= '\0';
-	SGBD->db_directory[len+1] 	= '\0';
-	fwrite(SGBD ,sizeof(data_base), 1, DB);
+	strcpylower( SGBD->db_name, db_name );
+	strcpylower( SGBD->db_directory, db_name );
+	strcat( SGBD->db_directory, "/" );
+	SGBD->db_name[len] = '\0';
+	SGBD->db_directory[len+1] = '\0';
+	fwrite( SGBD ,sizeof(data_base), 1, DB );
 
-    aux_name_tolower = (char *)malloc(sizeof(char) * (strlen(db_name)+1));
-    strcpylower(aux_name_tolower, db_name);
-    strcat(create, aux_name_tolower);
-    free(aux_name_tolower);
+    aux_name_tolower = (char *)malloc( sizeof(char) * (strlen(db_name) + 1) );
+    strcpylower( aux_name_tolower, db_name );
+    strcat( create, aux_name_tolower );
+    free( aux_name_tolower );
 
-	if(system(create) == -1) {			//verifica se foi possivel criar o diretorio
-		printf("ERROR: It was not possible to create the database\n");
-		fclose(DB);
-		return;
+	if( system(create) == -1 ) {			//verifica se foi possivel criar o diretorio
+		printf( "ERROR: It was not possible to create the database\n" );
+		fclose( DB );
+		return 0;
 	}
 
-    fclose(DB);
-    free(SGBD);
+    fclose( DB );
+    free( SGBD );
 
-
-    if(objcmp(db_name, "uffsdb") != 0)
-        printf("CREATE DATABASE\n");
+    if( objcmp(db_name, "uffsdb") != 0 ) {
+        printf( "CREATE DATABASE\n" );
+	}
+	
+	return 1;
 }
 
-void dropDatabase(char *db_name) {
+void dropDatabase( const char *db_name ) {
 	FILE *DB;
 	int i;
-	char vec_name 				[QTD_DB][LEN_DB_NAME],
-		 vec_directory 			[QTD_DB][LEN_DB_NAME],
+	char vec_name 				[QTD_DB][TAMANHO_NOME_BANCO],
+		 vec_directory 			[QTD_DB][TAMANHO_NOME_BANCO],
 		 valid;
 
-	if(strcmp(db_name, connected.db_name) == 0) {
-		printf("ERROR: You can not delete the database that you are connected.\n");
+	if( strcmp(db_name, connected.db_name) == 0 ) {
+		printf( "ERROR: You can not delete the database that you are connected.\n" );
 		return;
 	}
 
@@ -146,16 +151,16 @@ void dropDatabase(char *db_name) {
     	fseek(DB, -1, 1);
 
     	fread(&valid			,sizeof(char), 			 1, DB);
-        fread(vec_name[i]  		,sizeof(char), LEN_DB_NAME, DB);
-        fread(vec_directory[i] 	,sizeof(char), LEN_DB_NAME, DB);
+        fread(vec_name[i]  		,sizeof(char), TAMANHO_NOME_BANCO, DB);
+        fread(vec_directory[i] 	,sizeof(char), TAMANHO_NOME_BANCO, DB);
 
         if(objcmp(vec_name[i], db_name) == 0) {
         	if(valid) {
 	        	valid = 0;
-	        	fseek(DB, ((LEN_DB_NAME*2+1)*i), SEEK_SET); 	// posiciona o cabecote sobre o byte de validade
+	        	fseek(DB, ((TAMANHO_NOME_BANCO*2+1)*i), SEEK_SET); 	// posiciona o cabecote sobre o byte de validade
 	        	fwrite(&valid ,sizeof(char), 1, DB);			// do banco e apaga ele
 
-	        	char directory[LEN_DB_NAME*2] = "rm data/";
+	        	char directory[TAMANHO_NOME_BANCO*2] = "rm data/";
 	        	strcat(directory, vec_directory[i]);
 	        	strcat(directory, " -R\0");
 
@@ -177,8 +182,8 @@ void showDB() {
 
 	FILE *DB;
 	int i, qtdDB=0;
-	char vec_name 				[QTD_DB][LEN_DB_NAME],
-		 vec_directory 			[QTD_DB][LEN_DB_NAME],
+	char vec_name 				[QTD_DB][TAMANHO_NOME_BANCO],
+		 vec_directory 			[QTD_DB][TAMANHO_NOME_BANCO],
 		 valid;
 
     if((DB = fopen("data/DB.dat","r+b")) == NULL) {
@@ -193,8 +198,8 @@ void showDB() {
     	fseek(DB, -1, 1);
 
     	fread(&valid			,sizeof(char), 			 1, DB);
-        fread(vec_name[i]  		,sizeof(char), LEN_DB_NAME, DB);
-        fread(vec_directory[i] 	,sizeof(char), LEN_DB_NAME, DB);
+        fread(vec_name[i]  		,sizeof(char), TAMANHO_NOME_BANCO, DB);
+        fread(vec_directory[i] 	,sizeof(char), TAMANHO_NOME_BANCO, DB);
 
        	if(valid) {
        		printf("%-20s| uffsdb  | UTF8     | pt_BR.UTF-8 | pt_BR.UTF-8 | \n", vec_name[i]);
@@ -206,17 +211,19 @@ void showDB() {
     fclose(DB);
 }
 ///
-void dbInit(char *db) {
-	char *name;
-	if(system("mkdir data > /dev/null 2>&1") == -1)
-		printf("ERROR: It was not possible to initialize uffsdb\n");
-    if (db==NULL)
-    {
-		name=(char *)malloc(sizeof(char)*7);
-		name[0]='u';name[1]='f';name[2]='f';name[3]='s';
-		name[4]='d';name[5]='b';name[6]=0;
-    } else name=db;
+int dbInit( const char *db ) {
+	
+	if(system("mkdir data > /dev/null 2>&1") == -1) {
+		printf("ERROR: It was not possible to initialize uffsdb\n");	
+	}
+	
+    if( db == NULL ) {
+		// Se o nome do banco não foi especificado, cria o banco padrão
+		createDB( "uffsdb" );
+		return 1;
+    } 
     
-	createDB(name);
+	createDB( db );
+	return 1;
 }
 

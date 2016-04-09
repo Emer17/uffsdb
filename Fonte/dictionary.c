@@ -30,7 +30,7 @@
 
 int existeArquivo(const char* filename){
 
-    char directory[LEN_DB_NAME*2];
+    char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, filename);
     FILE* fptr = fopen(directory, "r");
@@ -102,7 +102,7 @@ int verificaNomeTabela(char *nomeTabela) {
     FILE *dicionario;
     char *tupla = (char *)malloc(sizeof(char)*TAMANHO_NOME_TABELA);
 
-    char directory[LEN_DB_NAME*2];
+    char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_object.dat");
 
@@ -137,7 +137,7 @@ int quantidadeTabelas(){
     FILE *dicionario;
     int codTbl = 0;
 
-    char directory[LEN_DB_NAME*2];
+    char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_object.dat");
 
@@ -213,7 +213,7 @@ tp_table *procuraAtributoFK(struct fs_objects objeto){
     memset(vetEsqm, 0, sizeof(tp_table)*objeto.qtdCampos);
     memset(esquema, 0, sizeof(tp_table)*objeto.qtdCampos);
 
-    char directory[LEN_DB_NAME*2];
+    char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_schema.dat");
 
@@ -279,7 +279,7 @@ int procuraObjectArquivo(char *nomeTabela){
     char *table = (char *)malloc(sizeof(char) * tamanhoTotal);
     FILE *dicionario, *fp;
 
-    char directory[LEN_DB_NAME*2];
+    char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_object.dat");
 
@@ -316,7 +316,7 @@ int procuraObjectArquivo(char *nomeTabela){
     fclose(fp);
     fclose(dicionario);
 
-    char directoryex[LEN_DB_NAME*4];
+    char directoryex[TAMANHO_NOME_BANCO*4];
     strcpy(directoryex, connected.db_directory);
     strcat(directoryex, "fs_object.dat");
 
@@ -341,7 +341,7 @@ struct fs_objects leObjeto(char *nTabela){
     memset(tupla, '\0', TAMANHO_NOME_TABELA);
     int cod;
 
-    char directory[LEN_DB_NAME*2];
+    char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_object.dat");
 
@@ -414,7 +414,7 @@ tp_table *leSchema (struct fs_objects objeto){
         return ERRO_DE_ALOCACAO;
     }
 
-    char directory[LEN_DB_NAME*2];
+    char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_schema.dat");
 
@@ -573,7 +573,7 @@ int finalizaTabela(table *t){
     char nomeArquivo[TAMANHO_NOME_ARQUIVO];
     memset(nomeArquivo, 0, TAMANHO_NOME_ARQUIVO);
 
-    char directory[LEN_DB_NAME*2];
+    char directory[TAMANHO_NOME_BANCO*2];
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_schema.dat");
 
@@ -750,7 +750,7 @@ void printTable(char *tbl){
 		printf("		List of Relations\n");
 		char *tupla = (char *)malloc(sizeof(char)*TAMANHO_NOME_TABELA);
 
-		char directory[LEN_DB_NAME*2];
+		char directory[TAMANHO_NOME_BANCO*2];
     	strcpy(directory, connected.db_directory);
     	strcat(directory, "fs_object.dat");
 
