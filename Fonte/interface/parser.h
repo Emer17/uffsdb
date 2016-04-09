@@ -104,4 +104,8 @@ void clearGlobalStructs( void );
  */
 void setMode( const char mode );
 
+/* interface: Parte gerada pelo yacc, presente no arquivo yacc.y
+ *            É responsável por fazer a conexão ao banco e chamar yyparse()
+ *            para fazer a validação dos comandos enviados pelo usuário.
+ */
 int interface( void );

@@ -23,8 +23,5 @@ void dropDatabase( const char * );
  *
  */
 void showDB();
-/* interface: Parte gerada pelo yacc, presente no arquivo yacc.y
- *            É responsável por fazer a conexão ao banco e chamar yyparse()
- *            para fazer a validação dos comandos enviados pelo usuário.
- */
+
 
