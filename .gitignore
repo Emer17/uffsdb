@@ -8,4 +8,6 @@ Debug/
 *.workspace
 *.project
 /Makefile
+/UFFSDB.mk
+/UFFSDB.txt
 

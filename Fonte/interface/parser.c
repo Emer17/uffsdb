@@ -204,7 +204,6 @@ void setMode(char mode) {
     GLOBAL_PARSER.step++;
 }
 
-
 int interface() {
     pthread_t pth;
 

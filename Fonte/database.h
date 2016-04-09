@@ -27,4 +27,4 @@ void showDB();
  *            É responsável por fazer a conexão ao banco e chamar yyparse()
  *            para fazer a validação dos comandos enviados pelo usuário.
  */
-int interface();
+

@@ -25,8 +25,8 @@
 db_connected connected;
 
 int main(){
-    dbInit(NULL);
-    printf("uffsdb (15.1).\nType \"help\" for help.\n\n");
+    dbInit( NULL );
+    printf( "uffsdb (15.1).\nType \"help\" for help.\n\n" );
     interface();
     return 0;
 }
