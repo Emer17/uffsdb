@@ -11,7 +11,7 @@ char connectDB( const char * );
 /* dbInit: cria o banco de dados padrão
  *         com o nome "ibetres", caso não exista
  */
-int dbInit( char *db );
+int dbInit( const char *db );
 
 /* dropDatabase: Recebe o nome de um banco de dados
  *               deleta o banco caso o banco exista

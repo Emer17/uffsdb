@@ -21,6 +21,7 @@
 #endif
 
 #include "interface/y.tab.h"
+#include "interface/parser.h"
 
 db_connected connected;
 
