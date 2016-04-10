@@ -70,6 +70,11 @@ typedef struct db_connected {
     int conn_active;
 }db_connected;
 
+struct db_options {
+	char * db_name;
+	//char * user_name;
+};
+
 // Union's utilizados na conversão de variáveis do tipo inteiro e double.
 
 union c_double{

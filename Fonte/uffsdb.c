@@ -25,9 +25,9 @@
 
 db_connected connected;
 
-int main(){
-    dbInit( NULL );
-    printf( "uffsdb (15.1).\nType \"help\" for help.\n\n" );
-    interface();
+//É possível passar o nome do banco pela linha de comando?
+int main( int argc, char ** argv ){
+    dbInit( NULL );    
+    interface( argc, argv );
     return 0;
 }

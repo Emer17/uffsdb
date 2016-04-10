@@ -49,17 +49,17 @@ char connectDB( const char *db_name ) {
 }
 
 int createDB( const char *db_name ) {
-	FILE * DB;	
+	FILE * DB_file = NULL;
 	char vec_name [QTD_DB][TAMANHO_NOME_BANCO];
 	char vec_directory [QTD_DB][TAMANHO_NOME_BANCO];
 	char create	[TAMANHO_NOME_BANCO+6] = "mkdir data/";
 	char * aux_name_tolower = NULL;
 	char valid;
 
-    if( (DB = fopen("data/DB.dat", "a+b")) == NULL ) {
+    if( (DB_file = fopen("data/DB.dat", "a+b")) == NULL ) {
        	printf("ERROR: cannot open file\n");
 		return 0;
-    }
+    }	
 	
     if( strlen(db_name) >= TAMANHO_NOME_BANCO-1 ) {		
     	printf( "WARNING: database name is too long, maximum number of characters allowed is %d\n", TAMANHO_NOME_BANCO );
@@ -69,19 +69,19 @@ int createDB( const char *db_name ) {
     }
 
 	int db_count;
-    for( db_count = 0; fgetc(DB) != EOF; db_count++ ) {
-    	fseek( DB, -1, SEEK_CUR );
+    for( db_count = 0; fgetc(DB_file) != EOF; db_count++ ) {
+    	fseek( DB_file, -1, SEEK_CUR );
 
-    	fread( &valid, sizeof(char), 1, DB );
-        fread( vec_name[db_count], sizeof(char), TAMANHO_NOME_BANCO, DB );
-        fread( vec_directory[db_count], sizeof(char), TAMANHO_NOME_BANCO, DB );
+    	fread( &valid, sizeof(char), 1, DB_file );
+        fread( vec_name[db_count], sizeof(char), TAMANHO_NOME_BANCO, DB_file );
+        fread( vec_directory[db_count], sizeof(char), TAMANHO_NOME_BANCO, DB_file );
 
         if( objcmp( vec_name[db_count], db_name ) == 0 ) { // Se há conflito de nomes
         	if( valid ) {
-	        	fclose( DB );
-				if( objcmp( db_name, "uffsdb" ) != 0 ) {
+	        	fclose( DB_file );				
+				if( objcmp( db_name, "uffsdb" ) != 0 ) { 					
 	        		printf( "ERROR: database already exists\n" );
-				}
+				}				
 	            return 0;
 	        }
         }
@@ -95,39 +95,39 @@ int createDB( const char *db_name ) {
 
 
     if( db_count >= QTD_DB ) {
-    	fclose( DB );
+    	fclose( DB_file );
     	printf( "ERROR: The amount of databases in this machine exceeded the limit.\n" );
     	return 0;
     }
 
-    data_base * SGBD = NULL;
+    data_base * DB = NULL;
 
-	SGBD = (data_base *)malloc( sizeof(data_base) );
+	DB = (data_base *)malloc( sizeof(data_base) );
 	int len = strlen( db_name );
-	memset( SGBD->db_name, 0, TAMANHO_NOME_BANCO );
-	memset( SGBD->db_directory, 0, TAMANHO_NOME_BANCO );
-
-	SGBD->valid = 1;
-	strcpylower( SGBD->db_name, db_name );
-	strcpylower( SGBD->db_directory, db_name );
-	strcat( SGBD->db_directory, "/" );
-	SGBD->db_name[len] = '\0';
-	SGBD->db_directory[len+1] = '\0';
-	fwrite( SGBD, sizeof( data_base ), 1, DB );
+	memset( DB->db_name, 0, TAMANHO_NOME_BANCO );
+	memset( DB->db_directory, 0, TAMANHO_NOME_BANCO );
+	DB->valid = 1;
+	
+	strcpylower( DB->db_name, db_name );
+	strcpylower( DB->db_directory, db_name );
+	strcat( DB->db_directory, "/" );
+	DB->db_name[len] = '\0';
+	DB->db_directory[len+1] = '\0';
+	fwrite( DB, sizeof( data_base ), 1, DB_file );
 
     aux_name_tolower = (char *)malloc( sizeof(char) * (strlen(db_name) + 1) );
     strcpylower( aux_name_tolower, db_name );
     strcat( create, aux_name_tolower );
     free( aux_name_tolower );
-	free( SGBD );
+	free( DB );
 
 	if( system(create) == -1 ) {			//verifica se foi possivel criar o diretorio
 		printf( "ERROR: It was not possible to create the database\n" );		
-		fclose( DB );
+		fclose( DB_file );
 		return 0;
 	}
 
-    fclose( DB );
+    fclose( DB_file );
 	
 	/*
     free( SGBD );
@@ -149,7 +149,7 @@ void dropDatabase( const char *db_name ) {
 		 valid;
 
 	if( strcmp(db_name, connected.db_name) == 0 ) {
-		printf( "ERROR: You can not delete the database that you are connected.\n" );
+		printf( "ERROR: You can not delete the database that you are connected to.\n" );
 		return;
 	}
 
@@ -221,20 +221,18 @@ void showDB() {
     printf("(%d %s)\n\n\n\n", qtdDB, (1 >= qtdDB)? "row": "rows");
     fclose(DB);
 }
-///
-int dbInit( const char *db ) {
-	
+
+int dbInit( const char *db ) {	
 	if(system("mkdir data > /dev/null 2>&1") == -1) {
 		printf("ERROR: It was not possible to initialize uffsdb\n");	
-	}
-	
+	}	
     if( db == NULL ) {
 		// Se o nome do banco não foi especificado, cria o banco padrão
-		createDB( "uffsdb" );
-		return 1;
-    } 
-    
-	createDB( db );
+		createDB( "uffsdb" );		
+    } else {
+		createDB( db );
+	}	
+	
 	return 1;
 }
 

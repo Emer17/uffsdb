@@ -203,94 +203,149 @@ void setMode( const char mode ) {
     GLOBAL_PARSER.step++;
 }
 
-int interface() {
+int interface( int argc, char **argv ) {
     pthread_t pth;
+    pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
+    pthread_join( pth, NULL );
+	
+	struct db_options options;
+	options.db_name = NULL;
+	
+	int i = 1;	
+	while( i < argc ) {
+		if( argv[i][0] == '-' ) {
+			if( argv[i][1] == '\0' ) {
+				printf( "ERRO: Nenhuma opcao especificada apos -\n" );
+				return 0;
+			} else if( argv[i][2] != '\0' ) {
+				printf( "ERRO: Opcao possui mais de uma letra\n" );
+				return 0;
+			}
+			
+			char optionName = argv[i][1];
+			i++;
+			if( i >= argc ) {
+				printf( "ERRO: A opcao %s nao recebeu nenhum argumento\n", argv[i-1] );
+				return 0;
+			} else if( argv[i][0] == '-' ) {
+				printf( "ERRO: Argumentos nao podem inciar com -\n" );
+				return 0;
+			}
+			
+			switch( optionName ) {
+				case 'd':										
+					if( options.db_name != NULL ) {
+						printf( "ERRO: A opcao -d foi configurada multiplas vezes\n" );
+						return 0;
+					}
+					char * name = argv[i];
+					options.db_name = malloc( sizeof(char) * ( strlen(name) + 1 ) );
+					options.db_name = name;
+					break;
+					
+				default:
+					// Em caso de a opcao for desconhecida	
+					printf( "ERRO: Opcao \"%s\" desconhecida\n", argv[i-1] );
+					return 0;					
+			}
+		} else {
+			printf( "ERRO: Argumento desconhecido \"%s\"\n", argv[i] );
+			return 0;
+		}
+		
+		i++;
+	}
 
-    pthread_create(&pth, NULL, (void*)clearGlobalStructs, NULL);
-    pthread_join(pth, NULL);
+	if( options.db_name == NULL ) {
+		// Conecta automaticamente no banco padrão caso nenhum nome tenha sido passado
+		connect( "uffsdb" ); 
+	} else {
+		connect( options.db_name );
+	}    
+	
+	printf( "uffsdb (15.1).\nType \"help\" for help.\n\n" );
 
-    connect("uffsdb"); // conecta automaticamente no banco padrão
-
-    while(1){
-        if (!connected.conn_active) {
-            printf(">");
+    while( 1 ) {
+        if( !connected.conn_active ) {
+            printf( ">" );
         } else {
-            printf("%s=# ", connected.db_name);
+            printf( "%s=# ", connected.db_name );
         }
 
-        pthread_create(&pth, NULL, (void*)yyparse, &GLOBAL_PARSER);
-        pthread_join(pth, NULL);
+        pthread_create( &pth, NULL, (void*)yyparse, &GLOBAL_PARSER );
+        pthread_join( pth, NULL );
 
-        if (GLOBAL_PARSER.noerror) {
-            if (GLOBAL_PARSER.mode != 0) {
-                if (!connected.conn_active) {
+        if( GLOBAL_PARSER.noerror ) {
+            if ( GLOBAL_PARSER.mode != 0 ) {
+                if( !connected.conn_active ) {
                     notConnected();
                 } else {
-                    switch(GLOBAL_PARSER.mode) {
+                    switch( GLOBAL_PARSER.mode ) {
                         case OP_INSERT:
-                            if (GLOBAL_DATA.N > 0) {
-                                insert(&GLOBAL_DATA);
-                            }
-                            else
-                                printf("WARNING: Nothing to be inserted. Command ignored.\n");
+                            if ( GLOBAL_DATA.N > 0 ) {
+                                insert( &GLOBAL_DATA );
+                            } else {
+                                printf( "WARNING: Nothing to be inserted. Command ignored.\n" );								
+							}
                             break;
                         case OP_SELECT_ALL:
-                            imprime(GLOBAL_DATA.objName);
+                            imprime( GLOBAL_DATA.objName );
                             break;
                         case OP_CREATE_TABLE:
-                            createTable(&GLOBAL_DATA);
+                            createTable( &GLOBAL_DATA );
                             break;
                         case OP_CREATE_DATABASE:
-                            createDB(GLOBAL_DATA.objName);
+                            createDB( GLOBAL_DATA.objName );
                             break;
                         case OP_DROP_TABLE:
-                            excluirTabela(GLOBAL_DATA.objName);
+                            excluirTabela( GLOBAL_DATA.objName );
                             break;
                         case OP_DROP_DATABASE:
-                            dropDatabase(GLOBAL_DATA.objName);
+                            dropDatabase( GLOBAL_DATA.objName );
                             break;
-                        default: break;
+                        default: 
+							break;
                     }
-
                 }
             }
         } else {
             GLOBAL_PARSER.consoleFlag = 1;
-            switch(GLOBAL_PARSER.mode) {
+            switch( GLOBAL_PARSER.mode ) {
                 case OP_CREATE_DATABASE:
                 case OP_DROP_DATABASE:
                 case OP_CREATE_TABLE:
                 case OP_DROP_TABLE:
                 case OP_SELECT_ALL:
                 case OP_INSERT:
-                    if (GLOBAL_PARSER.step == 1) {
+                    if ( GLOBAL_PARSER.step == 1 ) {
                         GLOBAL_PARSER.consoleFlag = 0;
-                        printf("Expected object name.\n");
+                        printf( "Expected object name.\n" );
                     }
-                break;
+					break;
 
-                default: break;
+                default: 
+					break;
             }
 
-            if (GLOBAL_PARSER.mode == OP_CREATE_TABLE) {
-                if (GLOBAL_PARSER.step == 2) {
-                    printf("Column not specified correctly.\n");
+            if( GLOBAL_PARSER.mode == OP_CREATE_TABLE ) {
+                if( GLOBAL_PARSER.step == 2 ) {
+                    printf( "Column not specified correctly.\n" );
                     GLOBAL_PARSER.consoleFlag = 0;
                 }
-            } else if (GLOBAL_PARSER.mode == OP_INSERT) {
-                if (GLOBAL_PARSER.step == 2) {
-                    printf("Expected token \"VALUES\" after object name.\n");
+            } else if ( GLOBAL_PARSER.mode == OP_INSERT ) {
+                if ( GLOBAL_PARSER.step == 2 ) {
+                    printf( "Expected token \"VALUES\" after object name.\n" );
                     GLOBAL_PARSER.consoleFlag = 0;
                 }
             }
 
-            printf("ERROR: syntax error.\n");
+            printf( "ERROR: syntax error.\n" );
             GLOBAL_PARSER.noerror = 1;
         }
 
-        if (GLOBAL_PARSER.mode != 0) {
-            pthread_create(&pth, NULL, (void*)clearGlobalStructs, NULL);
-            pthread_join(pth, NULL);
+        if ( GLOBAL_PARSER.mode != 0 ) {
+            pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
+            pthread_join( pth, NULL );
         }
     }
     return 0;
