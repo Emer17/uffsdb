@@ -53,7 +53,7 @@ int yywrap() {
 
 start: insert | select | create_table | create_database | drop_table | drop_database
      | table_attr | list_tables | connection | exit_program | semicolon {GLOBAL_PARSER.consoleFlag = 1; return 0;}
-     | parentesis_open | parentesis_close| help_pls | list_databases | clear | contributors
+     | parentesis_open | parentesis_close| help | list_databases | clear | contributors
      | qualquer_coisa | /*nothing*/;
 
 /*--------------------------------------------------*/
@@ -63,7 +63,7 @@ start: insert | select | create_table | create_database | drop_table | drop_data
 /* CONNECTION */
 connection: CONNECT OBJECT {connect(*yytext); GLOBAL_PARSER.consoleFlag = 1; return 0;};
 
-qualquer_coisa: OBJECT {GLOBAL_PARSER.consoleFlag = 1; GLOBAL_PARSER.noerror = 0; return 0;};
+qualquer_coisa: OBJECT {GLOBAL_PARSER.consoleFlag = 1; GLOBAL_PARSER.error = 1; return 0;};
 
 /* EXIT */
 exit_program: QUIT {exit(0);};
@@ -102,7 +102,7 @@ list_databases: LIST_DBASES {
 }
 
 /* HELP */
-help_pls: HELP {help(); GLOBAL_PARSER.consoleFlag = 1; return 0;}
+help: HELP {help(); GLOBAL_PARSER.consoleFlag = 1; return 0;}
 
 /* CONTRIBUTORS */
 contributors: CONTR {contr(); GLOBAL_PARSER.consoleFlag = 1; return 0;}
@@ -117,7 +117,7 @@ insert: INSERT INTO {setMode(OP_INSERT);} table opt_column_list VALUES parentesi
         GLOBAL_DATA.N = GLOBAL_PARSER.val_count;
     else {
         printf("ERROR: The column counter doesn't match the value counter.\n");
-        GLOBAL_PARSER.noerror=0;
+        GLOBAL_PARSER.error = 1;
     }
     return 0;
 };

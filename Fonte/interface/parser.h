@@ -5,6 +5,7 @@
  * Essas funcções irão preencher uma estrutura, ou parte dela, e chamarão
  * as funções do banco de dados para executar as operações.
  */
+#define OP_INVALID			0
 #define OP_INSERT 			1
 #define OP_CREATE_TABLE 	2
 #define OP_DROP_TABLE 		3
@@ -108,6 +109,6 @@ void setMode( const char mode );
  *            É responsável por fazer a conexão ao banco e chamar yyparse()
  *            para fazer a validação dos comandos enviados pelo usuário.
  */
-int interface( int argc, char ** argv );
+void interface( int argc, char ** argv );
 
 void parseOptions( void );

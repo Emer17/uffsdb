@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/* A Bison parser, made by GNU Bison 3.0.2.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.4"
+#define YYBISON_VERSION "3.0.2"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -196,7 +196,7 @@ extern int yydebug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-
+typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
 #line 38 "yacc.y" /* yacc.c:355  */
@@ -208,8 +208,6 @@ union YYSTYPE
 
 #line 210 "y.tab.c" /* yacc.c:355  */
 };
-
-typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif
@@ -223,7 +221,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 227 "y.tab.c" /* yacc.c:358  */
+#line 225 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -546,9 +544,9 @@ static const char *const yytname[] =
   "HELP", "LIST_DBASES", "CLEAR", "CONTR", "'('", "')'", "';'", "','",
   "'*'", "$accept", "start", "connection", "qualquer_coisa",
   "exit_program", "clear", "parentesis_open", "parentesis_close",
-  "table_attr", "list_tables", "list_databases", "help_pls",
-  "contributors", "insert", "$@1", "semicolon", "table", "opt_column_list",
-  "column_list", "column", "value_list", "value", "create_table", "$@2",
+  "table_attr", "list_tables", "list_databases", "help", "contributors",
+  "insert", "$@1", "semicolon", "table", "opt_column_list", "column_list",
+  "column", "value_list", "value", "create_table", "$@2",
   "table_column_attr", "type", "$@3", "column_create", "attribute",
   "table_fk", "column_fk", "drop_table", "$@4", "$@5", "create_database",
   "$@6", "$@7", "drop_database", "$@8", "$@9", "select", "$@10",
@@ -1382,43 +1380,43 @@ yyreduce:
         case 12:
 #line 55 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1386 "y.tab.c" /* yacc.c:1646  */
+#line 1384 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
 #line 64 "yacc.y" /* yacc.c:1646  */
     {connect(*yytext); GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1392 "y.tab.c" /* yacc.c:1646  */
+#line 1390 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
 #line 66 "yacc.y" /* yacc.c:1646  */
-    {GLOBAL_PARSER.consoleFlag = 1; GLOBAL_PARSER.noerror = 0; return 0;}
-#line 1398 "y.tab.c" /* yacc.c:1646  */
+    {GLOBAL_PARSER.consoleFlag = 1; GLOBAL_PARSER.error = 1; return 0;}
+#line 1396 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
 #line 69 "yacc.y" /* yacc.c:1646  */
     {exit(0);}
-#line 1404 "y.tab.c" /* yacc.c:1646  */
+#line 1402 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
 #line 71 "yacc.y" /* yacc.c:1646  */
     {clear(); GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1410 "y.tab.c" /* yacc.c:1646  */
+#line 1408 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
 #line 73 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_PARSER.parentesis++;}
-#line 1416 "y.tab.c" /* yacc.c:1646  */
+#line 1414 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
 #line 75 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_PARSER.parentesis--;}
-#line 1422 "y.tab.c" /* yacc.c:1646  */
+#line 1420 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
@@ -1431,7 +1429,7 @@ yyreduce:
         notConnected();
     return 0;
 }
-#line 1435 "y.tab.c" /* yacc.c:1646  */
+#line 1433 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
@@ -1444,7 +1442,7 @@ yyreduce:
         notConnected();
     return 0;
 }
-#line 1448 "y.tab.c" /* yacc.c:1646  */
+#line 1446 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
@@ -1454,25 +1452,25 @@ yyreduce:
     GLOBAL_PARSER.consoleFlag = 1;
     return 0;
 }
-#line 1458 "y.tab.c" /* yacc.c:1646  */
+#line 1456 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
 #line 105 "yacc.y" /* yacc.c:1646  */
     {help(); GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1464 "y.tab.c" /* yacc.c:1646  */
+#line 1462 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
 #line 108 "yacc.y" /* yacc.c:1646  */
     {contr(); GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1470 "y.tab.c" /* yacc.c:1646  */
+#line 1468 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
 #line 115 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_INSERT);}
-#line 1476 "y.tab.c" /* yacc.c:1646  */
+#line 1474 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
@@ -1482,47 +1480,47 @@ yyreduce:
         GLOBAL_DATA.N = GLOBAL_PARSER.val_count;
     else {
         printf("ERROR: The column counter doesn't match the value counter.\n");
-        GLOBAL_PARSER.noerror=0;
+        GLOBAL_PARSER.error = 1;
     }
     return 0;
 }
-#line 1490 "y.tab.c" /* yacc.c:1646  */
+#line 1488 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
 #line 127 "yacc.y" /* yacc.c:1646  */
     {setObjName(yytext);}
-#line 1496 "y.tab.c" /* yacc.c:1646  */
+#line 1494 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
 #line 133 "yacc.y" /* yacc.c:1646  */
     {setColumnInsert(yytext);}
-#line 1502 "y.tab.c" /* yacc.c:1646  */
+#line 1500 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
 #line 137 "yacc.y" /* yacc.c:1646  */
     {setValueInsert(yylval.strval, 'D');}
-#line 1508 "y.tab.c" /* yacc.c:1646  */
+#line 1506 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
 #line 138 "yacc.y" /* yacc.c:1646  */
     {setValueInsert(yylval.strval, 'I');}
-#line 1514 "y.tab.c" /* yacc.c:1646  */
+#line 1512 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
 #line 139 "yacc.y" /* yacc.c:1646  */
     {setValueInsert(yylval.strval, 'S');}
-#line 1520 "y.tab.c" /* yacc.c:1646  */
+#line 1518 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
 #line 142 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_CREATE_TABLE);}
-#line 1526 "y.tab.c" /* yacc.c:1646  */
+#line 1524 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
@@ -1532,137 +1530,137 @@ yyreduce:
 
     return 0;
 }
-#line 1536 "y.tab.c" /* yacc.c:1646  */
+#line 1534 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
 #line 150 "yacc.y" /* yacc.c:1646  */
     {setColumnTypeCreate('I');}
-#line 1542 "y.tab.c" /* yacc.c:1646  */
+#line 1540 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
 #line 151 "yacc.y" /* yacc.c:1646  */
     {setColumnTypeCreate('S');}
-#line 1548 "y.tab.c" /* yacc.c:1646  */
+#line 1546 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
 #line 151 "yacc.y" /* yacc.c:1646  */
     {setColumnSizeCreate(yylval.strval);}
-#line 1554 "y.tab.c" /* yacc.c:1646  */
+#line 1552 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
 #line 152 "yacc.y" /* yacc.c:1646  */
     {setColumnTypeCreate('D');}
-#line 1560 "y.tab.c" /* yacc.c:1646  */
+#line 1558 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
 #line 153 "yacc.y" /* yacc.c:1646  */
     {setColumnTypeCreate('C');}
-#line 1566 "y.tab.c" /* yacc.c:1646  */
+#line 1564 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
 #line 155 "yacc.y" /* yacc.c:1646  */
     {setColumnCreate(yytext);}
-#line 1572 "y.tab.c" /* yacc.c:1646  */
+#line 1570 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
 #line 158 "yacc.y" /* yacc.c:1646  */
     {setColumnPKCreate();}
-#line 1578 "y.tab.c" /* yacc.c:1646  */
+#line 1576 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
 #line 161 "yacc.y" /* yacc.c:1646  */
     {setColumnFKTableCreate(yytext);}
-#line 1584 "y.tab.c" /* yacc.c:1646  */
+#line 1582 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
 #line 163 "yacc.y" /* yacc.c:1646  */
     {setColumnFKColumnCreate(yytext);}
-#line 1590 "y.tab.c" /* yacc.c:1646  */
+#line 1588 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
 #line 166 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_DROP_TABLE);}
-#line 1596 "y.tab.c" /* yacc.c:1646  */
+#line 1594 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
 #line 166 "yacc.y" /* yacc.c:1646  */
     {setObjName(yytext);}
-#line 1602 "y.tab.c" /* yacc.c:1646  */
+#line 1600 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
 #line 166 "yacc.y" /* yacc.c:1646  */
     {return 0;}
-#line 1608 "y.tab.c" /* yacc.c:1646  */
+#line 1606 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
 #line 169 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_CREATE_DATABASE);}
-#line 1614 "y.tab.c" /* yacc.c:1646  */
+#line 1612 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
 #line 169 "yacc.y" /* yacc.c:1646  */
     {setObjName(yytext);}
-#line 1620 "y.tab.c" /* yacc.c:1646  */
+#line 1618 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
 #line 169 "yacc.y" /* yacc.c:1646  */
     {return 0;}
-#line 1626 "y.tab.c" /* yacc.c:1646  */
+#line 1624 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
 #line 172 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_DROP_DATABASE);}
-#line 1632 "y.tab.c" /* yacc.c:1646  */
+#line 1630 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 68:
 #line 172 "yacc.y" /* yacc.c:1646  */
     {setObjName(yytext);}
-#line 1638 "y.tab.c" /* yacc.c:1646  */
+#line 1636 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
 #line 172 "yacc.y" /* yacc.c:1646  */
     {return 0;}
-#line 1644 "y.tab.c" /* yacc.c:1646  */
+#line 1642 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
 #line 175 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_SELECT_ALL);}
-#line 1650 "y.tab.c" /* yacc.c:1646  */
+#line 1648 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
 #line 175 "yacc.y" /* yacc.c:1646  */
     {return 0;}
-#line 1656 "y.tab.c" /* yacc.c:1646  */
+#line 1654 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
 #line 177 "yacc.y" /* yacc.c:1646  */
     {setObjName(yytext);}
-#line 1662 "y.tab.c" /* yacc.c:1646  */
+#line 1660 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1666 "y.tab.c" /* yacc.c:1646  */
+#line 1664 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

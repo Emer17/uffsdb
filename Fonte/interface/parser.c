@@ -54,16 +54,15 @@ void notConnected() {
 }
 
 void setObjName( char **nome ) {
-    if ( GLOBAL_PARSER.mode != 0 ) {
+    if ( GLOBAL_PARSER.mode != OP_INVALID ) {
         GLOBAL_DATA.objName = malloc( sizeof(char) * ( strlen(*nome) + 1 ) );
-
         strcpylower( GLOBAL_DATA.objName, *nome );
         GLOBAL_DATA.objName[ strlen(*nome) ] = '\0';
         GLOBAL_PARSER.step++;
     }
 }
 
-void setColumnInsert(char **nome) {
+void setColumnInsert( char **nome ) {
     GLOBAL_DATA.columnName = realloc(GLOBAL_DATA.columnName, (GLOBAL_PARSER.col_count+1)*sizeof(char *));
 
     GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count] = malloc(sizeof(char)*(strlen(*nome)+1));
@@ -73,18 +72,18 @@ void setColumnInsert(char **nome) {
     GLOBAL_PARSER.col_count++;
 }
 
-void setValueInsert(char *nome, char type) {
-    int i;
-    GLOBAL_DATA.values  = realloc(GLOBAL_DATA.values, (GLOBAL_PARSER.val_count+1)*sizeof(char *));
-    GLOBAL_DATA.type    = realloc(GLOBAL_DATA.type, (GLOBAL_PARSER.val_count+1)*sizeof(char));
+void setValueInsert( char *nome, char type ) {
+    int i = 0;
+    GLOBAL_DATA.values  = realloc( GLOBAL_DATA.values, ( GLOBAL_PARSER.val_count+1 ) * sizeof(char *) );
+    GLOBAL_DATA.type    = realloc( GLOBAL_DATA.type, ( GLOBAL_PARSER.val_count+1 ) * sizeof(char) );
 
     // Adiciona o valor no vetor de strings
-    GLOBAL_DATA.values[GLOBAL_PARSER.val_count] = malloc(sizeof(char)*(strlen(nome)+1));
-    if (type == 'I' || type == 'D') {
-        strcpy(GLOBAL_DATA.values[GLOBAL_PARSER.val_count], nome);
+    GLOBAL_DATA.values[GLOBAL_PARSER.val_count] = malloc( sizeof(char) * ( strlen(nome)+1 ) );
+    if( type == 'I' || type == 'D' ) {
+        strcpy( GLOBAL_DATA.values[GLOBAL_PARSER.val_count], nome );
         GLOBAL_DATA.values[GLOBAL_PARSER.val_count][strlen(nome)] = '\0';
-    } else if (type == 'S') {
-        for (i = 1; i < strlen(nome)-1; i++) {
+    } else if ( type == 'S' ) {
+        for( i = 1; i < strlen(nome)-1; i++ ) {
             GLOBAL_DATA.values[GLOBAL_PARSER.val_count][i-1] = nome[i];
         }
         GLOBAL_DATA.values[GLOBAL_PARSER.val_count][strlen(nome)-2] = '\0';
@@ -95,20 +94,20 @@ void setValueInsert(char *nome, char type) {
     GLOBAL_PARSER.val_count++;
 }
 
-void setColumnCreate(char **nome) {
-    GLOBAL_DATA.columnName  = realloc(GLOBAL_DATA.columnName, (GLOBAL_PARSER.col_count+1)*sizeof(char *));
-    GLOBAL_DATA.attribute   = realloc(GLOBAL_DATA.attribute, (GLOBAL_PARSER.col_count+1)*sizeof(int));
-    GLOBAL_DATA.fkColumn    = realloc(GLOBAL_DATA.fkColumn, (GLOBAL_PARSER.col_count+1)*sizeof(char *));
-    GLOBAL_DATA.fkTable     = realloc(GLOBAL_DATA.fkTable, (GLOBAL_PARSER.col_count+1)*sizeof(char *));
-    GLOBAL_DATA.values      = realloc(GLOBAL_DATA.values, (GLOBAL_PARSER.col_count+1)*sizeof(char *));
-    GLOBAL_DATA.type        = realloc(GLOBAL_DATA.type, (GLOBAL_PARSER.col_count+1)*sizeof(char *));
+void setColumnCreate( char **nome ) {
+    GLOBAL_DATA.columnName  = realloc( GLOBAL_DATA.columnName, (GLOBAL_PARSER.col_count+1) * sizeof(char *) );
+    GLOBAL_DATA.attribute   = realloc( GLOBAL_DATA.attribute, (GLOBAL_PARSER.col_count+1) * sizeof(int) );
+    GLOBAL_DATA.fkColumn    = realloc( GLOBAL_DATA.fkColumn, (GLOBAL_PARSER.col_count+1) * sizeof(char *) );
+    GLOBAL_DATA.fkTable     = realloc( GLOBAL_DATA.fkTable, (GLOBAL_PARSER.col_count+1) * sizeof(char *) );
+    GLOBAL_DATA.values      = realloc( GLOBAL_DATA.values, (GLOBAL_PARSER.col_count+1) * sizeof(char *) );
+    GLOBAL_DATA.type        = realloc( GLOBAL_DATA.type, (GLOBAL_PARSER.col_count+1) * sizeof(char *) );
 
-    GLOBAL_DATA.values[GLOBAL_PARSER.col_count] = malloc(sizeof(char));
-    GLOBAL_DATA.fkTable[GLOBAL_PARSER.col_count] = malloc(sizeof(char));
-    GLOBAL_DATA.fkColumn[GLOBAL_PARSER.col_count] = malloc(sizeof(char));
-    GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count] = malloc(sizeof(char)*(strlen(*nome)+1));
+    GLOBAL_DATA.values[GLOBAL_PARSER.col_count] = malloc( sizeof(char) );
+    GLOBAL_DATA.fkTable[GLOBAL_PARSER.col_count] = malloc( sizeof(char) );
+    GLOBAL_DATA.fkColumn[GLOBAL_PARSER.col_count] = malloc( sizeof(char) );
+    GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count] = malloc( sizeof(char) * (strlen(*nome)+1) );
 
-    strcpylower(GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count], *nome);
+    strcpylower( GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count], *nome );
 
     GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count][strlen(*nome)] = '\0';
     GLOBAL_DATA.type[GLOBAL_PARSER.col_count] = 0;
@@ -118,12 +117,12 @@ void setColumnCreate(char **nome) {
     GLOBAL_PARSER.step = 2;
 }
 
-void setColumnTypeCreate(char type) {
+void setColumnTypeCreate( char type ) {
     GLOBAL_DATA.type[GLOBAL_PARSER.col_count-1] = type;
     GLOBAL_PARSER.step++;
 }
 
-void setColumnSizeCreate(char *size) {
+void setColumnSizeCreate( char *size ) {
     GLOBAL_DATA.values[GLOBAL_PARSER.col_count-1] = realloc(GLOBAL_DATA.values[GLOBAL_PARSER.col_count-1], sizeof(char)*(strlen(size)+1));
     strcpy(GLOBAL_DATA.values[GLOBAL_PARSER.col_count-1], size);
     GLOBAL_DATA.values[GLOBAL_PARSER.col_count-1][strlen(size)-1] = '\0';
@@ -133,7 +132,7 @@ void setColumnPKCreate() {
     GLOBAL_DATA.attribute[GLOBAL_PARSER.col_count-1] = PK;
 }
 
-void setColumnFKTableCreate(char **nome) {
+void setColumnFKTableCreate( char **nome ) {
     GLOBAL_DATA.fkTable[GLOBAL_PARSER.col_count-1] = realloc(GLOBAL_DATA.fkTable[GLOBAL_PARSER.col_count-1], sizeof(char)*(strlen(*nome)+1));
     strcpylower(GLOBAL_DATA.fkTable[GLOBAL_PARSER.col_count-1], *nome);
     GLOBAL_DATA.fkTable[GLOBAL_PARSER.col_count-1][strlen(*nome)] = '\0';
@@ -141,9 +140,9 @@ void setColumnFKTableCreate(char **nome) {
     GLOBAL_PARSER.step++;
 }
 
-void setColumnFKColumnCreate(char **nome) {
+void setColumnFKColumnCreate( char **nome ) {
     GLOBAL_DATA.fkColumn[GLOBAL_PARSER.col_count-1] = realloc(GLOBAL_DATA.fkColumn[GLOBAL_PARSER.col_count-1], sizeof(char)*(strlen(*nome)+1));
-    strcpylower(GLOBAL_DATA.fkColumn[GLOBAL_PARSER.col_count-1], *nome);
+    strcpylower( GLOBAL_DATA.fkColumn[GLOBAL_PARSER.col_count-1], *nome );
     GLOBAL_DATA.fkColumn[GLOBAL_PARSER.col_count-1][strlen(*nome)] = '\0';
     GLOBAL_PARSER.step++;
 }
@@ -152,39 +151,43 @@ void setColumnFKColumnCreate(char **nome) {
 void clearGlobalStructs() {
     int i;
 
-    if (GLOBAL_DATA.objName) {
+    if( GLOBAL_DATA.objName ) {
         free(GLOBAL_DATA.objName);
         GLOBAL_DATA.objName = NULL;
     }
 
-    for (i = 0; i < GLOBAL_DATA.N; i++ ) {
-        if (GLOBAL_DATA.columnName)
-            free(GLOBAL_DATA.columnName[i]);
-        if (GLOBAL_DATA.values)
-            free(GLOBAL_DATA.values[i]);
-        if (GLOBAL_DATA.fkTable)
-            free(GLOBAL_DATA.fkTable[i]);
-        if (GLOBAL_DATA.fkColumn)
-            free(GLOBAL_DATA.fkColumn[i]);
+    for( i = 0; i < GLOBAL_DATA.N; i++ ) {
+        if( GLOBAL_DATA.columnName ) {
+            free( GLOBAL_DATA.columnName[i] );
+		}
+        if( GLOBAL_DATA.values ){
+            free( GLOBAL_DATA.values[i] );
+		}
+        if( GLOBAL_DATA.fkTable ) {
+            free( GLOBAL_DATA.fkTable[i] );
+		}
+        if( GLOBAL_DATA.fkColumn ) {
+            free( GLOBAL_DATA.fkColumn[i] );
+		}
     }
 
-    free(GLOBAL_DATA.columnName);
+    free( GLOBAL_DATA.columnName );
     GLOBAL_DATA.columnName = NULL;
 
-    free(GLOBAL_DATA.values);
+    free( GLOBAL_DATA.values );
     GLOBAL_DATA.values = NULL;
 
-    free(GLOBAL_DATA.fkTable);
+    free( GLOBAL_DATA.fkTable );
     GLOBAL_DATA.fkTable = NULL;
 
-    free(GLOBAL_DATA.fkColumn);
+    free( GLOBAL_DATA.fkColumn );
     GLOBAL_DATA.fkColumn = NULL;
 
-    free(GLOBAL_DATA.type);
-    GLOBAL_DATA.type = (char *)malloc(sizeof(char));
+    free( GLOBAL_DATA.type );
+    GLOBAL_DATA.type = (char *)malloc( sizeof(char) );
 
-    free(GLOBAL_DATA.attribute);
-    GLOBAL_DATA.attribute = (int *)malloc(sizeof(int));
+    free( GLOBAL_DATA.attribute );
+    GLOBAL_DATA.attribute = (int *)malloc( sizeof(int) );
 
     yylex_destroy();
 
@@ -192,7 +195,7 @@ void clearGlobalStructs() {
 
     GLOBAL_PARSER.mode              = 0;
     GLOBAL_PARSER.parentesis        = 0;
-    GLOBAL_PARSER.noerror           = 1;
+    GLOBAL_PARSER.error           	= 0;
     GLOBAL_PARSER.col_count         = 0;
     GLOBAL_PARSER.val_count         = 0;
     GLOBAL_PARSER.step              = 0;
@@ -203,7 +206,7 @@ void setMode( const char mode ) {
     GLOBAL_PARSER.step++;
 }
 
-int interface( int argc, char **argv ) {
+void interface( int argc, char **argv ) {
     pthread_t pth;
     pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
     pthread_join( pth, NULL );
@@ -216,27 +219,27 @@ int interface( int argc, char **argv ) {
 		if( argv[i][0] == '-' ) {
 			if( argv[i][1] == '\0' ) {
 				printf( "ERRO: Nenhuma opcao especificada apos -\n" );
-				return 0;
+				return;
 			} else if( argv[i][2] != '\0' ) {
 				printf( "ERRO: Opcao possui mais de uma letra\n" );
-				return 0;
+				return;
 			}
 			
 			char optionName = argv[i][1];
 			i++;
 			if( i >= argc ) {
 				printf( "ERRO: A opcao %s nao recebeu nenhum argumento\n", argv[i-1] );
-				return 0;
+				return;
 			} else if( argv[i][0] == '-' ) {
-				printf( "ERRO: Argumentos nao podem inciar com -\n" );
-				return 0;
+				printf( "ERRO: Argumentos de opcao nao podem inciar com -\n" );
+				return;
 			}
 			
 			switch( optionName ) {
 				case 'd':										
 					if( options.db_name != NULL ) {
 						printf( "ERRO: A opcao -d foi configurada multiplas vezes\n" );
-						return 0;
+						return;
 					}
 					char * name = argv[i];
 					options.db_name = malloc( sizeof(char) * ( strlen(name) + 1 ) );
@@ -246,11 +249,11 @@ int interface( int argc, char **argv ) {
 				default:
 					// Em caso de a opcao for desconhecida	
 					printf( "ERRO: Opcao \"%s\" desconhecida\n", argv[i-1] );
-					return 0;					
+					return;					
 			}
 		} else {
 			printf( "ERRO: Argumento desconhecido \"%s\"\n", argv[i] );
-			return 0;
+			return;
 		}
 		
 		i++;
@@ -275,8 +278,8 @@ int interface( int argc, char **argv ) {
         pthread_create( &pth, NULL, (void*)yyparse, &GLOBAL_PARSER );
         pthread_join( pth, NULL );
 
-        if( GLOBAL_PARSER.noerror ) {
-            if ( GLOBAL_PARSER.mode != 0 ) {
+        if( !GLOBAL_PARSER.error ) {
+            if ( GLOBAL_PARSER.mode != OP_INVALID ) {
                 if( !connected.conn_active ) {
                     notConnected();
                 } else {
@@ -307,7 +310,15 @@ int interface( int argc, char **argv ) {
 							break;
                     }
                 }
-            }
+            } else {
+				// Só entra neste bloco "else" se a operação terminada por ;  
+				// 		não for identificada?
+				#if DEBUG
+					puts( "\n" );
+					puts( "MODO DE OPERACAO INVALIDA!!!!!!!" );
+					puts( "\n" );
+				#endif
+			}
         } else {
             GLOBAL_PARSER.consoleFlag = 1;
             switch( GLOBAL_PARSER.mode ) {
@@ -340,19 +351,19 @@ int interface( int argc, char **argv ) {
             }
 
             printf( "ERROR: syntax error.\n" );
-            GLOBAL_PARSER.noerror = 1;
+            GLOBAL_PARSER.error = 0;
         }
 
-        if ( GLOBAL_PARSER.mode != 0 ) {
+        if ( GLOBAL_PARSER.mode != OP_INVALID ) {
             pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
             pthread_join( pth, NULL );
         }
     }
-    return 0;
+    
 }
 
 void yyerror(char *s, ...) {
-    GLOBAL_PARSER.noerror = 0;
+    GLOBAL_PARSER.error = 1;
     /*extern yylineno;
 
     va_list ap;

@@ -45,3 +45,15 @@ CREATE TABLE
 
 dentro do banco "nautica", usei o comando \q. O terminal parece ficar esperando um comando e nada acontece. Usei Ctrl+c para poder sair.
 			(Aconteceu apenas uma vez. Talvez não seja um erro. Pode ter acontecido em função de alguma linha acima.)
+			
+			
+
+
+4) Comando HELP( maiúsculo ) resulta em erro de sintaxe, quando help( minúsculo ) não. 
+	( CORRIGIDO! ): apenas foi alterado a linha 38 do arquivo lex.l
+		De: 	help 		return HELP;
+		Para:	(?i:HELP) 	return HELP;
+		
+5) Comando help e contributors resultam em modo operação não definida( OP_MODE == 0 )
+
+
