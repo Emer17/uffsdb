@@ -56,7 +56,9 @@ typedef struct rc_parser {
 							//		se for 0, nenhum erro foi encontrado, e 1 caso contrário. 
     int     col_count;      // Contador de colunas
     int     val_count;      // Contador de valores
-    int     consoleFlag;   	// Auxiliar para não imprimir duas vezes nome=#
+    int     consoleFlag;   	// Auxiliar para não imprimir duas vezes nome=#		
+	int		endOfFile; 		// Determina se chegou no fim do arquivo de script
+	int		readingFile;
 }rc_parser;
 
 typedef struct data_base {

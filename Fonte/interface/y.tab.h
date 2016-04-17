@@ -72,7 +72,10 @@ extern int yydebug;
     HELP = 282,
     LIST_DBASES = 283,
     CLEAR = 284,
-    CONTR = 285
+    CONTR = 285,
+    RUN_SCRIPT = 286,
+    END_OF_FILE = 287,
+    EDITOR = 288
   };
 #endif
 /* Tokens.  */
@@ -104,6 +107,9 @@ extern int yydebug;
 #define LIST_DBASES 283
 #define CLEAR 284
 #define CONTR 285
+#define RUN_SCRIPT 286
+#define END_OF_FILE 287
+#define EDITOR 288
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -117,7 +123,7 @@ union YYSTYPE
     int subtok;
     char *strval;
 
-#line 121 "y.tab.h" /* yacc.c:1909  */
+#line 127 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

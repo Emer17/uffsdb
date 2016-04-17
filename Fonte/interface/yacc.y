@@ -49,12 +49,13 @@ int yywrap() {
         CHAR        PRIMARY     KEY         REFERENCES  DATABASE
         DROP        OBJECT      NUMBER      VALUE       QUIT
         LIST_TABLES LIST_TABLE  ALPHANUM    CONNECT     HELP
-        LIST_DBASES CLEAR       CONTR;
+        LIST_DBASES CLEAR       CONTR		RUN_SCRIPT	END_OF_FILE
+		EDITOR;
 
 start: insert | select | create_table | create_database | drop_table | drop_database
      | table_attr | list_tables | connection | exit_program | semicolon {GLOBAL_PARSER.consoleFlag = 1; return 0;}
      | parentesis_open | parentesis_close| help | list_databases | clear | contributors
-     | qualquer_coisa | /*nothing*/;
+     | qualquer_coisa | run_script | end_of_file | editor |/*nothing*/;
 
 /*--------------------------------------------------*/
 /**************** GENERAL FUNCTIONS *****************/
@@ -67,6 +68,63 @@ qualquer_coisa: OBJECT {GLOBAL_PARSER.consoleFlag = 1; GLOBAL_PARSER.error = 1; 
 
 /* EXIT */
 exit_program: QUIT {exit(0);};
+
+editor: EDITOR {
+	// Aqui vai a parte de abrir um editor de texto
+	/*
+	const char * editorNames[] = {
+		"vi", "vim", "gedit", "geany" 
+	};	
+	char editorPath[4][256] = { {0} }; //Mudar para algo dinamico mais tarde
+		
+	int i = 0;
+	while( i < 4 ) {
+		char cmd [32] = "which ";
+		strcat( cmd, editorNames[i] );
+		puts( cmd );
+		FILE * pathPointer = popen( cmd, "r" );		
+		while( fgets( editorPath[i], 256, pathPointer ) != NULL ) {
+			printf( "Caminho e: %s\n", editorPath[i] );
+		}
+		cmd [6] = '\0';
+		pclose(pathPointer);
+		pathPointer = NULL;
+		i++;
+	}
+	
+	i = 0;
+	if( editorPath[0][0] != '\0' ) {
+		puts( "Os seguintes editores foram detectados:" );
+		while( i < 4 ) {
+			if( editorPath[i][0] != '\0' ) {
+				printf( "%d. %s\n", i+1, editorPath[i] );
+				i++;
+			}			
+		}
+	}
+	*/
+	return 0;
+};
+
+run_script: RUN_SCRIPT {
+	FILE * scriptData = loadScript( *yytext );
+	if( scriptData == NULL ) {
+		return 0;
+	}
+	yyin = scriptData;	
+	GLOBAL_PARSER.consoleFlag = 1;
+	GLOBAL_PARSER.readingFile = 1;
+	return 0; 	
+};
+
+end_of_file: END_OF_FILE {
+	//printf( "FIM\n" );
+	//GLOBAL_PARSER.error = 1;
+	GLOBAL_PARSER.endOfFile = 1;
+	GLOBAL_PARSER.readingFile = 0;
+	GLOBAL_PARSER.consoleFlag = 1;
+	return 0;
+};
 
 clear: CLEAR {clear(); GLOBAL_PARSER.consoleFlag = 1; return 0;};
 
@@ -140,8 +198,7 @@ value: VALUE {setValueInsert(yylval.strval, 'D');}
 
 /* CREATE TABLE */
 create_table: CREATE TABLE {setMode(OP_CREATE_TABLE);} table parentesis_open table_column_attr parentesis_close semicolon {
-    GLOBAL_DATA.N = GLOBAL_PARSER.col_count;
-
+    GLOBAL_DATA.N = GLOBAL_PARSER.col_count;	
     return 0;
 };
 

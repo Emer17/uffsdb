@@ -111,4 +111,4 @@ void setMode( const char mode );
  */
 void interface( int argc, char ** argv );
 
-void parseOptions( void );
+FILE * loadScript( char * scriptPath );

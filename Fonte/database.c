@@ -224,7 +224,8 @@ void showDB() {
 
 int dbInit( const char *db ) {	
 	if(system("mkdir data > /dev/null 2>&1") == -1) {
-		printf("ERROR: It was not possible to initialize uffsdb\n");	
+		printf("ERROR: It was not possible to initialize uffsdb\n");
+		return 0;
 	}	
     if( db == NULL ) {
 		// Se o nome do banco não foi especificado, cria o banco padrão

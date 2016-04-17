@@ -52,19 +52,22 @@
 [0-9]*\.[0-9]*					{yylval.strval = yytext; return VALUE;};
 [0-9]+							{yylval.strval = yytext; return NUMBER;}
 
-\n								{
-									if (GLOBAL_PARSER.mode != 0) {
-										if (GLOBAL_PARSER.parentesis)
-											printf("%s(# ", connected.db_name);
-										else
-											printf("%s-# ", connected.db_name);
-									} else if (connected.conn_active) {
-								 		if (GLOBAL_PARSER.consoleFlag)
-							                GLOBAL_PARSER.consoleFlag = 0;
-							            else
-							                printf("%s=# ", connected.db_name);
-									} else
-								 		printf(">");
+[\n]							{	
+									if ( GLOBAL_PARSER.mode != OP_INVALID && !GLOBAL_PARSER.readingFile ) {
+										if( GLOBAL_PARSER.parentesis ) {
+											printf( "%s(# ", connected.db_name );
+										} else {
+											printf( "%s-# ", connected.db_name );
+										}
+									} else if ( connected.conn_active ) {
+								 		if( GLOBAL_PARSER.consoleFlag ) {
+							                //GLOBAL_PARSER.consoleFlag = 0;
+							            } else {
+							                printf( "%s=# ", connected.db_name );
+										}
+									} else {
+								 		printf( ">" );
+									}
 								};
 
 [\\][c]							return CONNECT;
@@ -74,10 +77,15 @@
 [\\][l]+[^\n]*					{invalidCommand(yytext);};
 [\\][q]							return QUIT;
 [\\][q]+[^\n]*					{invalidCommand(yytext);};
+[\\][i][ ][\^a-zA-z][a-zA-z|0-9]*[\.][a-zA-z]+ return RUN_SCRIPT;
+[\\][e][ ]*						return EDITOR;
+[\\][i]+[^ ^\n]*				{invalidCommand(yytext);};
+[\\][i]+[ ]*[\n]				{invalidCommand("\\i <enter>'. Expecting '\\i SCRIPT"); return 0;};
 [\\][d]+						return LIST_TABLES;
 [\\][d]+[^\n]*					{invalidCommand(yytext);};
 [\\][t]+						return LIST_TABLE;
 [\\][t]+[^ ^\n]*				{invalidCommand(yytext);};
 [\\][t]+[ ]*[\n]				{invalidCommand("\\t <enter>'. Expecting '\\t TABLENAME"); return 0;};
 [ \t]+							/* ignore whitespace */;
+<<EOF>>							return END_OF_FILE;
 %%

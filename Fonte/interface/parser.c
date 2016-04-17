@@ -189,16 +189,22 @@ void clearGlobalStructs() {
     free( GLOBAL_DATA.attribute );
     GLOBAL_DATA.attribute = (int *)malloc( sizeof(int) );
 
-    yylex_destroy();
+	if( GLOBAL_PARSER.endOfFile ) {
+		yylex_destroy();
+		GLOBAL_PARSER.endOfFile = 0;
+		GLOBAL_PARSER.readingFile = 0;
+	} 
+    
 
     GLOBAL_DATA.N = 0;
 
-    GLOBAL_PARSER.mode              = 0;
+    GLOBAL_PARSER.mode              = OP_INVALID;
     GLOBAL_PARSER.parentesis        = 0;
     GLOBAL_PARSER.error           	= 0;
     GLOBAL_PARSER.col_count         = 0;
     GLOBAL_PARSER.val_count         = 0;
     GLOBAL_PARSER.step              = 0;
+	
 }
 
 void setMode( const char mode ) {
@@ -313,11 +319,7 @@ void interface( int argc, char **argv ) {
             } else {
 				// Só entra neste bloco "else" se a operação terminada por ;  
 				// 		não for identificada?
-				#if DEBUG
-					puts( "\n" );
-					puts( "MODO DE OPERACAO INVALIDA!!!!!!!" );
-					puts( "\n" );
-				#endif
+			
 			}
         } else {
             GLOBAL_PARSER.consoleFlag = 1;
@@ -349,17 +351,41 @@ void interface( int argc, char **argv ) {
                     GLOBAL_PARSER.consoleFlag = 0;
                 }
             }
-
-            printf( "ERROR: syntax error.\n" );
+						
+			printf( "ERROR: syntax error.\n" );							
             GLOBAL_PARSER.error = 0;
         }
 
-        if ( GLOBAL_PARSER.mode != OP_INVALID ) {
+		
+        if ( GLOBAL_PARSER.mode != OP_INVALID || GLOBAL_PARSER.endOfFile ) {
             pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
             pthread_join( pth, NULL );
         }
+		
+		// getchar();
     }
     
+}
+
+FILE * loadScript( char * scriptPath ) {
+	if( scriptPath == NULL ) {
+		printf( "ERRO: Nenhum caminho para o script foi especificado!" );
+		return NULL;
+	}		
+	scriptPath += 3;
+	char * path = malloc( sizeof( char ) * strlen(scriptPath) - 2 );
+	strcpy( path, scriptPath );	
+	char * dot = strchr( path, '.' );	
+	if( strcmp( dot, ".sql" ) != 0 ) {
+		puts( "ERRO: Script nao possui extensao .sql" );
+		return NULL;
+	}	
+	
+	FILE * script = fopen( path, "r" );	
+	if( script == NULL ) {
+		printf( "ERRO: Nao foi possivel abrir o arquivo %s\n", path );
+	}	
+	return script;	
 }
 
 void yyerror(char *s, ...) {
