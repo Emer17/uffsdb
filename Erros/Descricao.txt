@@ -57,3 +57,63 @@ dentro do banco "nautica", usei o comando \q. O terminal parece ficar esperando 
 5) Comando help e contributors resultam em modo operação não definida( OP_MODE == 0 )
 
 
+
+														6)erro ao inserir string em char
+
+
+create table testachar( 
+integer primary key,
+letra char 
+);
+
+insert into testachar (cod,letra) values (1,'II'); 
+
+/*mostra o erro:*/
+ERROR: column "letra" expect char.
+
+/*porem, se fizermos um select * from testachar, o resultado será:
+
+cod        | letra      
+------------+------------
+ 1          |           
+
+(1 row) 
+
+*/
+
+														7)erros de tabela em funçao de nomes grandes
+
+create table isso99e99um99teste99de99nome99gigante(
+cod integer
+);
+
+/*    \d mostrará:    */
+ Schema     | Name            | Type       | Owner     
+------------+-----------------+------------+-------  
+ public     | testachar       | tuple      | ibetres    
+ public     | isso99e99um99teste99 | tuple      | ibetres
+
+
+
+ drop table isso99e99um99teste99de99nome99gigante;
+/* O comando acima mostrará :  */
+ ERROR: table "isso99e99um99teste99de99nome99gigante" does not exist.
+
+
+
+														8)nomes gigantes novamente...
+
+create database agora77eu55realmente55vou55usar55um55nome55gigante55que55vai55bugar55esse55uffsdb;
+
+/* isso resulta em:    */
+WARNING: database name is too long, maximum number of characters allowed is 20
+
+
+/*ok, forcei a amizade mesmo, vou diminuir pra 19 entao..*/
+teste=# create database a123456789b12345678;
+WARNING: database name is too long, maximum number of characters allowed is 20
+
+
+/*o erro continua... só funciona com 18:*/
+teste=# create database a123456789b1234567; 
+CREATE DATABASE 

@@ -50,3 +50,5 @@ insert into vendas (id,loja,produto,venda,custo,lucro) values
 (4, 3, 2, 4.47, 1.84, 2.93),
 (5, 5, 3, 11.93, 4.59, 7.34),
 (6, 5, 1, 14.31, 5.51, 8.80);
+
+select p.descricao, p.estudio from produtos p; /*nao funciona*/
