@@ -100,6 +100,9 @@ cod integer
  drop table isso99e99um99teste99de99nome99gigante;
 /* O comando acima mostrará :  */
  ERROR: table "isso99e99um99teste99de99nome99gigante" does not exist.
+ 
+ Outro erro crítico que acontece é que ao colocar um nome gigante um erro de corrupção de memória acontece, e o programa aborta.
+( CORRIGIDO ): Um if foi colocado no início da função createTable(), para verificar se o tamanho do nome passado excede o máximo permitido
 
 
 
@@ -137,7 +140,7 @@ Abortado
 
 Após isso, o programa se fecha sozinho
 
-	
+10) Erro ao criar tabela com nome gigante
 
 
 

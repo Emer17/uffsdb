@@ -780,13 +780,14 @@ int procuraSchemaArquivo(struct fs_objects objeto){
 
 int excluirTabela( char * nomeTabela ) {	
     struct fs_objects objeto, objeto1;
-    tp_table *esquema, *esquema1;
-    int x,erro, i, j, k, l, qtTable;
-    char str[20];
+    tp_table * esquema = NULL; 
+	tp_table * esquema1 = NULL;
+    int x,erro, i, j, l, qtTable;
+    char str[20] = { '\0' };
     char dat[5] = ".dat";
-    memset(str, '\0', 20);
+    //memset(str, '\0', 20);
 
-    if (!verificaNomeTabela(nomeTabela)) {
+    if ( !verificaNomeTabela( nomeTabela ) ) {
         printf("ERROR: table \"%s\" does not exist.\n", nomeTabela);
         return ERRO_NOME_TABELA;
     }
@@ -798,9 +799,8 @@ int excluirTabela( char * nomeTabela ) {
     abreTabela(nomeTabela, &objeto, &esquema);
     qtTable = quantidadeTabelas();
 	
-	
 
-    char **tupla = (char **)malloc(sizeof(char **)*qtTable);
+    char ** tupla = (char **)malloc( sizeof(char **) * qtTable );
     memset(tupla, 0, qtTable);
 
     for (i=0; i < qtTable; i++) {
@@ -808,10 +808,10 @@ int excluirTabela( char * nomeTabela ) {
         memset(tupla[i], '\0', TAMANHO_NOME_TABELA);
     }
 
-    tp_table *tab2 = (tp_table *)malloc(sizeof(struct tp_table));
-    tab2 = procuraAtributoFK(objeto);   //retorna o tipo de chave que e cada campo
+    tp_table *tab2 = (tp_table *)malloc( sizeof(struct tp_table) );
+    tab2 = procuraAtributoFK( objeto );   //retorna o tipo de chave que e cada campo
 
-    FILE *dicionario;
+    FILE * dicionario = NULL;
 
     char directory[TAMANHO_NOME_BANCO*2];
     memset(directory, '\0', TAMANHO_NOME_BANCO*2);
@@ -824,9 +824,9 @@ int excluirTabela( char * nomeTabela ) {
 	}
 	
 
-    k=0;
+    int k = 0;
     while(fgetc (dicionario) != EOF){
-        fseek(dicionario, -1, 1);
+        fseek( dicionario, -1, SEEK_CUR );
 
         //coloca o nome de todas as tabelas em tupla
         fread(tupla[k], sizeof(char), TAMANHO_NOME_TABELA , dicionario);
@@ -864,10 +864,10 @@ int excluirTabela( char * nomeTabela ) {
 	
     free(tab2);
 
-    tp_buffer *bufferpoll = initbuffer();
+    tp_buffer * bufferpoll = initbuffer();
 
-    if(bufferpoll == ERRO_DE_ALOCACAO){
-        printf("ERROR: no memory available to allocate buffer.\n");
+    if( bufferpoll == ERRO_DE_ALOCACAO ) {
+        printf( "ERROR: no memory available to allocate buffer.\n" );
         return ERRO_LEITURA_DADOS;
     }
 
@@ -889,7 +889,6 @@ int excluirTabela( char * nomeTabela ) {
     strcat(directory, str);
 
     remove(directory);
-
     free(bufferpoll);
 
     printf("DROP TABLE\n");
@@ -897,14 +896,16 @@ int excluirTabela( char * nomeTabela ) {
     return SUCCESS;
 }
 
-/////
-int verifyFieldName(char **fieldName, int N){
-    int i, j;
-    if(N<=1) return 1;
-    for(i=0; i < N; i++){
-        for(j=i+1; j < N; j++){
-            if(objcmp(fieldName[i], fieldName[j]) == 0){
-                printf("ERROR: column \"%s\" specified more than once\n", fieldName[i]);
+int verifyFieldName( char ** fieldName, int N ) {    
+    if( N <= 1 ) {
+		return 1;
+	}
+	
+	int i, j;
+    for( i = 0; i < N; i++ ) {
+        for( j = i+1; j < N; j++ ) {
+            if( objcmp( fieldName[i], fieldName[j] ) == 0 ){
+                printf( "ERROR: column \"%s\" specified more than once\n", fieldName[i] );
                 return 0;
             }
         }
@@ -912,63 +913,85 @@ int verifyFieldName(char **fieldName, int N){
     return 1;
 }
 
-//////
-void createTable(rc_insert *t) {
-	int size;
-    strcpylower(t->objName, t->objName);        //muda pra minúsculo
-    char *tableName = (char*) malloc (sizeof(char)*TAMANHO_NOME_TABELA),
-        fkTable[TAMANHO_NOME_TABELA], fkColumn[TAMANHO_NOME_CAMPO];
+void createTable( rc_insert * t ) {	
+    //strcpylower( t->objName, t->objName );        //muda pra minúsculo
+	if( (strlen( t->objName) + 1) > TAMANHO_NOME_TABELA ) {
+		printf( "ERRO: Nome da tabela excede tamanho maximo permitido\n" );
+		return;
+	}
+    char * tableName = (char*)malloc( sizeof(char) * TAMANHO_NOME_TABELA );
+	char fkTable[TAMANHO_NOME_TABELA] = { '\0' };
+	char fkColumn[TAMANHO_NOME_CAMPO] = { '\0' };
 
-    strncpylower(tableName, t->objName, TAMANHO_NOME_TABELA);
+    strncpylower( tableName, t->objName, TAMANHO_NOME_TABELA );
+    strcat( tableName, ".dat\0" );                  //tableName.dat
 
-    strcat(tableName, ".dat\0");                  //tableName.dat
-
-    if(existeArquivo(tableName)){
-        printf("ERROR: table already exist\n");
-        free(tableName);
+    if( existeArquivo(tableName) ){
+        printf("ERROR: Table already exists\n");
+        free( tableName );
         return;
     }
 
-    table *tab = NULL;
-    tab = iniciaTabela(t->objName);    //cria a tabela
+    table * tab = NULL;
+    tab = iniciaTabela( t->objName );    // Retorna um tabela inicializada
 
-    if(0 == verifyFieldName(t->columnName, t->N)){
-        free(tableName);
-        freeTable(tab);
+    if( 0 == verifyFieldName( t->columnName, t->N ) ){
+        free( tableName );
+        freeTable( tab );
         return;
     }
+	
     int i;
-    for(i=0; i < t->N; i++){
-    	if (t->type[i] == 'S')
+	int size = 0;
+    for( i = 0; i < t->N; i++ ) {		
+		
+    	if (t->type[i] == 'S') {
     		size = atoi(t->values[i]);
-    	else if (t->type[i] == 'I')
+		} else if (t->type[i] == 'I') {
     		size = sizeof(int);
-    	else if (t->type[i] == 'D')
+    	} else if (t->type[i] == 'D') {
     		size = sizeof(double);
-        else if (t->type[i] == 'C')
-    		size = sizeof(char);
+        } else if (t->type[i] == 'C') {
+    		size = sizeof(char);		
+		}
 
-    	if (t->attribute[i] == FK) {
-    		strncpylower(fkTable, t->fkTable[i], TAMANHO_NOME_TABELA);
-    		strncpylower(fkColumn,t->fkColumn[i], TAMANHO_NOME_CAMPO);
+    	if ( t->attribute[i] == FK ) {
+    		strncpylower( fkTable, t->fkTable[i], TAMANHO_NOME_TABELA );
+    		strncpylower( fkColumn,t->fkColumn[i], TAMANHO_NOME_CAMPO );
     	} else {
-    		strcpy(fkTable, "");
-    		strcpy(fkColumn, "");
+    		strcpy( fkTable, "" );
+    		strcpy( fkColumn, "" );
     	}
-
-        tab = adicionaCampo(tab, t->columnName[i], t->type[i], size, t->attribute[i], fkTable, fkColumn);
-        if((objcmp(fkTable, "") != 0) || (objcmp(fkColumn, "") != 0)){
-            if(verifyFK(fkTable, fkColumn) == 0){
-    			printf("ERROR: attribute FK cannot be referenced\n");
-                free(tableName);
-                freeTable(tab);
+				
+		tp_table * temp = malloc( sizeof( tp_table ) );		
+		strcpy( temp->nome, t->columnName[i] );
+		temp->tipo 	= t->type[i];
+		temp->tam 	= size;
+		temp->chave = t->attribute[i];
+		strcpy( temp->tabelaApt, fkTable );
+		strcpy( temp->attApt, fkColumn );
+		temp->next 	= NULL;		
+        tab = adicionaCampo( tab, temp );
+		
+		free( temp );
+		temp = NULL;		
+		
+        if( ( strcmp( fkTable, "") != 0 ) || ( strcmp(fkColumn, "" ) != 0 ) ) {
+            if( verifyFK( fkTable, fkColumn ) == 0 ){
+    			printf( "ERROR: attribute FK cannot be referenced\n" );				
+                free( tableName );
+                freeTable( tab );
                 return;
     		}
-        }
-    }
-
-    printf("%s\n",(finalizaTabela(tab) == SUCCESS)? "CREATE TABLE" : "ERROR: table already exist\n");
-    free(tableName);
-    if (tab != NULL) freeTable(tab);
+        }		
+		
+    }	
+	
+    printf( "%s\n",( finalizaTabela(tab) == SUCCESS )? "CREATE TABLE" : "ERROR: table already exist\n" );	
+    free( tableName );
+    if( tab != NULL ) {		
+		freeTable( tab );
+	}
+	
 }
-///////
+

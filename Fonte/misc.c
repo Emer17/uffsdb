@@ -140,12 +140,17 @@ void help() {
 int objcmp( const char * obj, const char * str ) {	
 	size_t objSize = strlen( obj ) + 1;
 	size_t strSize = strlen( str ) + 1;
+	
+	/*
+	printf( "Tamanho da string %s: %d\n", obj, (int)strlen(obj) );
+	printf( "Tamanho obj: %d\n", (int)objSize );
+	printf( "Tamanho str: %d\n", (int)strSize );
+	*/
 		
 	char * object = NULL; 
-	char * string = NULL;	
-
+	char * string = NULL;		
 	object = (char *)malloc( sizeof(char) * objSize );
-	string = (char *)malloc( sizeof(char) * strSize );
+	string = (char *)malloc( sizeof(char) * strSize );	
 	memset( object, '\0', objSize );
 	memset( string, '\0', strSize );
 

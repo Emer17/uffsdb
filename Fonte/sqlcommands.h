@@ -91,7 +91,7 @@ tp_table *abreTabela(char *, struct fs_objects *, tp_table **);
  *              e cria uma tabela no banco corrente
  */
 void createTable(rc_insert *);
-////
+
 int verifyFieldName(char **, int );
-////
+
 int verifyFK(char *, char *);
