@@ -137,32 +137,32 @@ void help() {
 	printf("\t\t\t\t\t\t  imprmir todos os valores de uma tabela\n");
 }
 ////
-int objcmp( const char *obj, const char *str ) {
+int objcmp( const char * obj, const char * str ) {	
+	size_t objSize = strlen( obj ) + 1;
+	size_t strSize = strlen( str ) + 1;
+		
 	char * object = NULL; 
 	char * string = NULL;	
 
-	object = (char *)malloc( sizeof(char) * TAMANHO_NOME_CAMPO );
-	string = (char *)malloc( sizeof(char) * TAMANHO_NOME_CAMPO );
-	memset( object, '\0', TAMANHO_NOME_CAMPO );
-	memset( string, '\0', TAMANHO_NOME_CAMPO );
+	object = (char *)malloc( sizeof(char) * objSize );
+	string = (char *)malloc( sizeof(char) * strSize );
+	memset( object, '\0', objSize );
+	memset( string, '\0', strSize );
 
 	int i;
-	for( i = 0; i < strlen(obj); i++ ) {
-		object[i] = tolower(obj[i]);		
-	}
-	object[i] = '\0';
+	for( i = 0; i < objSize; i++ ) {
+		object[i] = tolower( obj[i] );
+	}	
 
-	for( i = 0; i < strlen( str ); i++ ) {
+	for( i = 0; i < strSize; i++ ) {
 		string[i] = tolower( str[i] );
 	}
-	string[i] = '\0';
 
 	i = strcmp( object, string );
-
 	free( object );
 	free( string );
-
-	return i;
+	
+	return i;	 
 }
 
 void strcpylower( char *dest, const char *src ) {

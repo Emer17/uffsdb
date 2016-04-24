@@ -778,7 +778,7 @@ int procuraSchemaArquivo(struct fs_objects objeto){
                 ERRO_LEITURA_DADOS.
    ---------------------------------------------------------------------------------------------*/
 
-int excluirTabela(char *nomeTabela) {
+int excluirTabela( char * nomeTabela ) {	
     struct fs_objects objeto, objeto1;
     tp_table *esquema, *esquema1;
     int x,erro, i, j, k, l, qtTable;
@@ -790,12 +790,15 @@ int excluirTabela(char *nomeTabela) {
         printf("ERROR: table \"%s\" does not exist.\n", nomeTabela);
         return ERRO_NOME_TABELA;
     }
+	
 
     strcpylower(str, nomeTabela);
     strcat(str, dat);              //Concatena e junta o nome com .dat
 
     abreTabela(nomeTabela, &objeto, &esquema);
     qtTable = quantidadeTabelas();
+	
+	
 
     char **tupla = (char **)malloc(sizeof(char **)*qtTable);
     memset(tupla, 0, qtTable);
@@ -816,8 +819,10 @@ int excluirTabela(char *nomeTabela) {
     strcpy(directory, connected.db_directory);
     strcat(directory, "fs_object.dat");
 
-    if((dicionario = fopen(directory,"a+b")) == NULL)
-        return ERRO_ABRIR_ARQUIVO;
+    if((dicionario = fopen(directory,"a+b")) == NULL) {
+        return ERRO_ABRIR_ARQUIVO;	
+	}
+	
 
     k=0;
     while(fgetc (dicionario) != EOF){
@@ -856,6 +861,7 @@ int excluirTabela(char *nomeTabela) {
         }
     }
 
+	
     free(tab2);
 
     tp_buffer *bufferpoll = initbuffer();

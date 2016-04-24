@@ -142,8 +142,7 @@ int createDB( const char *db_name ) {
 }
 
 void dropDatabase( const char *db_name ) {
-	FILE *DB;
-	int i;
+	FILE * DB = NULL;	
 	char vec_name 				[QTD_DB][TAMANHO_NOME_BANCO],
 		 vec_directory 			[QTD_DB][TAMANHO_NOME_BANCO],
 		 valid;
@@ -158,40 +157,40 @@ void dropDatabase( const char *db_name ) {
 		return;
     }
 
-    for(i=0; fgetc (DB) != EOF; i++) {
-    	fseek(DB, -1, 1);
+	int i;
+    for( i = 0; fgetc( DB ) != EOF; i++ ) {
+    	fseek( DB, -1, SEEK_CUR );
 
-    	fread(&valid			,sizeof(char), 			 1, DB);
-        fread(vec_name[i]  		,sizeof(char), TAMANHO_NOME_BANCO, DB);
-        fread(vec_directory[i] 	,sizeof(char), TAMANHO_NOME_BANCO, DB);
+    	fread( &valid, sizeof(char), 1, DB );
+        fread( vec_name[i], sizeof(char), TAMANHO_NOME_BANCO, DB );
+        fread( vec_directory[i], sizeof(char), TAMANHO_NOME_BANCO, DB );
 
-        if(objcmp(vec_name[i], db_name) == 0) {
-        	if(valid) {
+        if( objcmp( vec_name[i], db_name ) == 0 ) {
+        	if( valid ) {
 	        	valid = 0;
-	        	fseek(DB, ((TAMANHO_NOME_BANCO*2+1)*i), SEEK_SET); 	// posiciona o cabecote sobre o byte de validade
-	        	fwrite(&valid ,sizeof(char), 1, DB);			// do banco e apaga ele
+	        	fseek( DB, ( TAMANHO_NOME_BANCO * 2 + 1 ) * i, SEEK_SET ); 	// posiciona o cabecote sobre o byte de validade
+	        	fwrite( &valid, sizeof(char), 1, DB );			// do banco e apaga ele
 
 	        	char directory[TAMANHO_NOME_BANCO*2] = "rm data/";
-	        	strcat(directory, vec_directory[i]);
-	        	strcat(directory, " -R\0");
+	        	strcat( directory, vec_directory[i] );
+	        	strcat( directory, " -R\0" );
 
-	        	system(directory);
+	        	system( directory );
 
-	        	fclose(DB);
-	        	printf("DROP DATABASE\n");
+	        	fclose( DB );
+	        	printf( "DROP DATABASE\n" );
 	        	return;
 	        }
         }
     }
-    fclose(DB);
+    fclose( DB );
 
-    printf("ERROR: database does not exist\n");
+    printf( "ERROR: database does not exist\n" );
 
 }
 
 void showDB() {
-
-	FILE *DB;
+	FILE *DB = NULL;
 	int i, qtdDB=0;
 	char vec_name 				[QTD_DB][TAMANHO_NOME_BANCO],
 		 vec_directory 			[QTD_DB][TAMANHO_NOME_BANCO],

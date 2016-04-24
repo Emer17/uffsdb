@@ -50,9 +50,11 @@ dentro do banco "nautica", usei o comando \q. O terminal parece ficar esperando 
 
 
 4) Comando HELP( maiúsculo ) resulta em erro de sintaxe, quando help( minúsculo ) não. 
+/-----------------------------------------------------------------------------------------------------------------------------------------/
 	( CORRIGIDO! ): apenas foi alterado a linha 38 do arquivo lex.l
 		De: 	help 		return HELP;
 		Para:	(?i:HELP) 	return HELP;
+/-----------------------------------------------------------------------------------------------------------------------------------------/
 		
 5) Comando help e contributors resultam em modo operação não definida( OP_MODE == 0 )
 
@@ -117,3 +119,27 @@ WARNING: database name is too long, maximum number of characters allowed is 20
 /*o erro continua... só funciona com 18:*/
 teste=# create database a123456789b1234567; 
 CREATE DATABASE 
+
+9) Erro ao deletar tabela ou database não existente de nome gigante
+/-----------------------------------------------------------------------------------------------------------------------------------------/
+	CORRIGIDO: O erro estava na função objcmp() do arquivo misc.c
+		No caso, memória era alocada suficiente para o tamanho da macro TAMANHO_NOME_TABELA. Portanto, se algum nome maior fosse passado, 
+			a memória era escrita em um lugar não permitido.
+		Vale lembrar que a mesma função era usada para comparar nomes de banco, porém a macro TAMANHO_NOME_BANCO tem tamanho 20, 
+			e TAMANHO_NOME_TABELA tem tamanho 40, ou seja, memória desnecessária era alocada.
+		A solução foi simplesmente substituir a macro da função pelo tamanho específico de cada argumento, assim nenhuma memória desnecessária 
+			é alocada
+/-----------------------------------------------------------------------------------------------------------------------------------------/
+
+uffsdb=# DROP TABLE ffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+*** Error in `./UFFSDB': free(): invalid next size (fast): 0x00000000010263e0 ***
+Abortado
+
+Após isso, o programa se fecha sozinho
+
+	
+
+
+
+ 
+
