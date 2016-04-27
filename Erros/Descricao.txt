@@ -60,27 +60,22 @@ dentro do banco "nautica", usei o comando \q. O terminal parece ficar esperando 
 
 
 
-														6)erro ao inserir string em char
+														6)Não mostra erro ao inserir string em char
 
 
-create table testachar( 
-integer primary key,
-letra char 
-);
+create table testachar( cod integer primary key, letra char );
 
-insert into testachar (cod,letra) values (1,'II'); 
+insert into testachar values (1,'Abobrinha'); 
 
-/*mostra o erro:*/
-ERROR: column "letra" expect char.
-
-/*porem, se fizermos um select * from testachar, o resultado será:
+/* nao mostra nenhum erro, porem, se fizermos um select * from testachar, o resultado será:
 
 cod        | letra      
 ------------+------------
- 1          |           
+ 1          | A         
 
 (1 row) 
 
+* esta guardando só o primeiro caractere da string
 */
 
 														7)erros de tabela em funçao de nomes grandes
@@ -140,9 +135,26 @@ Abortado
 
 Após isso, o programa se fecha sozinho
 
-10) Erro ao criar tabela com nome gigante
 
 
+10)Digitar varias aspas simples seguidas resulta em erro... nao aparece mais uffsdb=# na tela e nenhum comando funciona.
+uffsdb=#'''''
+'''''
+aasa
+asasf
+asfsas
+asasf					/*terminal fica esperando comandos mas nao faz nada*/
+gsd
+
+
+
+para sair desse erro temos que digitar duas aspas simples (''). Vai mostrar na tela:
+ERROR: syntax error.
+
+
+11) depois de se conectar a um banco,digitar ;;;;;;;;;;;;;;;; resulta em:
+uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# 
+
+//printa o nome do banco tantas vezes quanto foi digitado ;
 
  
-
