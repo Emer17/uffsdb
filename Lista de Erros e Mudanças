@@ -43,13 +43,26 @@ Para clonar:
 		Para:	(?i:HELP) 	return HELP;
 		
 		
-		
+
 ***************************************************************************************************************/
-2) Erro ao deletar tabela ou database não existente de nome gigante ( Corrigido )
+2) Erro ao remover tabela não existente de nome gigante ( Corrigido )
 ***************************************************************************************************************/
 
-uffsdb=# DROP TABLE ffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-*** Error in `./UFFSDB': free(): invalid next size (fast): 0x00000000010263e0 ***
+DROP TABLE fffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+*** Error in `./uffsdb': free(): invalid next size (fast): 0x00000000007b14a0 ***
+Abortado
+
+	( CORRIGIDO ): 
+		> Um if foi colocado no início da função createTable(), para verificar se o tamanho do nome passado excede o máximo permitido
+		
+		
+		
+***************************************************************************************************************/
+3) Erro ao criar tabela de nome gigante ( Corrigido )
+***************************************************************************************************************/
+
+uffsdb=# CREATE TABLE ffffffffffffffffffffffffffffffffffffffffffffff( nome VARCHAR(12) );
+*** Error in `./uffsdb': malloc(): memory corruption: 0x0000000001ba7070 ***
 Abortado
 
 Após isso, o programa se fecha sozinho
@@ -95,7 +108,7 @@ Após isso, o programa se fecha sozinho
 
 
 **************************************************************************************************************/
-3) Não mostra erro/aviso ao inserir string em char ( CORRIGIDO )
+4) Não mostra erro/aviso ao inserir string em char ( CORRIGIDO )
 **************************************************************************************************************/
 
 create table testachar( cod integer primary key, letra char );
@@ -122,7 +135,7 @@ Função: 	insert()
 
 
 **************************************************************************************************************/
-4) Prompt aparece várias vezes na tela ( Não corrigido )
+5) Prompt aparece várias vezes na tela ( Não corrigido )
 **************************************************************************************************************/
 Ao copiar e colar as seguintes linhas no terminal:
 
@@ -143,7 +156,7 @@ CREATE TABLE
 
 
 **************************************************************************************************************/
-5) Prompt é exibido de acordo com a quantidade de ; ( Não corrigido )
+6) Prompt é exibido de acordo com a quantidade de ; ( Não corrigido )
 **************************************************************************************************************/
 Depois de se conectar a um banco, digitar ;;;;;;;;;;;;;;;; resulta em:
 
