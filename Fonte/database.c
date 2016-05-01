@@ -85,12 +85,13 @@ int createDB( const char *db_name ) {
 	            return 0;
 	        }
         }
-	
+/*	
 #ifdef DEBUG
 		printf( "Valido: %d\n", ( int )valid );
 		printf( "Nome do banco: %s\n", vec_name[ db_count ] );
 		printf( "Nome do diretorio: %s\n\n", vec_directory[ db_count ] );
 #endif	
+*/
     }
 
 

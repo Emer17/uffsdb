@@ -140,12 +140,6 @@ void help() {
 int objcmp( const char * obj, const char * str ) {	
 	size_t objSize = strlen( obj ) + 1;
 	size_t strSize = strlen( str ) + 1;
-	
-	/*
-	printf( "Tamanho da string %s: %d\n", obj, (int)strlen(obj) );
-	printf( "Tamanho obj: %d\n", (int)objSize );
-	printf( "Tamanho str: %d\n", (int)strSize );
-	*/
 		
 	char * object = NULL; 
 	char * string = NULL;		
@@ -198,27 +192,23 @@ void strncpylower(char *dest, char *src, int length) {
     Retorno:    INT(1 - Está contido, 0 - Não está)
    ---------------------------------------------------------------------------------------------*/
 
-int TrocaArquivosObj(char *nomeTabela, char *linha){
-    int x = 0;
-    char *tabela = (char *)malloc(sizeof(char) * TAMANHO_NOME_TABELA);
-
-    while(x < TAMANHO_NOME_TABELA){
-        tabela[x] = linha[x];
-        x++;
-    }
-
-    if(objcmp(tabela, nomeTabela) == 0){
-        return 1;
-    }
-
-    free(tabela);
-    return 0;
+int TrocaArquivosObj( char * nomeTabela, char * linha ) {
+	char tabela[ TAMANHO_NOME_TABELA ] = { '\0' };
+	strcpy( tabela, linha );	
+	return ( objcmp( tabela, nomeTabela ) == 0 )
+		? 1
+		: 0;
 }
-/////
-int pot10(int n) {
-    if(n == 0)
+
+int pot10( int n ) {
+	return ( n == 0 )
+		? 1
+		: 10 * pot10( n-1 );
+	/*
+    if( n == 0 )
         return 1;
     return 10 * pot10(n-1);
+	*/
 }
 
 int strtam(char n[]) {

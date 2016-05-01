@@ -1,0 +1,254 @@
+Nome dos integrantes:
+- André Luiz Maso
+- Eduardo Ogliari
+- Émerson Martins
+- João Ricardo Barp Neto
+	
+Repositório:
+  https://github.com/Emer17/uffsdb.git
+
+Para clonar:
+  git clone https://github.com/Emer17/uffsdb.git
+ 
+################################################################################################################|
+									             MUDANÇAS														|
+################################################################################################################| 
+> Agora é possível rodar scripts com o comando \i no terminal do uffsdb.
+	Sintaxe:
+		\i <nome_script>.sql
+
+	A extensão deve ser obrigatoriamente do tipo .sql, assim como esta deve ser incluída após o nome do arquivo
+	OBS: No momento apenas scripts que estão no mesmo diretório que o executável podem ser carregados.
+	
+> É possível conectar em um banco ao rodar o executável
+	Sintaxe:
+		./uffsdb -d <nome_do_banco>
+			
+	OBS: Se não for possível conectar no nome especificado, ele automaticamente conecta no banco padrão -- uffsdb
+	
+> Algumas outras mudanças incluem a adição do qualificador const em algumas funções, e a inicialização de algumas variáveis para NULL ou '\0' 
+
+
+
+################################################################################################################|
+									               ERROS   						                                |
+################################################################################################################|
+
+***************************************************************************************************************/
+1) Comando 'HELP' resulta em erro de sintaxe, enquanto 'help' não. ( Corrigido )
+***************************************************************************************************************/
+
+	( CORRIGIDO ): Apenas foi alterado a linha 38 do arquivo lex.l
+		De: 	help 		return HELP;
+		Para:	(?i:HELP) 	return HELP;
+		
+		
+		
+***************************************************************************************************************/
+2) Erro ao deletar tabela ou database não existente de nome gigante ( Corrigido )
+***************************************************************************************************************/
+
+uffsdb=# DROP TABLE ffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+*** Error in `./UFFSDB': free(): invalid next size (fast): 0x00000000010263e0 ***
+Abortado
+
+Após isso, o programa se fecha sozinho
+
+	( CORRIGIDO ): O erro estava na função objcmp() do arquivo misc.c
+		> No caso, memória era alocada suficiente para o tamanho da macro TAMANHO_NOME_TABELA. Portanto, se algum nome maior fosse passado, 
+			a memória era escrita em um lugar não permitido.		
+			
+		> Vale lembrar que a mesma função era usada para comparar nomes de banco, porém a macro TAMANHO_NOME_BANCO tem tamanho 20, 
+			e TAMANHO_NOME_TABELA tem tamanho 40, ou seja, memória desnecessária era alocada.			
+			
+		> A solução foi simplesmente substituir a macro pelo tamanho específico de cada argumento, assim nenhuma memória desnecessária 
+			é alocada
+			
+			
+			Nova versão de objcmp()
+				int objcmp( const char * obj, const char * str ) {	
+					size_t objSize = strlen( obj ) + 1;
+					size_t strSize = strlen( str ) + 1;
+		
+					char * object = NULL; 
+					char * string = NULL;		
+					object = (char *)malloc( sizeof(char) * objSize );
+					string = (char *)malloc( sizeof(char) * strSize );	
+					memset( object, '\0', objSize );
+					memset( string, '\0', strSize );
+
+					int i;
+					for( i = 0; i < objSize; i++ ) {
+						object[i] = tolower( obj[i] );
+					}	
+
+					for( i = 0; i < strSize; i++ ) {
+						string[i] = tolower( str[i] );
+					}
+
+					i = strcmp( object, string );
+					free( object );
+					free( string );
+	
+					return i;	 
+				}
+
+
+**************************************************************************************************************/
+3) Não mostra erro/aviso ao inserir string em char ( CORRIGIDO )
+**************************************************************************************************************/
+
+create table testachar( cod integer primary key, letra char );
+insert into testachar values (1,'Abobrinha'); 
+
+Não é exibido nenhum erro/aviso, e ao rodarmos o comando "select * from testachar", o resultado será:
+
+cod        | letra      
+------------+------------
+ 1          | A         
+
+(1 row) 
+
+> Não pode necessariamente ser considerado um "erro" -- pois o truncamento é intencional -- mas acreditamos que ao menos uma mensagem pudesse ser exibida.
+> Portanto, incluímos as seguinte linhas:
+
+Arquivo: 	sqlcommands.c
+Função: 	insert()
+	
+556:	printf( "\nWARNING: Attempted to write value of type \'string\' to attribute of type \'char\'.\n" );
+557:	printf( "String \'%s\' will be truncated to \'%c\'\n", s_insert->values[i], s_insert->values[i][0] );
+	
+
+
+
+**************************************************************************************************************/
+4) Prompt aparece várias vezes na tela ( Não corrigido )
+**************************************************************************************************************/
+Ao copiar e colar as seguintes linhas no terminal:
+
+create table classe(
+cod integer primary key,
+descr varchar(30)
+);
+
+O que irá aparecer na tela é:
+
+nautica=# create table classe(
+cod integer primary key,
+descr varchar(30)
+);nautica(# nautica(# nautica(# 
+CREATE TABLE
+
+> O erro provavelmente ocorre pois foram identificados vários '\n' após cada linha -- no caso 3 -- o que causou o prompt a aparecer várias vezes
+
+
+**************************************************************************************************************/
+5) Prompt é exibido de acordo com a quantidade de ; ( Não corrigido )
+**************************************************************************************************************/
+Depois de se conectar a um banco, digitar ;;;;;;;;;;;;;;;; resulta em:
+
+	uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# uffsdb=# 
+
+> Imprime o nome do banco tantas vezes quantos ; forem digitados
+
+
+
+
+################################################################################################################|
+					               ERROS VALGRIND ( Todos abaixo foram corrigidos )   							|
+################################################################################################################|
+
+/***************************************************************************************************************/		
+/*********** 20 bytes in 1 blocks are definitely lost in loss record 5 of 15 ***********************************/
+/***************************************************************************************************************/		
+Arquivo: 	misc.c
+Função: 	TrocaArquivosObj()
+
+De:
+	int x = 0;	
+    char *tabela = (char *)malloc(sizeof(char) * TAMANHO_NOME_TABELA);	
+	
+    while(x < TAMANHO_NOME_TABELA){
+        tabela[x] = linha[x];
+        x++;
+    }
+    if(objcmp(tabela, nomeTabela) == 0){
+        return 1;
+    }
+
+    free(tabela);
+    return 0;
+    
+Para:
+	char tabela[ TAMANHO_NOME_TABELA ] = { '\0' };
+	strcpy( tabela, linha );	
+	return ( objcmp( tabela, nomeTabela ) == 0 )
+		? 1
+		: 0;
+		
+> Não é necessário alocar memória dinâmicamente se o tamanho será sempre o mesmo.
+> Assim como não é necessário utilizar um laço para copiar caractere por caractere quando existe strcpy() para esse fim.
+
+
+/***************************************************************************************************************/		
+/*********** 120 bytes in 1 blocks are definitely lost in loss record 9 of 13 **********************************/
+/***************************************************************************************************************/		
+Arquivo: 	sqlcommands.c
+Função: 	excluirTabela()
+
+De:
+	tp_table *tab2 = (tp_table *)malloc( sizeof(struct tp_table) );
+    tab2 = procuraAtributoFK( objeto );
+	
+Para:
+	tp_table *tab2 = NULL;
+    tab2 = procuraAtributoFK( objeto );
+
+> Neste caso, memória era alocada para tab2, para na linha seguinte fazer a variável apontar para outro endereço de memória, sem liberar a anterior.
+> Em outras palavras, não era necessário alocar memória, pois tab2 apenas aponta para o endereço de retorno de procuraAtributoFK( objeto );
+
+
+/***************************************************************************************************************/		
+/*********** 240 bytes in 1 blocks are definitely lost in loss record 11 of 14 *********************************/
+/***************************************************************************************************************/
+Arquivo: 	sqlcommands.c
+Função: 	procuraSchemaArquivo()
+
+De:
+	tp_table *esquema = (tp_table *)malloc(sizeof(tp_table)*objeto.qtdCampos);
+	
+Para:
+	tp_table *esquema = (tp_table *)malloc(sizeof(tp_table)*objeto.qtdCampos);
+	...
+	free( esquema );
+	
+> Ou seja, a memória de esquema não estava sendo liberada em todos os lugares possíveis.
+
+
+/***************************************************************************************************************/	
+/*********** 56 (16 direct, 40 indirect) bytes in 1 blocks are definitely lost in loss record 6 of 12 **********/
+/***************************************************************************************************************/
+Arquivo: 	sqlcommands.c
+Função:		excluirTabela()
+
+De:
+	char ** tupla = (char **)malloc( sizeof(char **) * qtTable );
+	
+Para:
+	char ** tupla = (char **)malloc( sizeof(char **) * qtTable );
+	...
+	for( i = 0; i < qtTable; i++ ) {
+        free( tupla[i] );
+    }
+	free( tupla );
+	
+> Ou seja, a memória de tupla não estava sendo liberada em nenhum lugar
+
+
+
+
+
+
+
+
+

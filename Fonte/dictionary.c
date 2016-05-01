@@ -383,80 +383,80 @@ struct fs_objects leObjeto(char *nTabela){
 
     return objeto;
 }
-//
-// LEITURA DE DICIONARIO E ESQUEMA
-tp_table *leSchema (struct fs_objects objeto){
-    FILE *schema;
-    int i = 0, cod = 0;
-    char *tupla = (char *)malloc(sizeof(char)*TAMANHO_NOME_CAMPO);
-    memset(tupla, 0, TAMANHO_NOME_CAMPO);
-    char *tuplaT = (char *)malloc(sizeof(char)*TAMANHO_NOME_TABELA+1);
-    memset(tuplaT, 0, TAMANHO_NOME_TABELA+1);
 
-    tp_table *esquema = (tp_table *)malloc(sizeof(tp_table)*(objeto.qtdCampos+1)); // Aloca esquema com a quantidade de campos necessarios.
-    memset(esquema, 0, (objeto.qtdCampos+1)*sizeof(tp_table));
-    for (i = 0; i < objeto.qtdCampos+1; i++) {
+// LEITURA DE DICIONARIO E ESQUEMA
+tp_table * leSchema( struct fs_objects objeto ) {
+    FILE * schema = NULL;
+    int i = 0, cod = 0;
+    char * tupla = (char *)malloc( sizeof(char) * TAMANHO_NOME_CAMPO );
+    memset( tupla, 0, TAMANHO_NOME_CAMPO);
+    char * tuplaT = (char *)malloc( sizeof(char) * TAMANHO_NOME_TABELA+1 );
+    memset( tuplaT, 0, TAMANHO_NOME_TABELA+1 );
+
+	// Aloca esquema com a quantidade de campos necessarios.	
+    tp_table * esquema = malloc( sizeof(tp_table) * (objeto.qtdCampos+1) );
+	memset( esquema, 0, (objeto.qtdCampos+1) * sizeof(tp_table) );
+    for( i = 0; i < objeto.qtdCampos+1; i++ ) {
         esquema[i].next = NULL;
     }
 
-
-    i = 0;
-    if(esquema == NULL){
-        free(tupla);
-        free(tuplaT);
+    
+    if( esquema == NULL ) {
+        free( tupla );
+        free( tuplaT );		
         return ERRO_DE_ALOCACAO;
     }
 
     char directory[TAMANHO_NOME_BANCO*2];
-    strcpy(directory, connected.db_directory);
-    strcat(directory, "fs_schema.dat");
+    strcpy( directory, connected.db_directory );
+    strcat( directory, "fs_schema.dat" );
 
-    schema = fopen(directory, "a+b"); // Abre o arquivo de esquemas de tabelas.
+    schema = fopen( directory, "a+b" ); // Abre o arquivo de esquemas de tabelas.
 
-    if (schema == NULL){
-        free(tupla);
-        free(tuplaT);
-        free(esquema);
+    if( schema == NULL ) {
+        free( tupla );
+        free( tuplaT );
+        free( esquema );
         return ERRO_ABRIR_ESQUEMA;
     }
 
-    while((fgetc (schema) != EOF) && (i < objeto.qtdCampos)){ // Varre o arquivo ate encontrar todos os campos com o codigo da tabela.
-        fseek(schema, -1, 1);
+	i = 0;
+    while( ( fgetc(schema) != EOF ) && ( i < objeto.qtdCampos ) ) { // Varre o arquivo ate encontrar todos os campos com o codigo da tabela.
+        fseek( schema, -1, SEEK_CUR );
 
-        if(fread(&cod, sizeof(int), 1, schema)){ // Le o codigo da tabela.
-            if(cod == objeto.cod){ // Verifica se o campo a ser copiado e da tabela que esta na estrutura fs_objects.
+        if( fread( &cod, sizeof(int), 1, schema ) ) { // Le o codigo da tabela.
+            if( cod == objeto.cod ) { // Verifica se o campo a ser copiado e da tabela que esta na estrutura fs_objects.
+                fread( tupla, sizeof(char), TAMANHO_NOME_CAMPO, schema );
+                strcpylower( esquema[i].nome, tupla );                  // Copia dados do campo para o esquema.
 
-                fread(tupla, sizeof(char), TAMANHO_NOME_CAMPO, schema);
-                strcpylower(esquema[i].nome,tupla);                  // Copia dados do campo para o esquema.
+                fread( &esquema[i].tipo, sizeof(char), 1, schema );
+                fread( &esquema[i].tam, sizeof(int), 1, schema );
+                fread( &esquema[i].chave, sizeof(int), 1, schema );
 
-                fread(&esquema[i].tipo, sizeof(char),1,schema);
-                fread(&esquema[i].tam, sizeof(int),1,schema);
-                fread(&esquema[i].chave, sizeof(int),1,schema);
+                fread( tuplaT, sizeof(char), TAMANHO_NOME_TABELA, schema );
+                strcpylower( esquema[i].tabelaApt,tuplaT );
 
-                fread(tuplaT, sizeof(char), TAMANHO_NOME_TABELA, schema);
-                strcpylower(esquema[i].tabelaApt,tuplaT);
+                fread( tupla, sizeof(char), TAMANHO_NOME_CAMPO, schema );
+                strcpylower( esquema[i].attApt,tupla );
 
-                fread(tupla, sizeof(char), TAMANHO_NOME_CAMPO, schema);
-                strcpylower(esquema[i].attApt,tupla);
-
-                if (i > 0)
-                    esquema[i-1].next = &esquema[i];
+                if( i > 0 ) {
+                    esquema[i-1].next = &esquema[i];					
+				}
 
                 i++;
             } else {
-                fseek(schema, 109, 1); // Pula a quantidade de caracteres para a proxima verificacao (40B do nome, 1B do tipo e 4B do tamanho,4B da chave, 20B do nome da Tabela Apontada e 40B do atributo apontado).
+                fseek( schema, 109, SEEK_CUR ); // Pula a quantidade de caracteres para a proxima verificacao (40B do nome, 1B do tipo e 4B do tamanho,4B da chave, 20B do nome da Tabela Apontada e 40B do atributo apontado).
             }
         }
     }
-    esquema[i].next = NULL;
+    esquema[i].next = NULL;	
 
-    free(tupla);
-    free(tuplaT);
-    fclose(schema);
-
+    free( tupla );
+    free( tuplaT );
+    fclose( schema );
     return esquema;
 }
-////
+
 int tamTupla(tp_table *esquema, struct fs_objects objeto) {// Retorna o tamanho total da tupla da tabela.
 
     int qtdCampos = objeto.qtdCampos, i, tamanhoGeral = 0;
@@ -523,9 +523,9 @@ table * adicionaCampo( table * t, tp_table * t2 ) {
         for( aux = t->esquema; aux != NULL; aux = aux->next ) { // Anda até o final da estrutura de campos.
             if( aux->next == NULL ) { // Adiciona um campo no final.				
                 e = (tp_table *)malloc( sizeof(tp_table ) );				
-                memset( e, 0, sizeof(*e) );				
+                memset( e, 0, sizeof(tp_table) );
 
-                if( e == NULL ) {
+                if( e == NULL ) {					
                     return ERRO_DE_ALOCACAO;
                 }
 
@@ -543,7 +543,7 @@ table * adicionaCampo( table * t, tp_table * t2 ) {
 
                 strcpylower( e->tabelaApt, t2->tabelaApt ); //Copia a Tabela Refenciada da FK de chave passado para o esquema;
                 strcpylower( e->attApt, t2->attApt ); //Copia o Atributo Refenciado da FK de chave passado para o esquema
-                aux->next = e; // Faz o campo anterior apontar para o campo inserido.
+                aux->next = e; // Faz o campo anterior apontar para o campo inserido.								
                 return t;
             }
         }

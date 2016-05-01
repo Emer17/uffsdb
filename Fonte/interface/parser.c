@@ -30,23 +30,24 @@ rc_insert GLOBAL_DATA;
  */
 rc_parser GLOBAL_PARSER;
 
-void connect( const char *nome ) {
+int connect( const char *nome ) {
     int r;
     r = connectDB( nome );
 	if ( r == SUCCESS ) {
         connected.db_name = malloc( sizeof(char) * ( strlen(nome) + 1 ) );
-
         strcpylower( connected.db_name, nome );
-
         connected.conn_active = 1;
         printf( "You are now connected to database \"%s\" as user \"uffsdb\".\n", nome );
+		return 1;
     } else {
     	printf( "ERROR: Failed to establish connection with database named \"%s\". (Error code: %d)\n", nome, r );
+		return 0;
     }
 }
 
 void invalidCommand( const char *command ) {
     printf( "ERROR: Invalid command '%s'. Type \"help\" for help.\n", command );
+	GLOBAL_PARSER.consoleFlag = 0;
 }
 
 void notConnected() {
@@ -269,7 +270,11 @@ void interface( int argc, char **argv ) {
 		// Conecta automaticamente no banco padrão caso nenhum nome tenha sido passado
 		connect( "uffsdb" ); 
 	} else {
-		connect( options.db_name );
+		if( !connect( options.db_name ) ) {
+			// Caso o banco de nome 'options.db_name' não exista, conecta no banco padrão.
+			printf( "Conectando ao banco padrão...\n\n" );
+			connect( "uffsdb" ); 
+		}
 	}    
 	
 	printf( "uffsdb (15.1).\nType \"help\" for help.\n\n" );
@@ -362,9 +367,8 @@ void interface( int argc, char **argv ) {
             pthread_join( pth, NULL );
         }
 		
-		// getchar();
-    }
-    
+    }    
+	
 }
 
 FILE * loadScript( char * scriptPath ) {
@@ -372,18 +376,21 @@ FILE * loadScript( char * scriptPath ) {
 		printf( "ERRO: Nenhum caminho para o script foi especificado!" );
 		return NULL;
 	}		
-	scriptPath += 3;
-	char * path = malloc( sizeof( char ) * strlen(scriptPath) - 2 );
-	strcpy( path, scriptPath );	
-	char * dot = strchr( path, '.' );	
+	//scriptPath += 3;
+	//char * path = malloc( sizeof( char ) * strlen(scriptPath) - 2 );
+	//strcpy( path, scriptPath );	
+	char * dot = strchr( scriptPath, '.' );	
+	scriptPath = strchr( scriptPath, ' ' );
+	scriptPath++;	
+	
 	if( strcmp( dot, ".sql" ) != 0 ) {
 		puts( "ERRO: Script nao possui extensao .sql" );
 		return NULL;
 	}	
 	
-	FILE * script = fopen( path, "r" );	
+	FILE * script = fopen( scriptPath, "r" );	
 	if( script == NULL ) {
-		printf( "ERRO: Nao foi possivel abrir o arquivo %s\n", path );
+		printf( "ERRO: Nao foi possivel abrir o arquivo %s\n", scriptPath );
 	}	
 	return script;	
 }

@@ -521,7 +521,7 @@ int finalizaInsert(char *nome, column *c){
 /* insert: Recebe uma estrutura rc_insert e valida os tokens encontrados pela interface().
  *         Se os valores forem válidos, insere um novo valor.
  */
-void insert(rc_insert *s_insert) {
+void insert( rc_insert * s_insert ) {
 	int i;
 	table *tabela = (table *)malloc(sizeof(table));
 	tabela->esquema = NULL;
@@ -542,7 +542,7 @@ void insert(rc_insert *s_insert) {
 					colunas = insereValor(tabela, colunas, esquema->nome, getInsertedValue(s_insert, esquema->nome, tabela));
 				} else {
 					printf("ERROR: data type invalid to column '%s' of relation '%s' (expected: %c, received: %c).\n", esquema->nome, tabela->nome, esquema->tipo, getInsertedType(s_insert, esquema->nome, tabela));
-					flag=1;
+					flag = 1;
 				}
 			}
 		} else {
@@ -553,6 +553,8 @@ void insert(rc_insert *s_insert) {
 			for(i=0; i < objeto.qtdCampos; i++) {
 
 				if(s_insert->type[i] == 'S' && tabela->esquema[i].tipo == 'C') {
+					printf( "\nWARNING: Attempted to write value of type \'string\' to attribute of type \'char\'.\n" );
+					printf( "String \'%s\' will be truncated to \'%c\'\n", s_insert->values[i], s_insert->values[i][0] );
 					s_insert->values[i][1] = '\0';
 					s_insert->type[i] = 'C';
 				}
@@ -562,22 +564,24 @@ void insert(rc_insert *s_insert) {
 					s_insert->type[i] = 'D';
 				}
 
-				if(s_insert->type[i] == tabela->esquema[i].tipo)
+				if(s_insert->type[i] == tabela->esquema[i].tipo) {
 					colunas = insereValor(tabela, colunas, tabela->esquema[i].nome, s_insert->values[i]);
-				else {
+				} else {
 					printf("ERROR: data type invalid to column '%s' of relation '%s' (expected: %c, received: %c).\n", tabela->esquema[i].nome, tabela->nome, tabela->esquema[i].tipo, s_insert->type[i]);
 					flag=1;
 				}
 			}
 		} else {
-			printf("ERROR: INSERT has more expressions than target columns.\n");
+			printf( "ERROR: INSERT has more expressions than target columns.\n" );
 			flag = 1;
 		}
 	}
 
-	if (!flag)
-		if (finalizaInsert(s_insert->objName, colunas) == SUCCESS)
-			printf("INSERT 0 1\n");
+	if( !flag ) {
+		if( finalizaInsert(s_insert->objName, colunas) == SUCCESS ) {
+			printf( "INSERT 0 1\n" );
+		}
+	}
 
 	//freeTp_table(&esquema, objeto.qtdCampos);
 	free(esquema);
@@ -681,67 +685,67 @@ void imprime(char nomeTabela[]) {
                 ERRO_REMOVER_ARQUIVO_SCHEMA
    ---------------------------------------------------------------------------------------------*/
 
-int procuraSchemaArquivo(struct fs_objects objeto){
-
-    FILE *schema, *newSchema;
+int procuraSchemaArquivo( struct fs_objects objeto ) {
+    FILE * schema = NULL; 
+	FILE * newSchema = NULL;
     int cod = 0;
-    char *tupla = (char *)malloc(sizeof(char) * 109);
-    memset(tupla, '\0', 109);
+    char * tupla = (char *)malloc( sizeof(char) * 109 );
+    memset( tupla, '\0', 109 );
 
-    tp_table *esquema = (tp_table *)malloc(sizeof(tp_table)*objeto.qtdCampos);
-    memset(esquema, 0, sizeof(tp_table)*objeto.qtdCampos);
+    tp_table * esquema = (tp_table *)malloc( sizeof(tp_table) * objeto.qtdCampos );
+    memset( esquema, 0, sizeof(tp_table) * objeto.qtdCampos );
 
-    char directory[TAMANHO_NOME_BANCO*2];
-    memset(&directory, '\0', TAMANHO_NOME_BANCO*2);
+    char directory[TAMANHO_NOME_BANCO*2] = { '\0' };
+    memset( &directory, '\0', TAMANHO_NOME_BANCO*2 );
 
-    strcpy(directory, connected.db_directory);
-    strcat(directory, "fs_schema.dat");
+    strcpy( directory, connected.db_directory );
+    strcat( directory, "fs_schema.dat" );
 
-    if((schema = fopen(directory, "a+b")) == NULL) {
-        free(tupla);
+    if( (schema = fopen( directory, "a+b") ) == NULL ) {
+        free( tupla );
+		free( esquema );
         return ERRO_REMOVER_ARQUIVO_SCHEMA;
     }
 
-    strcpy(directory, connected.db_directory);
-    strcat(directory, "fs_nschema.dat");
+    strcpy( directory, connected.db_directory );
+    strcat( directory, "fs_nschema.dat" );
 
-    if((newSchema = fopen(directory, "a+b")) == NULL) {
+    if( (newSchema = fopen( directory, "a+b") ) == NULL ) {
         free(tupla);
+		free( esquema );
         return ERRO_REMOVER_ARQUIVO_SCHEMA;
     }
 
-    fseek(newSchema, 0, SEEK_SET);
+    fseek( newSchema, 0, SEEK_SET );
 
-    while((fgetc (schema) != EOF)){ // Varre o arquivo ate encontrar todos os campos com o codigo da tabela.
-        fseek(schema, -1, 1);
-        fseek(newSchema, 0, SEEK_END);
+    while( (fgetc( schema ) != EOF) ) { // Varre o arquivo ate encontrar todos os campos com o codigo da tabela.
+        fseek( schema, -1, SEEK_CUR );
+        fseek( newSchema, 0, SEEK_END );
 
-        if(fread(&cod, sizeof(int), 1, schema)){ // Le o codigo da tabela.
-            if(cod != objeto.cod){
-                fwrite(&cod, sizeof(int), 1, newSchema);
+        if( fread(&cod, sizeof(int), 1, schema) ) { // Le o codigo da tabela.
+            if( cod != objeto.cod ) {
+                fwrite( &cod, sizeof(int), 1, newSchema );
+                fread( tupla, sizeof(char), TAMANHO_NOME_CAMPO, schema );
+                strcpylower( esquema[0].nome,tupla ); // Copia dados do campo para o esquema.
+                fwrite( tupla, sizeof(char), TAMANHO_NOME_CAMPO, newSchema );
 
-                fread(tupla, sizeof(char), TAMANHO_NOME_CAMPO, schema);
-                strcpylower(esquema[0].nome,tupla);                  // Copia dados do campo para o esquema.
-                fwrite(tupla, sizeof(char), TAMANHO_NOME_CAMPO, newSchema);
+                fread( &esquema[0].tipo , sizeof(char), 1 , schema );
+                fread( &esquema[0].tam  , sizeof(int) , 1 , schema );
+                fread( &esquema[0].chave, sizeof(int) , 1 , schema );
 
-                fread(&esquema[0].tipo , sizeof(char), 1 , schema);
-                fread(&esquema[0].tam  , sizeof(int) , 1 , schema);
-                fread(&esquema[0].chave, sizeof(int) , 1 , schema);
+                fwrite( &esquema[0].tipo , sizeof(char), 1, newSchema );
+                fwrite( &esquema[0].tam  , sizeof(int) , 1, newSchema );
+                fwrite( &esquema[0].chave, sizeof(int) , 1, newSchema );
 
-                fwrite(&esquema[0].tipo , sizeof(char), 1, newSchema);
-                fwrite(&esquema[0].tam  , sizeof(int) , 1, newSchema);
-                fwrite(&esquema[0].chave, sizeof(int) , 1, newSchema);
+                fread( tupla, sizeof(char), TAMANHO_NOME_TABELA, schema );
+                strcpylower( esquema[0].tabelaApt,tupla );
+                fwrite( &esquema[0].tabelaApt, sizeof(char), TAMANHO_NOME_TABELA, newSchema );
 
-                fread(tupla, sizeof(char), TAMANHO_NOME_TABELA, schema);
-                strcpylower(esquema[0].tabelaApt,tupla);
-                fwrite(&esquema[0].tabelaApt, sizeof(char), TAMANHO_NOME_TABELA, newSchema);
-
-                fread(tupla, sizeof(char), TAMANHO_NOME_CAMPO, schema);
-                strcpylower(esquema[0].attApt,tupla);
-                fwrite(&esquema[0].attApt, sizeof(char), TAMANHO_NOME_CAMPO, newSchema);
-
+                fread( tupla, sizeof(char), TAMANHO_NOME_CAMPO, schema );
+                strcpylower( esquema[0].attApt,tupla );
+                fwrite( &esquema[0].attApt, sizeof(char), TAMANHO_NOME_CAMPO, newSchema );
             } else {
-                fseek(schema, 109, 1);
+                fseek( schema, 109, 1 );
             }
         }
     }
@@ -749,22 +753,22 @@ int procuraSchemaArquivo(struct fs_objects objeto){
     fclose(newSchema);
     fclose(schema);
 
-    char directoryex[TAMANHO_NOME_BANCO*4];
-    memset(&directoryex, '\0', TAMANHO_NOME_BANCO*4);
-    strcpy(directoryex, connected.db_directory);
-    strcat(directoryex, "fs_schema.dat");
+    char directoryex[TAMANHO_NOME_BANCO*4] = { '\0' };
+    memset( &directoryex, '\0', TAMANHO_NOME_BANCO*4 );
+    strcpy( directoryex, connected.db_directory );
+    strcat( directoryex, "fs_schema.dat" );
 
-    remove(directoryex);
-
-    strcpy(directoryex, "mv ");
-    strcat(directoryex, connected.db_directory);
-    strcat(directoryex, "fs_nschema.dat ");
-    strcat(directoryex, connected.db_directory);
-    strcat(directoryex, "fs_schema.dat");
-
-    system(directoryex);
-
-    free(tupla);
+    remove( directoryex );
+    strcpy( directoryex, "mv " );
+    strcat( directoryex, connected.db_directory );
+    strcat( directoryex, "fs_nschema.dat " );
+    strcat( directoryex, connected.db_directory );
+    strcat( directoryex, "fs_schema.dat" );
+    system( directoryex );
+	
+	free( esquema );
+    free( tupla );
+	
     return SUCCESS;
 }
 
@@ -808,7 +812,7 @@ int excluirTabela( char * nomeTabela ) {
         memset(tupla[i], '\0', TAMANHO_NOME_TABELA);
     }
 
-    tp_table *tab2 = (tp_table *)malloc( sizeof(struct tp_table) );
+    tp_table *tab2 = NULL; //(tp_table *)malloc( sizeof(struct tp_table) );
     tab2 = procuraAtributoFK( objeto );   //retorna o tipo de chave que e cada campo
 
     FILE * dicionario = NULL;
@@ -820,6 +824,7 @@ int excluirTabela( char * nomeTabela ) {
     strcat(directory, "fs_object.dat");
 
     if((dicionario = fopen(directory,"a+b")) == NULL) {
+		free( tab2 );
         return ERRO_ABRIR_ARQUIVO;	
 	}
 	
@@ -832,7 +837,7 @@ int excluirTabela( char * nomeTabela ) {
         fread(tupla[k], sizeof(char), TAMANHO_NOME_TABELA , dicionario);
         k++;
 
-        fseek(dicionario, 28, 1);
+        fseek( dicionario, 28, SEEK_CUR );
     }
 
     fclose(dicionario);
@@ -861,13 +866,16 @@ int excluirTabela( char * nomeTabela ) {
         }
     }
 
+	free( tab2 );
+	for( i = 0; i < qtTable; i++ ) {
+        free( tupla[i] );
+    }
+	free( tupla );
 	
-    free(tab2);
-
     tp_buffer * bufferpoll = initbuffer();
 
     if( bufferpoll == ERRO_DE_ALOCACAO ) {
-        printf( "ERROR: no memory available to allocate buffer.\n" );
+        printf( "ERROR: no memory available to allocate buffer.\n" );		
         return ERRO_LEITURA_DADOS;
     }
 
@@ -876,20 +884,20 @@ int excluirTabela( char * nomeTabela ) {
         erro = colocaTuplaBuffer(bufferpoll, x, esquema, objeto);
 
     if(procuraSchemaArquivo(objeto) != 0) {
-        free(bufferpoll);
+        free(bufferpoll);		
         return ERRO_REMOVER_ARQUIVO_SCHEMA;
     }
 
     if(procuraObjectArquivo(nomeTabela) != 0) {
-        free(bufferpoll);
+        free(bufferpoll);		
         return ERRO_REMOVER_ARQUIVO_OBJECT;
     }
 
    	strcpy(directory, connected.db_directory);
     strcat(directory, str);
 
-    remove(directory);
-    free(bufferpoll);
+    remove( directory );
+    free( bufferpoll );	
 
     printf("DROP TABLE\n");
 

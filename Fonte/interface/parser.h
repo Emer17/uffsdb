@@ -43,10 +43,11 @@ void invalidCommand( const char *command );
  */
 void notConnected( void );
 
-/* Estabelece a conexão com uma base de dados. Se conectar,
- * define os parâmetros globais para a exibição do console.
+/* Estabelece a conexão com uma base de dados. 
+ * Se conectar, define os parâmetros globais para a exibição do console 
+ * e retorna 1. Caso contrário, retorna 0.
  */
-void connect( const char *nome );
+int connect( const char *nome );
 
 
 /* Define o nome do banco de dados ou da tabela identificado
