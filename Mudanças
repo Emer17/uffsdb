@@ -1,8 +1,0 @@
-Mudanças realizadas:
-
-misc.c
-	função objcmp: parâmetros receberam qualificador const( pois não são alterados dentro da função )
-
-uffsdb.c
-
-database.c
