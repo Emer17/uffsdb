@@ -176,7 +176,7 @@ void strcpylower( char *dest, const char *src ) {
 	*dest = '\0';
 }
 
-void strncpylower(char *dest, char *src, int length) {
+void strncpylower( char *dest, char *src, int length ) {
 	int i = 0;
 	while (i < length) {
 		if (src[i] == '\0') break;

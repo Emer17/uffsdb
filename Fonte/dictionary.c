@@ -493,7 +493,7 @@ table * adicionaCampo( table * t, tp_table * t2 ) {
     tp_table * aux = NULL;	
     if( t->esquema == NULL ) { // Se o campo for o primeiro a ser adicionado, adiciona campo no esquema.
 		
-        e = (tp_table *)malloc( sizeof(tp_table ) );
+        e = (tp_table *)malloc( sizeof( tp_table ) );
         memset( e, 0, sizeof(tp_table) );		
 		
         if( e == NULL ) {
@@ -504,7 +504,7 @@ table * adicionaCampo( table * t, tp_table * t2 ) {
 
         if( n > TAMANHO_NOME_CAMPO ) {
             n = TAMANHO_NOME_CAMPO;
-        }
+        }		
 
         strncpylower( e->nome, t2->nome, n ); // Copia nome do campo passado para o esquema
         e->tipo 	= t2->tipo; // Copia tipo do campo passado para o esquema

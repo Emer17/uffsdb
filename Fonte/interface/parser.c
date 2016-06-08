@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
+//#include <pthread.h>
 #ifndef FMACROS
    #include "../macros.h"
 #endif
@@ -107,10 +107,10 @@ void setColumnCreate( char **nome ) {
     GLOBAL_DATA.fkTable[GLOBAL_PARSER.col_count] = malloc( sizeof(char) );
     GLOBAL_DATA.fkColumn[GLOBAL_PARSER.col_count] = malloc( sizeof(char) );
     GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count] = malloc( sizeof(char) * (strlen(*nome)+1) );
+	
+	strcpylower( GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count], *nome );
 
-    strcpylower( GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count], *nome );
-
-    GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count][strlen(*nome)] = '\0';
+    GLOBAL_DATA.columnName[GLOBAL_PARSER.col_count][strlen(*nome)] = '\0';	
     GLOBAL_DATA.type[GLOBAL_PARSER.col_count] = 0;
     GLOBAL_DATA.attribute[GLOBAL_PARSER.col_count] = NPK;
 
@@ -183,7 +183,24 @@ void clearGlobalStructs() {
 
     free( GLOBAL_DATA.fkColumn );
     GLOBAL_DATA.fkColumn = NULL;
-
+		
+	//MUDAR TUDO ISTO
+	if( GLOBAL_DATA.selColumn != NULL ) {
+		i = 0;
+		while( i < QTD_COLUNAS_PROJ ) {
+			free( GLOBAL_DATA.selColumn[i] );
+			++i;
+		}
+		free( GLOBAL_DATA.selColumn );
+	}		
+	
+	GLOBAL_DATA.selColumn = NULL;
+	GLOBAL_DATA.selColumn = malloc( sizeof( char * ) * QTD_COLUNAS_PROJ );
+	for( i = 0; i < QTD_COLUNAS_PROJ; ++i ) {
+		GLOBAL_DATA.selColumn[i] = malloc( sizeof( char ) * TAMANHO_NOME_CAMPO );
+		GLOBAL_DATA.selColumn[i][0] = '\0';
+	}
+	// ATE AQUI( e considerar nao dar free() em tudo )
     free( GLOBAL_DATA.type );
     GLOBAL_DATA.type = (char *)malloc( sizeof(char) );
 
@@ -214,9 +231,10 @@ void setMode( const char mode ) {
 }
 
 void interface( int argc, char **argv ) {
-    pthread_t pth;
-    pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
-    pthread_join( pth, NULL );
+    //pthread_t pth;
+    //pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
+    //pthread_join( pth, NULL );
+	clearGlobalStructs();
 	
 	struct db_options options;
 	options.db_name = NULL;
@@ -277,7 +295,7 @@ void interface( int argc, char **argv ) {
 		}
 	}    
 	
-	printf( "uffsdb (15.1).\nType \"help\" for help.\n\n" );
+	printf( "uffsdb (15.1).\nType \"help\" for help.\n\n" );	
 
     while( 1 ) {
         if( !connected.conn_active ) {
@@ -286,8 +304,9 @@ void interface( int argc, char **argv ) {
             printf( "%s=# ", connected.db_name );
         }
 
-        pthread_create( &pth, NULL, (void*)yyparse, &GLOBAL_PARSER );
-        pthread_join( pth, NULL );
+        //pthread_create( &pth, NULL, (void*)yyparse, &GLOBAL_PARSER );
+        //pthread_join( pth, NULL );
+		yyparse();		
 
         if( !GLOBAL_PARSER.error ) {
             if ( GLOBAL_PARSER.mode != OP_INVALID ) {
@@ -301,10 +320,19 @@ void interface( int argc, char **argv ) {
                             } else {
                                 printf( "WARNING: Nothing to be inserted. Command ignored.\n" );								
 							}
-                            break;
-                        case OP_SELECT_ALL:
-                            imprime( GLOBAL_DATA.objName );
-                            break;
+                            break;                        
+						case OP_SELECT:
+							#ifdef UFFS_DEBUG
+								puts( "SELECT" );
+								int i = 0;
+								while( i < GLOBAL_DATA.N ) {
+									printf( "Valor: %s\n", GLOBAL_DATA.selColumn[i] );
+									++i;
+								}
+							#endif
+							
+							
+							break;
                         case OP_CREATE_TABLE:
                             createTable( &GLOBAL_DATA );
                             break;
@@ -358,13 +386,17 @@ void interface( int argc, char **argv ) {
             }
 						
 			printf( "ERROR: syntax error.\n" );							
-            GLOBAL_PARSER.error = 0;
+            //GLOBAL_PARSER.error = 0;
+			// Esta linha foi movida para baixo, para que as variaveis globais fossem limpas 
+			//  em caso de erro. Foi adicionado a linha GLOBAL_PARSER.error == 1 abaixo tambem
         }
 
 		
-        if ( GLOBAL_PARSER.mode != OP_INVALID || GLOBAL_PARSER.endOfFile ) {
-            pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
-            pthread_join( pth, NULL );
+        if ( GLOBAL_PARSER.mode != OP_INVALID || GLOBAL_PARSER.endOfFile || GLOBAL_PARSER.error == 1 ) {
+            //pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
+            //pthread_join( pth, NULL );
+			clearGlobalStructs();
+			GLOBAL_PARSER.error = 0;
         }
 		
     }    

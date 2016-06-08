@@ -589,43 +589,41 @@ void insert( rc_insert * s_insert ) {
 	freeTable(tabela);
 }
 
-
-///////////////
-void imprime(char nomeTabela[]) {
-
-    int j,erro, x, p, cont=0;
+// Tentar utilizar ssel para impressão de tabelas que nao cabem na tela
+void imprime( const char nomeTabela[] ) {
+    int j = 0, erro = 0, x = 0;
     struct fs_objects objeto;
 
-    if(!verificaNomeTabela(nomeTabela)){
+    if( !verificaNomeTabela(nomeTabela) ){
         printf("\nERROR: relation \"%s\" was not found.\n\n\n", nomeTabela);
         return;
     }
 
-    objeto = leObjeto(nomeTabela);
+    objeto = leObjeto( nomeTabela );
+    tp_table * esquema = leSchema(objeto);
 
-    tp_table *esquema = leSchema(objeto);
-
-    if(esquema == ERRO_ABRIR_ESQUEMA){
-        printf("ERROR: schema cannot be created.\n");
+    if( esquema == ERRO_ABRIR_ESQUEMA ){
+        printf( "ERROR: schema cannot be created.\n" );
         free(esquema);
         return;
     }
 
-    tp_buffer *bufferpoll = initbuffer();
+    tp_buffer * bufferpoll = initbuffer();
 
-    if(bufferpoll == ERRO_DE_ALOCACAO){
-        free(bufferpoll);
-        free(esquema);
-        printf("ERROR: no memory available to allocate buffer.\n");
+    if( bufferpoll == ERRO_DE_ALOCACAO ){
+        free( bufferpoll );
+        free( esquema );
+        printf( "ERROR: no memory available to allocate buffer.\n" );
         return;
     }
 
     erro = SUCCESS;
-    for(x = 0; erro == SUCCESS; x++)
+    for(x = 0; erro == SUCCESS; x++) {
         erro = colocaTuplaBuffer(bufferpoll, x, esquema, objeto);
-
-    int ntuples = --x;
-	p = 0;
+	}
+	
+    int ntuples = --x;	
+	int cont = 0, p = 0;
 	while(x){
 	    column *pagina = getPage(bufferpoll, esquema, objeto, p);
 	    if(pagina == ERRO_PARAMETRO){
@@ -635,23 +633,34 @@ void imprime(char nomeTabela[]) {
             return;
 	    }
 
-	    if(!cont) {
+		// Começa a imprimir o cabeçario da tabela( nome das colunas )
+	    if( !cont ) {
 	        for(j=0; j < objeto.qtdCampos; j++){
-	            if(pagina[j].tipoCampo == 'S')
+	            if(pagina[j].tipoCampo == 'S') {
 	                printf(" %-20s ", pagina[j].nomeCampo);
-	        	else
-	                printf(" %-10s ", pagina[j].nomeCampo);
-	            if(j<objeto.qtdCampos-1)
-	            	printf("|");
+	        	} else {
+	                printf(" %-10s ", pagina[j].nomeCampo);					
+				}
+				
+	            if( j < objeto.qtdCampos-1 ) {
+					printf("|");
+				}
 	        }
 	        printf("\n");
-	        for(j=0; j < objeto.qtdCampos; j++){
-	            printf("%s",(pagina[j].tipoCampo == 'S')? "----------------------": "------------");
-	            if(j<objeto.qtdCampos-1)
-	            	printf("+");
+	        for( j=0; j < objeto.qtdCampos; j++ ){
+	            printf( "%s",( pagina[j].tipoCampo == 'S' )
+					? "----------------------"
+					: "------------" 
+				);
+				
+	            if( j<objeto.qtdCampos-1 ) {
+	            	printf( "+" );
+				}				
 	        }
 	        printf("\n");
 	    }
+		// Termina de imprimir cabeçario da tabela
+		
 	    cont++;
 		for(j=0; j < objeto.qtdCampos*bufferpoll[p].nrec; j++){
         	if(pagina[j].tipoCampo == 'S')
@@ -670,7 +679,7 @@ void imprime(char nomeTabela[]) {
         	else
         		printf("|");
     	}
-    	x-=bufferpoll[p++].nrec;
+    	x -= bufferpoll[p++].nrec;
     }
     printf("\n(%d %s)\n\n",ntuples,(1>=ntuples)?"row": "rows");
 
@@ -949,12 +958,12 @@ void createTable( rc_insert * t ) {
         return;
     }
 	
-    int i;
-	int size = 0;
+    int i;	
+	int size = 0;	
     for( i = 0; i < t->N; i++ ) {		
 		
-    	if (t->type[i] == 'S') {
-    		size = atoi(t->values[i]);
+    	if (t->type[i] == 'S') {   					
+			size = atoi(t->values[i]);							
 		} else if (t->type[i] == 'I') {
     		size = sizeof(int);
     	} else if (t->type[i] == 'D') {
@@ -971,14 +980,27 @@ void createTable( rc_insert * t ) {
     		strcpy( fkColumn, "" );
     	}
 				
-		tp_table * temp = malloc( sizeof( tp_table ) );		
-		strcpy( temp->nome, t->columnName[i] );
+		tp_table * temp = malloc( sizeof( tp_table ) );
+		int tamanho = strlen( t->columnName[i] ) + 1;
+		char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };
+		
+		// Se o tamanho do nome do campo for muito grande, o mesmo é truncado
+		if( tamanho > TAMANHO_NOME_CAMPO ) {			
+			strncpy( nomeCampo, t->columnName[i], TAMANHO_NOME_CAMPO-1 );
+			nomeCampo[TAMANHO_NOME_CAMPO] = '\0';
+			printf( "WARNING: identificador %s sera truncado para %s\n", t->columnName[i], nomeCampo );			
+		} else {
+			strcpy( nomeCampo, t->columnName[i] );
+		}
+		
+		strcpy( temp->nome, nomeCampo );
 		temp->tipo 	= t->type[i];
 		temp->tam 	= size;
 		temp->chave = t->attribute[i];
 		strcpy( temp->tabelaApt, fkTable );
 		strcpy( temp->attApt, fkColumn );
 		temp->next 	= NULL;		
+		
         tab = adicionaCampo( tab, temp );
 		
 		free( temp );

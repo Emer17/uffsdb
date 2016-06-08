@@ -86,21 +86,41 @@ editor: EDITOR {
 		while( fgets( editorPath[i], 256, pathPointer ) != NULL ) {
 			printf( "Caminho e: %s\n", editorPath[i] );
 		}
-		cmd [6] = '\0';
+		cmd[6] = '\0'; // tamanho da string  'which '
 		pclose(pathPointer);
 		pathPointer = NULL;
 		i++;
 	}
 	
-	i = 0;
+	i = 0; 
+	int j = 0;
+	int opcao = 1;
+	char editoresDisponiveis[4][256] = { {0} };
+	
 	if( editorPath[0][0] != '\0' ) {
 		puts( "Os seguintes editores foram detectados:" );
 		while( i < 4 ) {
 			if( editorPath[i][0] != '\0' ) {
-				printf( "%d. %s\n", i+1, editorPath[i] );
-				i++;
-			}			
+				printf( "%d. %s\n", opcao, editorNames[i] );
+				strcpy( editoresDisponiveis[j], editorPath[i] );
+				j++;
+				opcao++;
+			}	
+			i++;		
 		}
+	} else {
+		return 0;
+	}
+	
+	int o = 0;
+	scanf( "%d", &o );
+	
+	
+	
+	i = 0;
+	while( editoresDisponiveis[i][0] != '\0' && i < 4 ) {
+		printf( "Nome: %s\n", editoresDisponiveis[i] );
+		i++;
 	}
 	*/
 	return 0;
@@ -229,9 +249,18 @@ create_database: CREATE DATABASE {setMode(OP_CREATE_DATABASE);} OBJECT {setObjNa
 drop_database: DROP DATABASE {setMode(OP_DROP_DATABASE);} OBJECT {setObjName(yytext);} semicolon {return 0;};
 
 /* SELECT */
-select: SELECT {setMode(OP_SELECT_ALL);} '*' FROM table_select semicolon {return 0;};
+select:  SELECT select_all FROM table_select semicolon {setMode(OP_SELECT);return 0;}
+		| SELECT select_multiple FROM table_select semicolon {setMode(OP_SELECT); return 0;};
 
-table_select: OBJECT {setObjName(yytext);};
+column_select: OBJECT { strcpy( GLOBAL_DATA.selColumn[GLOBAL_DATA.N], *yytext );
+++GLOBAL_DATA.N; };
+
+select_all: '*' { strcpy( GLOBAL_DATA.selColumn[GLOBAL_DATA.N], *yytext ); 
+++GLOBAL_DATA.N;};
+
+select_multiple: column_select | column_select ',' select_multiple;
+
+table_select: OBJECT { setObjName(yytext); };
 
 /* END */
 %%

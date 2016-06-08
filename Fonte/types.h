@@ -46,6 +46,7 @@ typedef struct rc_insert {
     int  *	attribute;         // Utilizado na criação (NPK, PK,FK)
     char **	fkTable;           // Recebe o nome da tabela FK
     char **	fkColumn;          // Recebe o nome da coluna FK
+	char ** selColumn;			// Colunas da lista de projeção ( SELECT )
 }rc_insert;
 
 typedef struct rc_parser {

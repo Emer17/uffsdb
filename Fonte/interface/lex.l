@@ -41,11 +41,11 @@
 [\\][\?]						return HELP;
 (?i:CLEAR)						return CLEAR;
 
-[,]								return *yytext;
-[;]								return *yytext;
-[*]								return *yytext;
-[(]								return *yytext;
-[)]								return *yytext;
+[,]+							return *yytext;
+[;]+							return *yytext;
+[*]+							return *yytext;
+[(]+							return *yytext;
+[)]+							return *yytext;
 
 ([a-zA-Z_]+[0-9_]*)+			{yylval.strval = yytext; return OBJECT;};
 [\']([^'])+[\']			  		{yylval.strval = yytext; return ALPHANUM;};
@@ -53,7 +53,7 @@
 [0-9]+							{yylval.strval = yytext; return NUMBER;}
 
 [\n]							{	
-									if ( GLOBAL_PARSER.mode != OP_INVALID && !GLOBAL_PARSER.readingFile ) {
+									if( GLOBAL_PARSER.mode != OP_INVALID && !GLOBAL_PARSER.readingFile ) {
 										if( GLOBAL_PARSER.parentesis ) {
 											printf( "%s(# ", connected.db_name );
 										} else {
@@ -77,7 +77,7 @@
 [\\][l]+[^\n]*					{invalidCommand(yytext);};
 [\\][q]							return QUIT;
 [\\][q]+[^\n]*					{invalidCommand(yytext);};
-[\\][i][ ][\^a-zA-z][a-zA-z|0-9]*[\.][a-zA-z]+ return RUN_SCRIPT;
+[\\][i][ ][\^a-zA-z][a-zA-z|0-9]*[\.][a-zA-z]+ 		return RUN_SCRIPT;
 [\\][e][ ]*						return EDITOR;
 [\\][i]+[^ ^\n]*				{invalidCommand(yytext);};
 [\\][i]+[ ]*[\n]				{invalidCommand("\\i <enter>'. Expecting '\\i SCRIPT"); return 0;};

@@ -25,9 +25,11 @@
 
 db_connected connected;
 
-//É possível passar o nome do banco pela linha de comando?
 int main( int argc, char ** argv ){
-    dbInit( NULL );    
-    interface( argc, argv );
+    if( dbInit( NULL ) ) {		
+		interface( argc, argv );
+	} else {
+		puts( "Erro ao inicializar banco" );
+	}      
     return 0;
 }

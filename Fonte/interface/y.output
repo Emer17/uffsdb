@@ -1,0 +1,1308 @@
+Não-terminais inúteis na gramática
+
+   mul
+
+
+Regras inúteis na gramática
+
+   80 select: SELECT mul FROM table_select semicolon
+
+   81 mul: column_select ',' mul
+
+
+Gramática
+
+    0 $accept: start $end
+
+    1 start: insert
+    2      | select
+    3      | create_table
+    4      | create_database
+    5      | drop_table
+    6      | drop_database
+    7      | table_attr
+    8      | list_tables
+    9      | connection
+   10      | exit_program
+   11      | semicolon
+   12      | parentesis_open
+   13      | parentesis_close
+   14      | help
+   15      | list_databases
+   16      | clear
+   17      | contributors
+   18      | qualquer_coisa
+   19      | run_script
+   20      | end_of_file
+   21      | editor
+   22      | %empty
+
+   23 connection: CONNECT OBJECT
+
+   24 qualquer_coisa: OBJECT
+
+   25 exit_program: QUIT
+
+   26 editor: EDITOR
+
+   27 run_script: RUN_SCRIPT
+
+   28 end_of_file: END_OF_FILE
+
+   29 clear: CLEAR
+
+   30 parentesis_open: '('
+
+   31 parentesis_close: ')'
+
+   32 table_attr: LIST_TABLE OBJECT
+
+   33 list_tables: LIST_TABLES
+
+   34 list_databases: LIST_DBASES
+
+   35 help: HELP
+
+   36 contributors: CONTR
+
+   37 $@1: %empty
+
+   38 insert: INSERT INTO $@1 table opt_column_list VALUES parentesis_open value_list parentesis_close semicolon
+
+   39 semicolon: ';'
+
+   40 table: OBJECT
+
+   41 opt_column_list: %empty
+   42                | parentesis_open column_list parentesis_close
+
+   43 column_list: column
+   44            | column ',' column_list
+
+   45 column: OBJECT
+
+   46 value_list: value
+   47           | value ',' value_list
+
+   48 value: VALUE
+   49      | NUMBER
+   50      | ALPHANUM
+
+   51 $@2: %empty
+
+   52 create_table: CREATE TABLE $@2 table parentesis_open table_column_attr parentesis_close semicolon
+
+   53 table_column_attr: column_create type attribute
+   54                  | column_create type attribute ',' table_column_attr
+
+   55 type: INTEGER
+
+   56 $@3: %empty
+
+   57 type: VARCHAR $@3 parentesis_open NUMBER parentesis_close
+   58     | DOUBLE
+   59     | CHAR
+
+   60 column_create: OBJECT
+
+   61 attribute: %empty
+   62          | PRIMARY KEY
+   63          | REFERENCES table_fk '(' column_fk ')'
+
+   64 table_fk: OBJECT
+
+   65 column_fk: OBJECT
+
+   66 $@4: %empty
+
+   67 $@5: %empty
+
+   68 drop_table: DROP TABLE $@4 OBJECT $@5 semicolon
+
+   69 $@6: %empty
+
+   70 $@7: %empty
+
+   71 create_database: CREATE DATABASE $@6 OBJECT $@7 semicolon
+
+   72 $@8: %empty
+
+   73 $@9: %empty
+
+   74 drop_database: DROP DATABASE $@8 OBJECT $@9 semicolon
+
+   75 select: SELECT column_select FROM table_select semicolon
+   76       | SELECT all_select FROM table_select semicolon
+
+   77 column_select: OBJECT
+
+   78 all_select: '*'
+
+   79 table_select: OBJECT
+
+
+Terminais, com as regras onde eles aparecem
+
+$end (0) 0
+'(' (40) 30 63
+')' (41) 31 63
+'*' (42) 78
+',' (44) 44 47 54
+';' (59) 39
+error (256)
+INSERT (258) 38
+INTO (259) 38
+VALUES (260) 38
+SELECT (261) 75 76
+FROM (262) 75 76
+CREATE (263) 52 71
+TABLE (264) 52 68
+INTEGER (265) 55
+VARCHAR (266) 57
+DOUBLE (267) 58
+CHAR (268) 59
+PRIMARY (269) 62
+KEY (270) 62
+REFERENCES (271) 63
+DATABASE (272) 71 74
+DROP (273) 68 74
+OBJECT (274) 23 24 32 40 45 60 64 65 68 71 74 77 79
+NUMBER (275) 49 57
+VALUE (276) 48
+QUIT (277) 25
+LIST_TABLES (278) 33
+LIST_TABLE (279) 32
+ALPHANUM (280) 50
+CONNECT (281) 23
+HELP (282) 35
+LIST_DBASES (283) 34
+CLEAR (284) 29
+CONTR (285) 36
+RUN_SCRIPT (286) 27
+END_OF_FILE (287) 28
+EDITOR (288) 26
+
+
+Não-terminais com as regras onde eles aparecem
+
+$accept (39)
+    à esquerda: 0
+start (40)
+    à esquerda: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+    21 22, à direita: 0
+connection (41)
+    à esquerda: 23, à direita: 9
+qualquer_coisa (42)
+    à esquerda: 24, à direita: 18
+exit_program (43)
+    à esquerda: 25, à direita: 10
+editor (44)
+    à esquerda: 26, à direita: 21
+run_script (45)
+    à esquerda: 27, à direita: 19
+end_of_file (46)
+    à esquerda: 28, à direita: 20
+clear (47)
+    à esquerda: 29, à direita: 16
+parentesis_open (48)
+    à esquerda: 30, à direita: 12 38 42 52 57
+parentesis_close (49)
+    à esquerda: 31, à direita: 13 38 42 52 57
+table_attr (50)
+    à esquerda: 32, à direita: 7
+list_tables (51)
+    à esquerda: 33, à direita: 8
+list_databases (52)
+    à esquerda: 34, à direita: 15
+help (53)
+    à esquerda: 35, à direita: 14
+contributors (54)
+    à esquerda: 36, à direita: 17
+insert (55)
+    à esquerda: 38, à direita: 1
+$@1 (56)
+    à esquerda: 37, à direita: 38
+semicolon (57)
+    à esquerda: 39, à direita: 11 38 52 68 71 74 75 76
+table (58)
+    à esquerda: 40, à direita: 38 52
+opt_column_list (59)
+    à esquerda: 41 42, à direita: 38
+column_list (60)
+    à esquerda: 43 44, à direita: 42 44
+column (61)
+    à esquerda: 45, à direita: 43 44
+value_list (62)
+    à esquerda: 46 47, à direita: 38 47
+value (63)
+    à esquerda: 48 49 50, à direita: 46 47
+create_table (64)
+    à esquerda: 52, à direita: 3
+$@2 (65)
+    à esquerda: 51, à direita: 52
+table_column_attr (66)
+    à esquerda: 53 54, à direita: 52 54
+type (67)
+    à esquerda: 55 57 58 59, à direita: 53 54
+$@3 (68)
+    à esquerda: 56, à direita: 57
+column_create (69)
+    à esquerda: 60, à direita: 53 54
+attribute (70)
+    à esquerda: 61 62 63, à direita: 53 54
+table_fk (71)
+    à esquerda: 64, à direita: 63
+column_fk (72)
+    à esquerda: 65, à direita: 63
+drop_table (73)
+    à esquerda: 68, à direita: 5
+$@4 (74)
+    à esquerda: 66, à direita: 68
+$@5 (75)
+    à esquerda: 67, à direita: 68
+create_database (76)
+    à esquerda: 71, à direita: 4
+$@6 (77)
+    à esquerda: 69, à direita: 71
+$@7 (78)
+    à esquerda: 70, à direita: 71
+drop_database (79)
+    à esquerda: 74, à direita: 6
+$@8 (80)
+    à esquerda: 72, à direita: 74
+$@9 (81)
+    à esquerda: 73, à direita: 74
+select (82)
+    à esquerda: 75 76, à direita: 2
+column_select (83)
+    à esquerda: 77, à direita: 75
+all_select (84)
+    à esquerda: 78, à direita: 76
+table_select (85)
+    à esquerda: 79, à direita: 75 76
+
+
+State 0
+
+    0 $accept: . start $end
+
+    INSERT       deslocar, e ir ao estado 1
+    SELECT       deslocar, e ir ao estado 2
+    CREATE       deslocar, e ir ao estado 3
+    DROP         deslocar, e ir ao estado 4
+    OBJECT       deslocar, e ir ao estado 5
+    QUIT         deslocar, e ir ao estado 6
+    LIST_TABLES  deslocar, e ir ao estado 7
+    LIST_TABLE   deslocar, e ir ao estado 8
+    CONNECT      deslocar, e ir ao estado 9
+    HELP         deslocar, e ir ao estado 10
+    LIST_DBASES  deslocar, e ir ao estado 11
+    CLEAR        deslocar, e ir ao estado 12
+    CONTR        deslocar, e ir ao estado 13
+    RUN_SCRIPT   deslocar, e ir ao estado 14
+    END_OF_FILE  deslocar, e ir ao estado 15
+    EDITOR       deslocar, e ir ao estado 16
+    '('          deslocar, e ir ao estado 17
+    ')'          deslocar, e ir ao estado 18
+    ';'          deslocar, e ir ao estado 19
+
+    $padrão  reduzir usando a regra 22 (start)
+
+    start             ir ao estado 20
+    connection        ir ao estado 21
+    qualquer_coisa    ir ao estado 22
+    exit_program      ir ao estado 23
+    editor            ir ao estado 24
+    run_script        ir ao estado 25
+    end_of_file       ir ao estado 26
+    clear             ir ao estado 27
+    parentesis_open   ir ao estado 28
+    parentesis_close  ir ao estado 29
+    table_attr        ir ao estado 30
+    list_tables       ir ao estado 31
+    list_databases    ir ao estado 32
+    help              ir ao estado 33
+    contributors      ir ao estado 34
+    insert            ir ao estado 35
+    semicolon         ir ao estado 36
+    create_table      ir ao estado 37
+    drop_table        ir ao estado 38
+    create_database   ir ao estado 39
+    drop_database     ir ao estado 40
+    select            ir ao estado 41
+
+
+State 1
+
+   38 insert: INSERT . INTO $@1 table opt_column_list VALUES parentesis_open value_list parentesis_close semicolon
+
+    INTO  deslocar, e ir ao estado 42
+
+
+State 2
+
+   75 select: SELECT . column_select FROM table_select semicolon
+   76       | SELECT . all_select FROM table_select semicolon
+
+    OBJECT  deslocar, e ir ao estado 43
+    '*'     deslocar, e ir ao estado 44
+
+    column_select  ir ao estado 45
+    all_select     ir ao estado 46
+
+
+State 3
+
+   52 create_table: CREATE . TABLE $@2 table parentesis_open table_column_attr parentesis_close semicolon
+   71 create_database: CREATE . DATABASE $@6 OBJECT $@7 semicolon
+
+    TABLE     deslocar, e ir ao estado 47
+    DATABASE  deslocar, e ir ao estado 48
+
+
+State 4
+
+   68 drop_table: DROP . TABLE $@4 OBJECT $@5 semicolon
+   74 drop_database: DROP . DATABASE $@8 OBJECT $@9 semicolon
+
+    TABLE     deslocar, e ir ao estado 49
+    DATABASE  deslocar, e ir ao estado 50
+
+
+State 5
+
+   24 qualquer_coisa: OBJECT .
+
+    $padrão  reduzir usando a regra 24 (qualquer_coisa)
+
+
+State 6
+
+   25 exit_program: QUIT .
+
+    $padrão  reduzir usando a regra 25 (exit_program)
+
+
+State 7
+
+   33 list_tables: LIST_TABLES .
+
+    $padrão  reduzir usando a regra 33 (list_tables)
+
+
+State 8
+
+   32 table_attr: LIST_TABLE . OBJECT
+
+    OBJECT  deslocar, e ir ao estado 51
+
+
+State 9
+
+   23 connection: CONNECT . OBJECT
+
+    OBJECT  deslocar, e ir ao estado 52
+
+
+State 10
+
+   35 help: HELP .
+
+    $padrão  reduzir usando a regra 35 (help)
+
+
+State 11
+
+   34 list_databases: LIST_DBASES .
+
+    $padrão  reduzir usando a regra 34 (list_databases)
+
+
+State 12
+
+   29 clear: CLEAR .
+
+    $padrão  reduzir usando a regra 29 (clear)
+
+
+State 13
+
+   36 contributors: CONTR .
+
+    $padrão  reduzir usando a regra 36 (contributors)
+
+
+State 14
+
+   27 run_script: RUN_SCRIPT .
+
+    $padrão  reduzir usando a regra 27 (run_script)
+
+
+State 15
+
+   28 end_of_file: END_OF_FILE .
+
+    $padrão  reduzir usando a regra 28 (end_of_file)
+
+
+State 16
+
+   26 editor: EDITOR .
+
+    $padrão  reduzir usando a regra 26 (editor)
+
+
+State 17
+
+   30 parentesis_open: '(' .
+
+    $padrão  reduzir usando a regra 30 (parentesis_open)
+
+
+State 18
+
+   31 parentesis_close: ')' .
+
+    $padrão  reduzir usando a regra 31 (parentesis_close)
+
+
+State 19
+
+   39 semicolon: ';' .
+
+    $padrão  reduzir usando a regra 39 (semicolon)
+
+
+State 20
+
+    0 $accept: start . $end
+
+    $end  deslocar, e ir ao estado 53
+
+
+State 21
+
+    9 start: connection .
+
+    $padrão  reduzir usando a regra 9 (start)
+
+
+State 22
+
+   18 start: qualquer_coisa .
+
+    $padrão  reduzir usando a regra 18 (start)
+
+
+State 23
+
+   10 start: exit_program .
+
+    $padrão  reduzir usando a regra 10 (start)
+
+
+State 24
+
+   21 start: editor .
+
+    $padrão  reduzir usando a regra 21 (start)
+
+
+State 25
+
+   19 start: run_script .
+
+    $padrão  reduzir usando a regra 19 (start)
+
+
+State 26
+
+   20 start: end_of_file .
+
+    $padrão  reduzir usando a regra 20 (start)
+
+
+State 27
+
+   16 start: clear .
+
+    $padrão  reduzir usando a regra 16 (start)
+
+
+State 28
+
+   12 start: parentesis_open .
+
+    $padrão  reduzir usando a regra 12 (start)
+
+
+State 29
+
+   13 start: parentesis_close .
+
+    $padrão  reduzir usando a regra 13 (start)
+
+
+State 30
+
+    7 start: table_attr .
+
+    $padrão  reduzir usando a regra 7 (start)
+
+
+State 31
+
+    8 start: list_tables .
+
+    $padrão  reduzir usando a regra 8 (start)
+
+
+State 32
+
+   15 start: list_databases .
+
+    $padrão  reduzir usando a regra 15 (start)
+
+
+State 33
+
+   14 start: help .
+
+    $padrão  reduzir usando a regra 14 (start)
+
+
+State 34
+
+   17 start: contributors .
+
+    $padrão  reduzir usando a regra 17 (start)
+
+
+State 35
+
+    1 start: insert .
+
+    $padrão  reduzir usando a regra 1 (start)
+
+
+State 36
+
+   11 start: semicolon .
+
+    $padrão  reduzir usando a regra 11 (start)
+
+
+State 37
+
+    3 start: create_table .
+
+    $padrão  reduzir usando a regra 3 (start)
+
+
+State 38
+
+    5 start: drop_table .
+
+    $padrão  reduzir usando a regra 5 (start)
+
+
+State 39
+
+    4 start: create_database .
+
+    $padrão  reduzir usando a regra 4 (start)
+
+
+State 40
+
+    6 start: drop_database .
+
+    $padrão  reduzir usando a regra 6 (start)
+
+
+State 41
+
+    2 start: select .
+
+    $padrão  reduzir usando a regra 2 (start)
+
+
+State 42
+
+   38 insert: INSERT INTO . $@1 table opt_column_list VALUES parentesis_open value_list parentesis_close semicolon
+
+    $padrão  reduzir usando a regra 37 ($@1)
+
+    $@1  ir ao estado 54
+
+
+State 43
+
+   77 column_select: OBJECT .
+
+    $padrão  reduzir usando a regra 77 (column_select)
+
+
+State 44
+
+   78 all_select: '*' .
+
+    $padrão  reduzir usando a regra 78 (all_select)
+
+
+State 45
+
+   75 select: SELECT column_select . FROM table_select semicolon
+
+    FROM  deslocar, e ir ao estado 55
+
+
+State 46
+
+   76 select: SELECT all_select . FROM table_select semicolon
+
+    FROM  deslocar, e ir ao estado 56
+
+
+State 47
+
+   52 create_table: CREATE TABLE . $@2 table parentesis_open table_column_attr parentesis_close semicolon
+
+    $padrão  reduzir usando a regra 51 ($@2)
+
+    $@2  ir ao estado 57
+
+
+State 48
+
+   71 create_database: CREATE DATABASE . $@6 OBJECT $@7 semicolon
+
+    $padrão  reduzir usando a regra 69 ($@6)
+
+    $@6  ir ao estado 58
+
+
+State 49
+
+   68 drop_table: DROP TABLE . $@4 OBJECT $@5 semicolon
+
+    $padrão  reduzir usando a regra 66 ($@4)
+
+    $@4  ir ao estado 59
+
+
+State 50
+
+   74 drop_database: DROP DATABASE . $@8 OBJECT $@9 semicolon
+
+    $padrão  reduzir usando a regra 72 ($@8)
+
+    $@8  ir ao estado 60
+
+
+State 51
+
+   32 table_attr: LIST_TABLE OBJECT .
+
+    $padrão  reduzir usando a regra 32 (table_attr)
+
+
+State 52
+
+   23 connection: CONNECT OBJECT .
+
+    $padrão  reduzir usando a regra 23 (connection)
+
+
+State 53
+
+    0 $accept: start $end .
+
+    $padrão  aceitar
+
+
+State 54
+
+   38 insert: INSERT INTO $@1 . table opt_column_list VALUES parentesis_open value_list parentesis_close semicolon
+
+    OBJECT  deslocar, e ir ao estado 61
+
+    table  ir ao estado 62
+
+
+State 55
+
+   75 select: SELECT column_select FROM . table_select semicolon
+
+    OBJECT  deslocar, e ir ao estado 63
+
+    table_select  ir ao estado 64
+
+
+State 56
+
+   76 select: SELECT all_select FROM . table_select semicolon
+
+    OBJECT  deslocar, e ir ao estado 63
+
+    table_select  ir ao estado 65
+
+
+State 57
+
+   52 create_table: CREATE TABLE $@2 . table parentesis_open table_column_attr parentesis_close semicolon
+
+    OBJECT  deslocar, e ir ao estado 61
+
+    table  ir ao estado 66
+
+
+State 58
+
+   71 create_database: CREATE DATABASE $@6 . OBJECT $@7 semicolon
+
+    OBJECT  deslocar, e ir ao estado 67
+
+
+State 59
+
+   68 drop_table: DROP TABLE $@4 . OBJECT $@5 semicolon
+
+    OBJECT  deslocar, e ir ao estado 68
+
+
+State 60
+
+   74 drop_database: DROP DATABASE $@8 . OBJECT $@9 semicolon
+
+    OBJECT  deslocar, e ir ao estado 69
+
+
+State 61
+
+   40 table: OBJECT .
+
+    $padrão  reduzir usando a regra 40 (table)
+
+
+State 62
+
+   38 insert: INSERT INTO $@1 table . opt_column_list VALUES parentesis_open value_list parentesis_close semicolon
+
+    '('  deslocar, e ir ao estado 17
+
+    $padrão  reduzir usando a regra 41 (opt_column_list)
+
+    parentesis_open  ir ao estado 70
+    opt_column_list  ir ao estado 71
+
+
+State 63
+
+   79 table_select: OBJECT .
+
+    $padrão  reduzir usando a regra 79 (table_select)
+
+
+State 64
+
+   75 select: SELECT column_select FROM table_select . semicolon
+
+    ';'  deslocar, e ir ao estado 19
+
+    semicolon  ir ao estado 72
+
+
+State 65
+
+   76 select: SELECT all_select FROM table_select . semicolon
+
+    ';'  deslocar, e ir ao estado 19
+
+    semicolon  ir ao estado 73
+
+
+State 66
+
+   52 create_table: CREATE TABLE $@2 table . parentesis_open table_column_attr parentesis_close semicolon
+
+    '('  deslocar, e ir ao estado 17
+
+    parentesis_open  ir ao estado 74
+
+
+State 67
+
+   71 create_database: CREATE DATABASE $@6 OBJECT . $@7 semicolon
+
+    $padrão  reduzir usando a regra 70 ($@7)
+
+    $@7  ir ao estado 75
+
+
+State 68
+
+   68 drop_table: DROP TABLE $@4 OBJECT . $@5 semicolon
+
+    $padrão  reduzir usando a regra 67 ($@5)
+
+    $@5  ir ao estado 76
+
+
+State 69
+
+   74 drop_database: DROP DATABASE $@8 OBJECT . $@9 semicolon
+
+    $padrão  reduzir usando a regra 73 ($@9)
+
+    $@9  ir ao estado 77
+
+
+State 70
+
+   42 opt_column_list: parentesis_open . column_list parentesis_close
+
+    OBJECT  deslocar, e ir ao estado 78
+
+    column_list  ir ao estado 79
+    column       ir ao estado 80
+
+
+State 71
+
+   38 insert: INSERT INTO $@1 table opt_column_list . VALUES parentesis_open value_list parentesis_close semicolon
+
+    VALUES  deslocar, e ir ao estado 81
+
+
+State 72
+
+   75 select: SELECT column_select FROM table_select semicolon .
+
+    $padrão  reduzir usando a regra 75 (select)
+
+
+State 73
+
+   76 select: SELECT all_select FROM table_select semicolon .
+
+    $padrão  reduzir usando a regra 76 (select)
+
+
+State 74
+
+   52 create_table: CREATE TABLE $@2 table parentesis_open . table_column_attr parentesis_close semicolon
+
+    OBJECT  deslocar, e ir ao estado 82
+
+    table_column_attr  ir ao estado 83
+    column_create      ir ao estado 84
+
+
+State 75
+
+   71 create_database: CREATE DATABASE $@6 OBJECT $@7 . semicolon
+
+    ';'  deslocar, e ir ao estado 19
+
+    semicolon  ir ao estado 85
+
+
+State 76
+
+   68 drop_table: DROP TABLE $@4 OBJECT $@5 . semicolon
+
+    ';'  deslocar, e ir ao estado 19
+
+    semicolon  ir ao estado 86
+
+
+State 77
+
+   74 drop_database: DROP DATABASE $@8 OBJECT $@9 . semicolon
+
+    ';'  deslocar, e ir ao estado 19
+
+    semicolon  ir ao estado 87
+
+
+State 78
+
+   45 column: OBJECT .
+
+    $padrão  reduzir usando a regra 45 (column)
+
+
+State 79
+
+   42 opt_column_list: parentesis_open column_list . parentesis_close
+
+    ')'  deslocar, e ir ao estado 18
+
+    parentesis_close  ir ao estado 88
+
+
+State 80
+
+   43 column_list: column .
+   44            | column . ',' column_list
+
+    ','  deslocar, e ir ao estado 89
+
+    $padrão  reduzir usando a regra 43 (column_list)
+
+
+State 81
+
+   38 insert: INSERT INTO $@1 table opt_column_list VALUES . parentesis_open value_list parentesis_close semicolon
+
+    '('  deslocar, e ir ao estado 17
+
+    parentesis_open  ir ao estado 90
+
+
+State 82
+
+   60 column_create: OBJECT .
+
+    $padrão  reduzir usando a regra 60 (column_create)
+
+
+State 83
+
+   52 create_table: CREATE TABLE $@2 table parentesis_open table_column_attr . parentesis_close semicolon
+
+    ')'  deslocar, e ir ao estado 18
+
+    parentesis_close  ir ao estado 91
+
+
+State 84
+
+   53 table_column_attr: column_create . type attribute
+   54                  | column_create . type attribute ',' table_column_attr
+
+    INTEGER  deslocar, e ir ao estado 92
+    VARCHAR  deslocar, e ir ao estado 93
+    DOUBLE   deslocar, e ir ao estado 94
+    CHAR     deslocar, e ir ao estado 95
+
+    type  ir ao estado 96
+
+
+State 85
+
+   71 create_database: CREATE DATABASE $@6 OBJECT $@7 semicolon .
+
+    $padrão  reduzir usando a regra 71 (create_database)
+
+
+State 86
+
+   68 drop_table: DROP TABLE $@4 OBJECT $@5 semicolon .
+
+    $padrão  reduzir usando a regra 68 (drop_table)
+
+
+State 87
+
+   74 drop_database: DROP DATABASE $@8 OBJECT $@9 semicolon .
+
+    $padrão  reduzir usando a regra 74 (drop_database)
+
+
+State 88
+
+   42 opt_column_list: parentesis_open column_list parentesis_close .
+
+    $padrão  reduzir usando a regra 42 (opt_column_list)
+
+
+State 89
+
+   44 column_list: column ',' . column_list
+
+    OBJECT  deslocar, e ir ao estado 78
+
+    column_list  ir ao estado 97
+    column       ir ao estado 80
+
+
+State 90
+
+   38 insert: INSERT INTO $@1 table opt_column_list VALUES parentesis_open . value_list parentesis_close semicolon
+
+    NUMBER    deslocar, e ir ao estado 98
+    VALUE     deslocar, e ir ao estado 99
+    ALPHANUM  deslocar, e ir ao estado 100
+
+    value_list  ir ao estado 101
+    value       ir ao estado 102
+
+
+State 91
+
+   52 create_table: CREATE TABLE $@2 table parentesis_open table_column_attr parentesis_close . semicolon
+
+    ';'  deslocar, e ir ao estado 19
+
+    semicolon  ir ao estado 103
+
+
+State 92
+
+   55 type: INTEGER .
+
+    $padrão  reduzir usando a regra 55 (type)
+
+
+State 93
+
+   57 type: VARCHAR . $@3 parentesis_open NUMBER parentesis_close
+
+    $padrão  reduzir usando a regra 56 ($@3)
+
+    $@3  ir ao estado 104
+
+
+State 94
+
+   58 type: DOUBLE .
+
+    $padrão  reduzir usando a regra 58 (type)
+
+
+State 95
+
+   59 type: CHAR .
+
+    $padrão  reduzir usando a regra 59 (type)
+
+
+State 96
+
+   53 table_column_attr: column_create type . attribute
+   54                  | column_create type . attribute ',' table_column_attr
+
+    PRIMARY     deslocar, e ir ao estado 105
+    REFERENCES  deslocar, e ir ao estado 106
+
+    $padrão  reduzir usando a regra 61 (attribute)
+
+    attribute  ir ao estado 107
+
+
+State 97
+
+   44 column_list: column ',' column_list .
+
+    $padrão  reduzir usando a regra 44 (column_list)
+
+
+State 98
+
+   49 value: NUMBER .
+
+    $padrão  reduzir usando a regra 49 (value)
+
+
+State 99
+
+   48 value: VALUE .
+
+    $padrão  reduzir usando a regra 48 (value)
+
+
+State 100
+
+   50 value: ALPHANUM .
+
+    $padrão  reduzir usando a regra 50 (value)
+
+
+State 101
+
+   38 insert: INSERT INTO $@1 table opt_column_list VALUES parentesis_open value_list . parentesis_close semicolon
+
+    ')'  deslocar, e ir ao estado 18
+
+    parentesis_close  ir ao estado 108
+
+
+State 102
+
+   46 value_list: value .
+   47           | value . ',' value_list
+
+    ','  deslocar, e ir ao estado 109
+
+    $padrão  reduzir usando a regra 46 (value_list)
+
+
+State 103
+
+   52 create_table: CREATE TABLE $@2 table parentesis_open table_column_attr parentesis_close semicolon .
+
+    $padrão  reduzir usando a regra 52 (create_table)
+
+
+State 104
+
+   57 type: VARCHAR $@3 . parentesis_open NUMBER parentesis_close
+
+    '('  deslocar, e ir ao estado 17
+
+    parentesis_open  ir ao estado 110
+
+
+State 105
+
+   62 attribute: PRIMARY . KEY
+
+    KEY  deslocar, e ir ao estado 111
+
+
+State 106
+
+   63 attribute: REFERENCES . table_fk '(' column_fk ')'
+
+    OBJECT  deslocar, e ir ao estado 112
+
+    table_fk  ir ao estado 113
+
+
+State 107
+
+   53 table_column_attr: column_create type attribute .
+   54                  | column_create type attribute . ',' table_column_attr
+
+    ','  deslocar, e ir ao estado 114
+
+    $padrão  reduzir usando a regra 53 (table_column_attr)
+
+
+State 108
+
+   38 insert: INSERT INTO $@1 table opt_column_list VALUES parentesis_open value_list parentesis_close . semicolon
+
+    ';'  deslocar, e ir ao estado 19
+
+    semicolon  ir ao estado 115
+
+
+State 109
+
+   47 value_list: value ',' . value_list
+
+    NUMBER    deslocar, e ir ao estado 98
+    VALUE     deslocar, e ir ao estado 99
+    ALPHANUM  deslocar, e ir ao estado 100
+
+    value_list  ir ao estado 116
+    value       ir ao estado 102
+
+
+State 110
+
+   57 type: VARCHAR $@3 parentesis_open . NUMBER parentesis_close
+
+    NUMBER  deslocar, e ir ao estado 117
+
+
+State 111
+
+   62 attribute: PRIMARY KEY .
+
+    $padrão  reduzir usando a regra 62 (attribute)
+
+
+State 112
+
+   64 table_fk: OBJECT .
+
+    $padrão  reduzir usando a regra 64 (table_fk)
+
+
+State 113
+
+   63 attribute: REFERENCES table_fk . '(' column_fk ')'
+
+    '('  deslocar, e ir ao estado 118
+
+
+State 114
+
+   54 table_column_attr: column_create type attribute ',' . table_column_attr
+
+    OBJECT  deslocar, e ir ao estado 82
+
+    table_column_attr  ir ao estado 119
+    column_create      ir ao estado 84
+
+
+State 115
+
+   38 insert: INSERT INTO $@1 table opt_column_list VALUES parentesis_open value_list parentesis_close semicolon .
+
+    $padrão  reduzir usando a regra 38 (insert)
+
+
+State 116
+
+   47 value_list: value ',' value_list .
+
+    $padrão  reduzir usando a regra 47 (value_list)
+
+
+State 117
+
+   57 type: VARCHAR $@3 parentesis_open NUMBER . parentesis_close
+
+    ')'  deslocar, e ir ao estado 18
+
+    parentesis_close  ir ao estado 120
+
+
+State 118
+
+   63 attribute: REFERENCES table_fk '(' . column_fk ')'
+
+    OBJECT  deslocar, e ir ao estado 121
+
+    column_fk  ir ao estado 122
+
+
+State 119
+
+   54 table_column_attr: column_create type attribute ',' table_column_attr .
+
+    $padrão  reduzir usando a regra 54 (table_column_attr)
+
+
+State 120
+
+   57 type: VARCHAR $@3 parentesis_open NUMBER parentesis_close .
+
+    $padrão  reduzir usando a regra 57 (type)
+
+
+State 121
+
+   65 column_fk: OBJECT .
+
+    $padrão  reduzir usando a regra 65 (column_fk)
+
+
+State 122
+
+   63 attribute: REFERENCES table_fk '(' column_fk . ')'
+
+    ')'  deslocar, e ir ao estado 123
+
+
+State 123
+
+   63 attribute: REFERENCES table_fk '(' column_fk ')' .
+
+    $padrão  reduzir usando a regra 63 (attribute)

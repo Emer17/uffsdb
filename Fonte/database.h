@@ -1,7 +1,7 @@
 /* createDB: Recebe um nome para criar um banco de dados
  *           cria o banco, caso ainda não exista
  */
-void createDB( const char * );
+void createDB( char * );
 
 /* connectDB: Recebe o nome de um banco de dadados
  *            conecta-se com o banco, caso exista
