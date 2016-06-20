@@ -249,14 +249,27 @@ create_database: CREATE DATABASE {setMode(OP_CREATE_DATABASE);} OBJECT {setObjNa
 drop_database: DROP DATABASE {setMode(OP_DROP_DATABASE);} OBJECT {setObjName(yytext);} semicolon {return 0;};
 
 /* SELECT */
-select:  SELECT select_all FROM table_select semicolon {setMode(OP_SELECT);return 0;}
-		| SELECT select_multiple FROM table_select semicolon {setMode(OP_SELECT); return 0;};
+select:  SELECT {setMode(OP_SELECT);} select_all FROM table_select semicolon {return 0;}
+		| SELECT {setMode(OP_SELECT);} select_multiple FROM table_select semicolon {return 0;};
 
 column_select: OBJECT { strcpy( GLOBAL_DATA.selColumn[GLOBAL_DATA.N], *yytext );
 ++GLOBAL_DATA.N; };
 
-select_all: '*' { strcpy( GLOBAL_DATA.selColumn[GLOBAL_DATA.N], *yytext ); 
-++GLOBAL_DATA.N;};
+select_all: '*' { 
+	if( GLOBAL_DATA.N < QTD_COLUNAS_PROJ ) {
+		strcpy( GLOBAL_DATA.selColumn[GLOBAL_DATA.N], *yytext ); 
+		++GLOBAL_DATA.N;		
+	} else {
+		printf( "Quantidade maxima de colunas permitidas na operacao SELECT excedida.\n" );
+		#if UFFS_DEBUG
+			printf( "\n-----------------------------------------------\n" );
+			printf( "GLOBAL_DATA.N excedeu o valor de QTD_COLUNAS_PROJ\n" );
+			printf( "-------------------------------------------------\n" );
+			printf( "ARQUIVO: %s\n LINHA: %d\n", __FILE__, __LINE__ );
+			printf( "-------------------------------------------------\n" );
+		#endif
+	}
+};
 
 select_multiple: column_select | column_select ',' select_multiple;
 

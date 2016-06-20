@@ -24,13 +24,13 @@ tp_table *procuraAtributoFK(struct fs_objects);
    ---------------------------------------------------------------------------------------------*/
 int procuraObjectArquivo(char *);
 /*
-    Esta função busca, no arquivo fs_object.dat, pelo nome da tabela retornando as informações que
-    estão no dicionário em uma estrutura fs_objects. Caso o nome da tabela não exista, o programa
-    aborta.
+    Esta função busca, no arquivo fs_object.dat, pelo nome da tabela retornando
+	as informações que estão no dicionário em uma estrutura fs_objects. 
+	Caso o nome da tabela não exista, o programa aborta.
 
     *nTabela - Nome da tabela a ser buscado no dicionário de dados
 */
-struct fs_objects leObjeto(char *);
+struct fs_objects leObjeto( const char * );
 /*
     Esta função busca, no arquivo fs_schema.dat, pelas informações do objeto, carregando o esquema
     da tabela que é retornadado em tp_table.
@@ -61,7 +61,7 @@ int quantidadeTabelas();
         -> 0 se existe no dicionário.
     *nomeTabela - Nome de uma tabela,  a qual deseja-se saber se existe no dicionario.
 */
-int verificaNomeTabela(char *);
+int verificaNomeTabela( const char * );
 /*
     Esta função inicia um estrutura do tipo table, como nome de tabela passado.
     Retorna:

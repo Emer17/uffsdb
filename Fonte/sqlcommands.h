@@ -35,7 +35,7 @@ int finalizaInsert(char *, column *);
     Parametros: Nome da tabela (char).
     Retorno:    void.
    ---------------------------------------------------------------------------------------------*/
-void imprime( const char [] );
+void imprime( const char [], const struct db_options * );
 /* ----------------------------------------------------------------------------------------------
     
 	Objetivo:   Função para exclusão de tabelas.

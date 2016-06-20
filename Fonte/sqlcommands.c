@@ -325,31 +325,31 @@ int verificaChavePK(char *nomeTabela, column *c, char *nomeCampo, char *valorCam
 }
 
 /////
-int finalizaInsert(char *nome, column *c){
-    column *auxC, *temp;
-    int i = 0, x = 0, t, erro, j = 0;
-    FILE *dados;
+int finalizaInsert( char * nome, column * c ) {
+    column * auxC = NULL, * temp = NULL;
+    int i = 0, x = 0, t, erro = SUCCESS, j = 0;
+    FILE * dados = NULL;
 
-    struct fs_objects objeto,dicio; // Le dicionario
-    tp_table *auxT ; // Le esquema
-    auxT = abreTabela(nome, &dicio, &auxT);
+    struct fs_objects objeto = {}, dicio = {};
+    tp_table * auxT = NULL; // Le esquema
+    auxT = abreTabela( nome, &dicio, &auxT );
 
-    table *tab     = (table *)malloc(sizeof(table));
-    tp_table *tab2 = (tp_table *)malloc(sizeof(struct tp_table));
-    memset(tab2, 0, sizeof(tp_table));
+    table * tab     = (table *)malloc( sizeof(table) );
+    tp_table * tab2 = (tp_table *)malloc( sizeof(struct tp_table) );
+    memset( tab2, 0, sizeof(tp_table) );
 
-    tab->esquema = abreTabela(nome, &objeto, &tab->esquema);
-    tab2 = procuraAtributoFK(objeto);
+    tab->esquema = abreTabela( nome, &objeto, &tab->esquema );
+    tab2 = procuraAtributoFK( objeto );
 
-    for(j = 0, temp = c; j < objeto.qtdCampos && temp != NULL; j++, temp = temp->next){
-        switch(tab2[j].chave){
+    for( j = 0, temp = c; j < objeto.qtdCampos && temp != NULL; j++, temp = temp->next ) {
+        switch( tab2[j].chave ) {
             case NPK:
                 erro = SUCCESS;
                 break;
 
             case PK:
-                erro = verificaChavePK(nome, temp , temp->nomeCampo, temp->valorCampo);
-                if (erro == ERRO_CHAVE_PRIMARIA){
+                erro = verificaChavePK( nome, temp , temp->nomeCampo, temp->valorCampo );
+                if( erro == ERRO_CHAVE_PRIMARIA ) {
                     printf("ERROR: duplicate key value violates unique constraint \"%s_pkey\"\nDETAIL:  Key (%s)=(%s) already exists.\n", nome, temp->nomeCampo, temp->valorCampo);
 
 					free(auxT); // Libera a memoria da estrutura.
@@ -358,17 +358,14 @@ int finalizaInsert(char *nome, column *c){
 					free(tab2); // Libera a memoria da estrutura.
                     return ERRO_CHAVE_PRIMARIA;
                 }
-
                 break;
 
             case FK:
-                if (tab2[j].chave == 2 && strlen(tab2[j].attApt) != 0 && strlen(tab2[j].tabelaApt) != 0){
-
+                if( tab2[j].chave == 2 && strlen(tab2[j].attApt) != 0 && strlen(tab2[j].tabelaApt) != 0 ) {
                     erro = verificaChaveFK(nome, temp, tab2[j].nome, temp->valorCampo, tab2[j].tabelaApt, tab2[j].attApt);
 
-                    if (erro != SUCCESS){
+                    if( erro != SUCCESS ) {
                         printf("ERROR: invalid reference to \"%s.%s\". The value \"%s\" does not exist.\n", tab2[j].tabelaApt,tab2[j].attApt,temp->valorCampo);
-
 						free(auxT); // Libera a memoria da estrutura.
 						free(temp); // Libera a memoria da estrutura.
                         free(tab); // Libera a memoria da estrutura.
@@ -376,15 +373,12 @@ int finalizaInsert(char *nome, column *c){
                         return ERRO_CHAVE_ESTRANGEIRA;
                     }
                 }
-
                 break;
         }
     }
 
-
-    if (erro == ERRO_CHAVE_ESTRANGEIRA){
+    if( erro == ERRO_CHAVE_ESTRANGEIRA ) {
         printf("ERROR: unknown foreign key error.\n");
-
 		free(auxT); // Libera a memoria da estrutura.
 		free(temp); // Libera a memoria da estrutura.
         free(tab); // Libera a memoria da estrutura.
@@ -392,16 +386,15 @@ int finalizaInsert(char *nome, column *c){
         return ERRO_CHAVE_ESTRANGEIRA;
     }
 
-    if (erro == ERRO_CHAVE_PRIMARIA){
+    if( erro == ERRO_CHAVE_PRIMARIA ) {
         printf("ERROR: unknown primary key error.\n");
-
 		free(auxT); // Libera a memoria da estrutura.
 		free(temp); // Libera a memoria da estrutura.
         free(tab); // Libera a memoria da estrutura.
 		free(tab2); // Libera a memoria da estrutura.
         return ERRO_CHAVE_PRIMARIA;
     }
-    if (erro == ERRO_DE_PARAMETRO) {
+    if( erro == ERRO_DE_PARAMETRO ) {
         printf("ERROR: invalid parameter.\n");
 		free(auxT); // Libera a memoria da estrutura.
 		free(temp); // Libera a memoria da estrutura.
@@ -410,11 +403,11 @@ int finalizaInsert(char *nome, column *c){
         return ERRO_DE_PARAMETRO;
     }
 
-    char directory[TAMANHO_NOME_BANCO*2];
+    char directory[TAMANHO_NOME_BANCO*2] = { '\0' };
     strcpy(directory, connected.db_directory);
     strcat(directory, dicio.nArquivo);
 
-    if((dados = fopen(directory,"a+b")) == NULL){
+    if( (dados = fopen(directory,"a+b")) == NULL ) {
         printf("ERROR: cannot open file.\n");
 		free(auxT); // Libera a memoria da estrutura.
 		free(temp); // Libera a memoria da estrutura.
@@ -424,11 +417,13 @@ int finalizaInsert(char *nome, column *c){
 
 	}
 
-    for(auxC = c, t = 0; auxC != NULL; auxC = auxC->next, t++){
-        if (t >= dicio.qtdCampos)
-            t = 0;
+	// Percorre todas as colunas c passadas no parametro da função
+    for( auxC = c, t = 0; auxC != NULL; auxC = auxC->next, t++ ) {
+        if( t >= dicio.qtdCampos ) {
+            t = 0;		
+		}
 
-        if (auxT[t].tipo == 'S'){ // Grava um dado do tipo string.
+        if( auxT[t].tipo == 'S' ) { // Grava um dado do tipo string.
 
             if (sizeof(auxC->valorCampo) > auxT[t].tam && sizeof(auxC->valorCampo) != 8){
                 printf("ERROR: invalid string length.\n");
@@ -452,14 +447,14 @@ int finalizaInsert(char *nome, column *c){
 
             char valorCampo[auxT[t].tam];
             strncpy(valorCampo, auxC->valorCampo, auxT[t].tam);
-            strcat(valorCampo, "\0");
+            strcat(valorCampo, "\0");			
             fwrite(&valorCampo,sizeof(valorCampo),1,dados);
 
-        } else if (auxT[t].tipo == 'I'){ // Grava um dado do tipo inteiro.
+        } else if( auxT[t].tipo == 'I' ) { // Grava um dado do tipo inteiro.
             i = 0;
-            while (i < strlen(auxC->valorCampo)){
-                if (auxC->valorCampo[i] < 48 || auxC->valorCampo[i] > 57){
-                    printf("ERROR: column \"%s\" expectet integer.\n", auxC->nomeCampo);
+            while( i < strlen(auxC->valorCampo) ) {
+                if( auxC->valorCampo[i] < 48 || auxC->valorCampo[i] > 57 ) {
+                    printf( "ERROR: column \"%s\" expectet integer.\n", auxC->nomeCampo );
 					free(tab); // Libera a memoria da estrutura.
 					free(tab2); // Libera a memoria da estrutura.
 					free(auxT); // Libera a memoria da estrutura.
@@ -471,14 +466,13 @@ int finalizaInsert(char *nome, column *c){
             }
 
             int valorInteiro = 0;
+            sscanf( auxC->valorCampo,"%d",&valorInteiro );
+            fwrite( &valorInteiro, sizeof(valorInteiro), 1, dados );
 
-            sscanf(auxC->valorCampo,"%d",&valorInteiro);
-            fwrite(&valorInteiro,sizeof(valorInteiro),1,dados);
-
-        } else if (auxT[t].tipo == 'D'){ // Grava um dado do tipo double.
+        } else if( auxT[t].tipo == 'D' ) { // Grava um dado do tipo double.
             x = 0;
-            while (x < strlen(auxC->valorCampo)){
-                if((auxC->valorCampo[x] < 48 || auxC->valorCampo[x] > 57) && (auxC->valorCampo[x] != 46)){
+            while( x < strlen(auxC->valorCampo) ) {
+                if( (auxC->valorCampo[x] < 48 || auxC->valorCampo[x] > 57) && (auxC->valorCampo[x] != 46) ) {
                     printf("ERROR: column \"%s\" expect double.\n", auxC->nomeCampo);
 					free(tab); // Libera a memoria da estrutura.
 					free(tab2); // Libera a memoria da estrutura.
@@ -492,11 +486,11 @@ int finalizaInsert(char *nome, column *c){
 
             double valorDouble = convertD(auxC->valorCampo);
             fwrite(&valorDouble,sizeof(valorDouble),1,dados);
-        }
-        else if (auxT[t].tipo == 'C'){ // Grava um dado do tipo char.
+			
+        } else if( auxT[t].tipo == 'C' ) { // Grava um dado do tipo char.
 
-            if (strlen(auxC->valorCampo) > (sizeof(char))) {
-                printf("ERROR: column \"%s\" expect char.\n", auxC->nomeCampo);
+            if( strlen(auxC->valorCampo) > sizeof(char) ) {
+                printf( "ERROR: column \"%s\" expect char.\n", auxC->nomeCampo );
 				free(tab); // Libera a memoria da estrutura.
 				free(tab2); // Libera a memoria da estrutura.
 				free(auxT); // Libera a memoria da estrutura.
@@ -505,7 +499,7 @@ int finalizaInsert(char *nome, column *c){
                 return ERRO_NO_TIPO_CHAR;
             }
             char valorChar = auxC->valorCampo[0];
-            fwrite(&valorChar,sizeof(valorChar),1,dados);
+            fwrite( &valorChar, sizeof(valorChar), 1, dados );
         }
 
     }
@@ -522,52 +516,51 @@ int finalizaInsert(char *nome, column *c){
  *         Se os valores forem válidos, insere um novo valor.
  */
 void insert( rc_insert * s_insert ) {
-	int i;
-	table *tabela = (table *)malloc(sizeof(table));
+	table * tabela = (table *)malloc( sizeof(table) );
 	tabela->esquema = NULL;
-	memset(tabela, 0, sizeof(table));
-	column *colunas = NULL;
-	tp_table *esquema = NULL;
-	struct fs_objects objeto;
-	memset(&objeto, 0, sizeof(struct fs_objects));
-	char  flag=0;
+	memset( tabela, 0, sizeof(table) );
+	column * colunas = NULL;
+	tp_table * esquema = NULL;
+	struct fs_objects objeto = {};
+	char flag = 0;
 
-	abreTabela(s_insert->objName, &objeto, &tabela->esquema); //retorna o esquema para a insere valor
-	strcpylower(tabela->nome, s_insert->objName);
+	abreTabela( s_insert->objName, &objeto, &tabela->esquema ); //retorna o esquema para a insere valor
+	strcpylower( tabela->nome, s_insert->objName );
 
-	if(s_insert->columnName != NULL) {
-		if (allColumnsExists(s_insert, tabela)) {
-			for (esquema = tabela->esquema; esquema != NULL; esquema = esquema->next) {
-				if(typesCompatible(esquema->tipo,getInsertedType(s_insert, esquema->nome, tabela))) {
-					colunas = insereValor(tabela, colunas, esquema->nome, getInsertedValue(s_insert, esquema->nome, tabela));
+	if( s_insert->columnName != NULL ) {
+		if( allColumnsExists(s_insert, tabela) ) {
+			for( esquema = tabela->esquema; esquema != NULL; esquema = esquema->next ) {
+				if( typesCompatible(esquema->tipo,getInsertedType(s_insert, esquema->nome, tabela)) ) {
+					colunas = insereValor( tabela, colunas, esquema->nome, getInsertedValue(s_insert, esquema->nome, tabela));
 				} else {
-					printf("ERROR: data type invalid to column '%s' of relation '%s' (expected: %c, received: %c).\n", esquema->nome, tabela->nome, esquema->tipo, getInsertedType(s_insert, esquema->nome, tabela));
+					printf( "ERROR: data type invalid to column '%s' of relation '%s' (expected: %c, received: %c).\n", esquema->nome, tabela->nome, esquema->tipo, getInsertedType(s_insert, esquema->nome, tabela) );
 					flag = 1;
 				}
 			}
 		} else {
 			flag = 1;
 		}
-	} else {
-		if (s_insert->N == objeto.qtdCampos) {
-			for(i=0; i < objeto.qtdCampos; i++) {
+	} else {		
+		// Se a quantidade de campos da inserção for igual a quantidade de campos da tabela
+		if( s_insert->N == objeto.qtdCampos ) {
+			int i;
+			for( i=0; i < objeto.qtdCampos; i++ ) {
 
-				if(s_insert->type[i] == 'S' && tabela->esquema[i].tipo == 'C') {
+				if( s_insert->type[i] == 'S' && tabela->esquema[i].tipo == 'C' ) {
 					printf( "\nWARNING: Attempted to write value of type \'string\' to attribute of type \'char\'.\n" );
 					printf( "String \'%s\' will be truncated to \'%c\'\n", s_insert->values[i], s_insert->values[i][0] );
 					s_insert->values[i][1] = '\0';
 					s_insert->type[i] = 'C';
 				}
 
-				if(s_insert->type[i] == 'I' && tabela->esquema[i].tipo == 'D') {
-
+				if( s_insert->type[i] == 'I' && tabela->esquema[i].tipo == 'D' ) {
 					s_insert->type[i] = 'D';
 				}
 
-				if(s_insert->type[i] == tabela->esquema[i].tipo) {
-					colunas = insereValor(tabela, colunas, tabela->esquema[i].nome, s_insert->values[i]);
+				if( s_insert->type[i] == tabela->esquema[i].tipo ) {
+					colunas = insereValor( tabela, colunas, tabela->esquema[i].nome, s_insert->values[i]);
 				} else {
-					printf("ERROR: data type invalid to column '%s' of relation '%s' (expected: %c, received: %c).\n", tabela->esquema[i].nome, tabela->nome, tabela->esquema[i].tipo, s_insert->type[i]);
+					printf( "ERROR: data type invalid to column '%s' of relation '%s' (expected: %c, received: %c).\n", tabela->esquema[i].nome, tabela->nome, tabela->esquema[i].tipo, s_insert->type[i] );
 					flag=1;
 				}
 			}
@@ -578,7 +571,7 @@ void insert( rc_insert * s_insert ) {
 	}
 
 	if( !flag ) {
-		if( finalizaInsert(s_insert->objName, colunas) == SUCCESS ) {
+		if( finalizaInsert( s_insert->objName, colunas ) == SUCCESS ) {
 			printf( "INSERT 0 1\n" );
 		}
 	}
@@ -590,20 +583,24 @@ void insert( rc_insert * s_insert ) {
 }
 
 // Tentar utilizar ssel para impressão de tabelas que nao cabem na tela
-void imprime( const char nomeTabela[] ) {
-    int j = 0, erro = 0, x = 0;
-    struct fs_objects objeto;
+void imprime( const char nomeTabela[], const struct db_options * options ) {
+    int j = 0, erro = 0;
+    struct fs_objects objeto = {};
+	
+	#if UFFS_DEBUG
+		printf( "\n\nNome da tabela: %s\n\n", nomeTabela );
+	#endif
 
     if( !verificaNomeTabela(nomeTabela) ){
-        printf("\nERROR: relation \"%s\" was not found.\n\n\n", nomeTabela);
+        printf( "\nERRO: A relacao \"%s\" nao foi encontrada.\n\n\n", nomeTabela );
         return;
     }
 
     objeto = leObjeto( nomeTabela );
-    tp_table * esquema = leSchema(objeto);
+    tp_table * esquema = leSchema( objeto );
 
     if( esquema == ERRO_ABRIR_ESQUEMA ){
-        printf( "ERROR: schema cannot be created.\n" );
+        printf( "ERRO: Nao foi possivel criar o esquema.\n" );
         free(esquema);
         return;
     }
@@ -613,78 +610,182 @@ void imprime( const char nomeTabela[] ) {
     if( bufferpoll == ERRO_DE_ALOCACAO ){
         free( bufferpoll );
         free( esquema );
-        printf( "ERROR: no memory available to allocate buffer.\n" );
+        printf( "ERRO: Nao ha memoria disponivel para alocar o buffer.\n" );
         return;
     }
 
     erro = SUCCESS;
-    for(x = 0; erro == SUCCESS; x++) {
-        erro = colocaTuplaBuffer(bufferpoll, x, esquema, objeto);
+	int qtdTuplas = 0, x = 0;		
+	
+    for( x = 0; erro == SUCCESS; x++ ) {
+        erro = colocaTuplaBuffer( bufferpoll, x, esquema, objeto );
+		if( erro == SUCCESS ) { 
+			qtdTuplas++;
+		}
+	}		
+	
+	FILE * temp = fopen( ".temp.txt", "w+" );	
+	if( temp == NULL ) {
+		#if UFFS_DEBUG
+			printf( "\nArquivo temp.txt para impressao de tabela nao pode ser criado.\nARQUIVO: %s\nLINHA: %d\n", __FILE__, __LINE__ );
+		#endif
+		return;
 	}
 	
-    int ntuples = --x;	
-	int cont = 0, p = 0;
-	while(x){
-	    column *pagina = getPage(bufferpoll, esquema, objeto, p);
-	    if(pagina == ERRO_PARAMETRO){
-            printf("ERROR: could not open the table.\n");
+	int ntuples = qtdTuplas, p = 0, nrec[QTD_PAGINAS] = { 0 };
+	register int i = 0;
+	column * paginas[QTD_PAGINAS] = { NULL };
+	
+	while( qtdTuplas > 0 ){
+		// NOTA: A quantidade máxima de páginas que cabem no bufferpoll é 1024 no momento
+		// 		  da escrita deste código. Após exceder esse valor a função getPage() não retorna 
+		//		  mais nenhuma página. Felizmente nunca excede porque qtdTuplas chega a ZERO
+		//		  antes que isso aconteça, e o laço é interrompido. Porém seria necessário
+		//		  alterar este comportamento caso fosse implementado uma política
+		//		  de troca do buffer.
+		
+		column * pagina = getPage( bufferpoll, esquema, objeto, p );
+		if( pagina == ERRO_PARAMETRO ) {
+			printf("ERRO: Nao foi possivel abrir a tabela.\n");
             free(bufferpoll);
             free(esquema);
             return;
-	    }
-
-		// Começa a imprimir o cabeçario da tabela( nome das colunas )
-	    if( !cont ) {
-	        for(j=0; j < objeto.qtdCampos; j++){
-	            if(pagina[j].tipoCampo == 'S') {
-	                printf(" %-20s ", pagina[j].nomeCampo);
-	        	} else {
-	                printf(" %-10s ", pagina[j].nomeCampo);					
-				}
-				
-	            if( j < objeto.qtdCampos-1 ) {
-					printf("|");
-				}
-	        }
-	        printf("\n");
-	        for( j=0; j < objeto.qtdCampos; j++ ){
-	            printf( "%s",( pagina[j].tipoCampo == 'S' )
-					? "----------------------"
-					: "------------" 
-				);
-				
-	            if( j<objeto.qtdCampos-1 ) {
-	            	printf( "+" );
-				}				
-	        }
-	        printf("\n");
-	    }
-		// Termina de imprimir cabeçario da tabela
+		}
+		paginas[i] = pagina;
+		nrec[i] = bufferpoll[p].nrec;		
+		qtdTuplas -= bufferpoll[p].nrec;		
+		p++;		
+		i++;
+	}
+	
+	int tamanhoColuna[objeto.qtdCampos];
+	for( i = 0; i < objeto.qtdCampos; i++ ) {
+		tamanhoColuna[i] = 0;
+	}
 		
-	    cont++;
-		for(j=0; j < objeto.qtdCampos*bufferpoll[p].nrec; j++){
-        	if(pagina[j].tipoCampo == 'S')
-            	printf(" %-20s ", pagina[j].valorCampo);
-        	else if(pagina[j].tipoCampo == 'I'){
-            	int *n = (int *)&pagina[j].valorCampo[0];
-            	printf(" %-10d ", *n);
-        	} else if(pagina[j].tipoCampo == 'C'){
-            	printf(" %-10c ", pagina[j].valorCampo[0]);
-        	} else if(pagina[j].tipoCampo == 'D'){
-            	double *n = (double *)&pagina[j].valorCampo[0];
-    	        printf(" %-10f ", *n);
-        	}
-            if(j>=1 && ((j+1)%objeto.qtdCampos)==0)
-            	printf("\n");
-        	else
-        		printf("|");
-    	}
-    	x -= bufferpoll[p++].nrec;
-    }
-    printf("\n(%d %s)\n\n",ntuples,(1>=ntuples)?"row": "rows");
+	int columnIndex = 0;	
+	for( i = 0; paginas[i] != NULL && i < QTD_PAGINAS; i++ ) {
+		for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {						
+			int tamanho = 0;
+			char length[TAMANHO_NOME_CAMPO] = { '\0' };
+			
+			if( paginas[i][j].tipoCampo == 'S' ) {
+				tamanho = strlen( paginas[i][j].valorCampo ) + 1;				
+			} else if( paginas[i][j].tipoCampo == 'I' ) {
+				int *n = (int *)&paginas[i][j].valorCampo[0];
+				snprintf( length, TAMANHO_NOME_CAMPO, "%d", *n );
+				tamanho = strlen( length ) + 1;
+			} else if( paginas[i][j].tipoCampo == 'C' ) {				
+				tamanho = sizeof(char) + 1;
+			} else if( paginas[i][j].tipoCampo == 'D' ) {
+				double *n = (double *)&paginas[i][j].valorCampo[0];
+				snprintf( length, TAMANHO_NOME_CAMPO, "%.*f", options->numeric_precision, *n );
+				tamanho = strlen( length ) + 1;
+			}
+			
+			if( tamanho > tamanhoColuna[columnIndex] ) {
+				tamanhoColuna[columnIndex] = tamanho;
+			}			
+			columnIndex = ( columnIndex + 1 ) % objeto.qtdCampos;			
+		}		
+	}
+	
+	#if UFFS_DEBUG
+		puts( "-------------------------------------" );
+		for( i = 0; i < objeto.qtdCampos; i++ ) {
+			printf( "Maior tamanho da coluna \'%s\': %d\n", esquema[i].nome, tamanhoColuna[i] );
+		}
+		puts( "-------------------------------------" );
+	#endif
+	
+	// Verifica se o ( tam. nome da coluna i ) > ( tam. maior valor da coluna i )
+	for( i = 0; i < objeto.qtdCampos; i++ ) {
+		int size = strlen( esquema[i].nome ) + 1;
+		if( size > tamanhoColuna[i] ) {
+			tamanhoColuna[i] = size;
+		}
+	}
+	
+	// Imprime o header
+	int lineCount = 0;
+	for( i = 0; i < objeto.qtdCampos; i++ ) {
+		int size = strlen( esquema[i].nome ) + 1;
+		
+		fprintf( temp, " %s ", esquema[i].nome );
+		lineCount += ( size  );
+		
+		if( tamanhoColuna[i] != size ) {
+			int spaces = tamanhoColuna[i] - size;
+			int k = 0;
+			while( k < spaces ) {
+				fprintf( temp, " ");
+				lineCount++;
+				k++;
+			}
+		}				
+		if( i+1 < objeto.qtdCampos ) { 
+			fprintf( temp, "|" ); 
+			lineCount++;
+		}
+	}
+	fprintf( temp, "\n" );
+	
+	for( i = 0; i < lineCount; i++ ) {
+		fprintf( temp, "-" );
+	}
+	fprintf( temp, "-\n" );
+		
+	// Imprime os valores das colunas
+	columnIndex = 0;	
+	for( i = 0; paginas[i] != NULL && i < QTD_PAGINAS; i++ ) {
+		for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {			
+			if( paginas[i][j].tipoCampo == 'S' ) {							
+				fprintf( temp, " %-*s", tamanhoColuna[columnIndex], paginas[i][j].valorCampo );
+			} else if( paginas[i][j].tipoCampo == 'I' ) {										
+				int *n = (int *)&paginas[i][j].valorCampo[0];				
+				fprintf( temp, " %-*d", tamanhoColuna[columnIndex], *n );
+			} else if( paginas[i][j].tipoCampo == 'C' ) {				
+				fprintf( temp, " %c", paginas[i][j].valorCampo[0] );
+			} else if( paginas[i][j].tipoCampo == 'D' ) {				
+				double *n = (double *)&paginas[i][j].valorCampo[0];
+				fprintf( temp, " %.*f", options->numeric_precision, *n );
+			}
+			
+			if( j >= 1 && ( (j+1) % objeto.qtdCampos ) == 0 ) {				
+				fprintf( temp, "\n" );        	
+			} else {				
+				fprintf( temp, "|" );
+			}
+			columnIndex = ( columnIndex + 1 ) % objeto.qtdCampos;
+		}
+	}
 
-    free(bufferpoll);
-    free(esquema);
+	fprintf( temp, "\n(%d %s)\n\n", ntuples, ( 1 >= ntuples )
+				? "row"
+				: "rows" 
+	);
+	
+	fclose( temp );
+	if( system( "less .temp.txt" ) == -1 ) {
+		printf( "ERRO: Nao foi possivel exibir a tabela!!!" );
+		#if UFFS_DEBUG
+			puts( "\n----------------------------------------------------------" );
+			printf( "ERRO: Comando less nao pode ser executado ou o arquivo temp.txt nao existe. \nARQUIVO: %s \nLINHA: %d\n", __FILE__, __LINE__ );
+			puts( "----------------------------------------------------------" );
+		#endif
+	}
+	
+	for( i = 0; i < QTD_PAGINAS; i++ ) {	
+		if( paginas[i] != NULL ) {
+			for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {
+				free( paginas[i][j].valorCampo );							
+				free( paginas[i][j].next );
+			}
+		}
+		free( paginas[i] );
+	}
+    free( bufferpoll );
+    free( esquema );
 }
 /* ----------------------------------------------------------------------------------------------
     Objetivo:   Copia todas as informações menos a tabela do objeto, que será removida.
@@ -999,7 +1100,7 @@ void createTable( rc_insert * t ) {
 		temp->chave = t->attribute[i];
 		strcpy( temp->tabelaApt, fkTable );
 		strcpy( temp->attApt, fkColumn );
-		temp->next 	= NULL;		
+		temp->next 	= NULL;				
 		
         tab = adicionaCampo( tab, temp );
 		

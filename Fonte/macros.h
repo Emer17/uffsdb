@@ -40,7 +40,7 @@
 #define TAMANHO_NOME_TABELA 20  // Tamanho do nome da tabela.
 #define TAMANHO_NOME_ARQUIVO 20 // Tamanho do nome do arquivo.
 #define QTD_DB 100
-#define QTD_COLUNAS_PROJ 50		// Quantidade máxima de colunas permitidas no SELECT
+#define QTD_COLUNAS_PROJ 1024		// Quantidade máxima de colunas permitidas no SELECT
 #define TAMANHO_NOME_BANCO 20   // Tamanho do nome do banco
 #define DB_EXISTS 1
 #define DB_NOT_EXISTS 24

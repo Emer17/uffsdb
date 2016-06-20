@@ -148,6 +148,18 @@ void setColumnFKColumnCreate( char **nome ) {
     GLOBAL_PARSER.step++;
 }
 
+void initGlobalStructs() {	
+    GLOBAL_DATA.type = (char *)malloc( sizeof(char) );
+	GLOBAL_DATA.attribute = (int *)malloc( sizeof(int) );	
+	GLOBAL_DATA.selColumn = malloc( sizeof( char * ) * QTD_COLUNAS_PROJ );
+	
+	int i;
+	for( i = 0; i < QTD_COLUNAS_PROJ; ++i ) {
+		GLOBAL_DATA.selColumn[i] = malloc( sizeof( char ) * TAMANHO_NOME_CAMPO );
+		GLOBAL_DATA.selColumn[i][0] = '\0';
+	}
+	
+}
 
 void clearGlobalStructs() {
     int i;
@@ -183,46 +195,27 @@ void clearGlobalStructs() {
 
     free( GLOBAL_DATA.fkColumn );
     GLOBAL_DATA.fkColumn = NULL;
-		
-	//MUDAR TUDO ISTO
-	if( GLOBAL_DATA.selColumn != NULL ) {
-		i = 0;
-		while( i < QTD_COLUNAS_PROJ ) {
-			free( GLOBAL_DATA.selColumn[i] );
-			++i;
-		}
-		free( GLOBAL_DATA.selColumn );
-	}		
 	
-	GLOBAL_DATA.selColumn = NULL;
-	GLOBAL_DATA.selColumn = malloc( sizeof( char * ) * QTD_COLUNAS_PROJ );
-	for( i = 0; i < QTD_COLUNAS_PROJ; ++i ) {
-		GLOBAL_DATA.selColumn[i] = malloc( sizeof( char ) * TAMANHO_NOME_CAMPO );
+	for( i = 0; i < QTD_COLUNAS_PROJ; ++i ) {		
 		GLOBAL_DATA.selColumn[i][0] = '\0';
 	}
-	// ATE AQUI( e considerar nao dar free() em tudo )
-    free( GLOBAL_DATA.type );
-    GLOBAL_DATA.type = (char *)malloc( sizeof(char) );
-
-    free( GLOBAL_DATA.attribute );
-    GLOBAL_DATA.attribute = (int *)malloc( sizeof(int) );
+	
+	*GLOBAL_DATA.type = '\0';
+	*GLOBAL_DATA.attribute = 0;
 
 	if( GLOBAL_PARSER.endOfFile ) {
 		yylex_destroy();
 		GLOBAL_PARSER.endOfFile = 0;
 		GLOBAL_PARSER.readingFile = 0;
-	} 
-    
+	}     
 
-    GLOBAL_DATA.N = 0;
-
-    GLOBAL_PARSER.mode              = OP_INVALID;
-    GLOBAL_PARSER.parentesis        = 0;
-    GLOBAL_PARSER.error           	= 0;
-    GLOBAL_PARSER.col_count         = 0;
-    GLOBAL_PARSER.val_count         = 0;
-    GLOBAL_PARSER.step              = 0;
-	
+    GLOBAL_DATA.N 				= 0;	
+    GLOBAL_PARSER.mode          = OP_INVALID;
+    GLOBAL_PARSER.parentesis    = 0;
+    GLOBAL_PARSER.error         = 0;
+    GLOBAL_PARSER.col_count     = 0;
+    GLOBAL_PARSER.val_count     = 0;
+    GLOBAL_PARSER.step          = 0;	
 }
 
 void setMode( const char mode ) {
@@ -234,11 +227,14 @@ void interface( int argc, char **argv ) {
     //pthread_t pth;
     //pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
     //pthread_join( pth, NULL );
+	initGlobalStructs();
 	clearGlobalStructs();
 	
-	struct db_options options;
-	options.db_name = NULL;
-	
+	// Seria interessante implementar uma funcionalidade onde as configurações são salvas
+	//  em um arquivo em disco e carregadas toda vez que o SGDB é executado. Caso o arquivo
+	//  não seja encontrado, os valores padrão poderiam ser utilizados
+	struct db_options options = { NULL, 3 };
+			
 	int i = 1;	
 	while( i < argc ) {
 		if( argv[i][0] == '-' ) {
@@ -330,7 +326,7 @@ void interface( int argc, char **argv ) {
 									++i;
 								}
 							#endif
-							
+							imprime( GLOBAL_DATA.objName, &options );
 							
 							break;
                         case OP_CREATE_TABLE:

@@ -114,3 +114,5 @@ void setMode( const char mode );
 void interface( int argc, char ** argv );
 
 FILE * loadScript( char * scriptPath );
+
+void initGlobalStructs( void );

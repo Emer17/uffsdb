@@ -1,19 +1,19 @@
 #define FTYPES 1 // flag para identificar se types.h já foi incluída
 
 struct fs_objects { // Estrutura usada para carregar fs_objects.dat
-    char 	nome[TAMANHO_NOME_TABELA];     //  Nome da tabela.
-    int 	cod;                            // Código da tabela.
+    char 	nome[TAMANHO_NOME_TABELA];     //  Nome da tabela.                               // Código da tabela.
     char 	nArquivo[TAMANHO_NOME_ARQUIVO];// Nome do arquivo onde estão armazenados os dados da tabela.
+	int 	cod; 
     int 	qtdCampos;                      // Quantidade de campos da tabela.
 };
 
 typedef struct tp_table{ // Estrutura usada para carregar fs_schema.dat
     char 	nome[TAMANHO_NOME_CAMPO];  // Nome do Campo.                    40bytes
     char 	tipo;                      // Tipo do Campo.                     1bytes
-    int 	tam;                        // Tamanho do Campo.                  4bytes
-    int 	chave;                      // Tipo da chave                      4bytes
-    char 	tabelaApt[TAMANHO_NOME_TABELA]; //Nome da Tabela Apontada        20bytes
+	char 	tabelaApt[TAMANHO_NOME_TABELA]; //Nome da Tabela Apontada        20bytes
     char 	attApt[TAMANHO_NOME_CAMPO];    //Nome do Atributo Apontado       40bytes
+    int 	tam;                        // Tamanho do Campo.                  4bytes
+    int 	chave;                      // Tipo da chave                      4bytes    	
     struct tp_table * next;          // Encadeamento para o próximo campo.
 }tp_table;
 
@@ -32,21 +32,21 @@ typedef struct table{ // Estrutura utilizada para criar uma tabela.
 typedef struct tp_buffer{ // Estrutura utilizada para armazenar o buffer.
    unsigned char 	db;        //Dirty bit
    unsigned char 	pc;        //Pin counter
-   unsigned int 	nrec;       //Número de registros armazenados na página.
    char 			data[TAMANHO_PAGINA];         // Dados
+   unsigned int 	nrec;       //Número de registros armazenados na página.   
    unsigned int 	position;   // Próxima posição válida na página.
 }tp_buffer;
 
 typedef struct rc_insert {
     char *	objName;           // Nome do objeto (tabela, banco de dados, etc...)
     char **	columnName;        // Colunas da tabela
-    char **	values;            // Valores da inserção ou tamanho das strings na criação
-    int     N;                 // Número de colunas de valores
+    char **	values;            // Valores da inserção ou tamanho das strings na criação    
     char *	type;              // Tipo do dado da inserção ou criação de tabela
-    int  *	attribute;         // Utilizado na criação (NPK, PK,FK)
-    char **	fkTable;           // Recebe o nome da tabela FK
+	char **	fkTable;           // Recebe o nome da tabela FK
     char **	fkColumn;          // Recebe o nome da coluna FK
-	char ** selColumn;			// Colunas da lista de projeção ( SELECT )
+	char ** selColumn;			// *Nome* das colunas da lista de projeção ( SELECT )	
+	int     N;                 // Número de colunas de valores ( Para SELECT determina a *quantidade* de colunas na projeção )
+    int  *	attribute;         // Utilizado na criação (NPK, PK,FK)    
 }rc_insert;
 
 typedef struct rc_parser {
@@ -75,20 +75,19 @@ typedef struct db_connected {
 }db_connected;
 
 struct db_options {
-	char * 	db_name;
+	char * 			db_name;
+	unsigned int	numeric_precision; // Opcao que determina a precisao numerica na impressao de valores DOUBLE
 	//char * user_name;
 };
 
 // Union's utilizados na conversão de variáveis do tipo inteiro e double.
 
 union c_double{
-
     double 	dnum;
     char 	double_cnum[sizeof(double)];
 };
 
 union c_int{
-
     int  num;
     char cnum[sizeof(int)];
 };

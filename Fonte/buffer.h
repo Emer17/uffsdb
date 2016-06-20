@@ -26,13 +26,13 @@ int printbufferpoll(tp_buffer *buffpoll, tp_table *s,struct fs_objects objeto, i
     Esta função insere uma tupla em uma página do buffer em que haja espaço suficiente.
     Retorna ERRO_BUFFER_CHEIO caso não haja espeço para a tupla
 
-    *buffer - Estrutura para armazenar tuplas na meméria
+    *buffer - Estrutura para armazenar tuplas na memória
     *from   - Número da tupla a ser posta no buffer. Este número é relativo a ordem de inserção da
               tupla na tabela em disco.
     *campos - Estrutura que armazena esquema da tabela para ler os dados do buffer
     *objeto - Estrutura que armazena dados sobre a tabela que está no buffer
 */
-int colocaTuplaBuffer(tp_buffer *buffer, int from, tp_table *campos, struct fs_objects objeto);
+int colocaTuplaBuffer( tp_buffer *buffer, int from, tp_table *campos, struct fs_objects objeto );
 
 
 /*

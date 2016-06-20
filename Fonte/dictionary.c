@@ -62,7 +62,7 @@ int existeAtributo(char *nomeTabela, column *c){
 
     erro = SUCCESS;
     for(x = 0; erro == SUCCESS; x++)
-        erro = colocaTuplaBuffer(bufferpoll, x, tabela, objeto);
+        erro = colocaTuplaBuffer( bufferpoll, x, tabela, objeto );
 
     pagina = getPage(bufferpoll, tabela, objeto, 0);
 
@@ -171,23 +171,17 @@ int retornaTamanhoValorCampo(char *nomeCampo, table  *tab) {
 }
 ////
 
-char retornaTamanhoTipoDoCampo(char *nomeCampo, table  *tab) {
-
+char retornaTamanhoTipoDoCampo( char *nomeCampo, table  *tab ) {
     char tipo = 0;
+    tp_table * temp = tab->esquema;
 
-    tp_table *temp = tab->esquema;
-
-    while(temp != NULL) {
-
-       if (objcmp(nomeCampo,temp->nome) == 0) {
+    while( temp != NULL ) {
+       if ( objcmp(nomeCampo,temp->nome) == 0 ) {
             tipo = temp->tipo;
-
             return tipo;
        }
-
        temp = temp->next;
     }
-
     return tipo;
 }
 ////
@@ -321,13 +315,15 @@ int procuraObjectArquivo(char *nomeTabela){
     strcat(directoryex, connected.db_directory);
     strcat(directoryex, "fs_object.dat");
 
-    system(directoryex);
+    if( system( directoryex ) == -1 ) {
+		return ERRO_ABRIR_ARQUIVO;
+	}
 
     free(table);
     return SUCCESS;
 }
 //
-struct fs_objects leObjeto(char *nTabela){
+struct fs_objects leObjeto( const char * nTabela ){
 
     FILE *dicionario;
     char *tupla = (char *)malloc(sizeof(char)*TAMANHO_NOME_TABELA);
@@ -431,7 +427,7 @@ tp_table * leSchema( struct fs_objects objeto ) {
 
                 fread( &esquema[i].tipo, sizeof(char), 1, schema );
                 fread( &esquema[i].tam, sizeof(int), 1, schema );
-                fread( &esquema[i].chave, sizeof(int), 1, schema );
+                fread( &esquema[i].chave, sizeof(int), 1, schema );				
 
                 fread( tuplaT, sizeof(char), TAMANHO_NOME_TABELA, schema );
                 strcpylower( esquema[i].tabelaApt,tuplaT );
@@ -509,7 +505,7 @@ table * adicionaCampo( table * t, tp_table * t2 ) {
         strncpylower( e->nome, t2->nome, n ); // Copia nome do campo passado para o esquema
         e->tipo 	= t2->tipo; // Copia tipo do campo passado para o esquema
         e->tam 		= t2->tam; // Copia tamanho do campo passado para o esquema
-        e->chave 	= t2->chave; // Copia tipo de chave passado para o esquema
+        e->chave 	= t2->chave; // Copia tipo de chave passado para o esquema		
 
         if( strlen(t2->tabelaApt) >= 1 ) {
 			strcpylower( e->tabelaApt, t2->tabelaApt ); //Copia a Tabela Refenciada da FK de chave passado para o esquema;
@@ -539,7 +535,7 @@ table * adicionaCampo( table * t, tp_table * t2 ) {
                 strncpylower( e->nome, t2->nome, n ); // Copia nome do campo passado para o esquema
                 e->tipo 	= t2->tipo; // Copia tipo do campo passado para o esquema
                 e->tam 		= t2->tam; // Copia tamanho do campo passado para o esquema
-                e->chave 	= t2->chave; // Copia tipo de chave passado para o esquema
+                e->chave 	= t2->chave; // Copia tipo de chave passado para o esquema				
 
                 strcpylower( e->tabelaApt, t2->tabelaApt ); //Copia a Tabela Refenciada da FK de chave passado para o esquema;
                 strcpylower( e->attApt, t2->attApt ); //Copia o Atributo Refenciado da FK de chave passado para o esquema
@@ -567,8 +563,9 @@ int finalizaTabela( table * t ) {
     strcpy( directory, connected.db_directory );
     strcat( directory, "fs_schema.dat" );
 
-    if( (esquema = fopen( directory,"a+b") ) == NULL )
-        return ERRO_ABRIR_ARQUIVO;
+    if( (esquema = fopen( directory,"a+b") ) == NULL ) {
+        return ERRO_ABRIR_ARQUIVO;		
+	}
 
     for( aux = t->esquema; aux != NULL; aux = aux->next ) { // Salva novos campos no esquema da tabela, fs_schema.dat
 
@@ -578,7 +575,7 @@ int finalizaTabela( table * t ) {
         fwrite( &aux->tam, sizeof(aux->tam), 1, esquema );  //Tamanho campo
         fwrite( &aux->chave, sizeof(aux->chave), 1, esquema );  //Chave do campo
         fwrite( &aux->tabelaApt, sizeof(aux->tabelaApt), 1, esquema );  //Tabela Apontada
-        fwrite( &aux->attApt, sizeof(aux->attApt), 1, esquema );  //Atributo apontado.
+        fwrite( &aux->attApt, sizeof(aux->attApt), 1, esquema );  //Atributo apontado.		
 
         qtdCampos++; // Soma quantidade total de campos inseridos.
     }
@@ -606,35 +603,34 @@ int finalizaTabela( table * t ) {
 }
 
 // INSERE NA TABELA
-column *insereValor(table  *tab, column *c, char *nomeCampo, char *valorCampo) {
+column *insereValor( table * tab, column * c, char * nomeCampo, char * valorCampo ) {
     int i;
 
-    column *aux;
-    column *e = NULL;
+    column * aux = NULL;
+    column * e	= NULL;
 
-    if(c == NULL){ // Se o valor a ser inserido é o primeiro, adiciona primeiro campo.
-
+    if( c == NULL ) { // Se o valor a ser inserido é o primeiro, adiciona primeiro campo.
         e = (column *)malloc(sizeof(column));
 
-        if (e == NULL)    {
+        if( e == NULL ) {
             return ERRO_DE_ALOCACAO;
         }
 
-        memset(e, 0, sizeof(column));
+        memset( e, 0, sizeof(column) );
 
-        int tam = retornaTamanhoValorCampo(nomeCampo, tab);
-        char tipo = retornaTamanhoTipoDoCampo(nomeCampo,tab);
+        int tam = retornaTamanhoValorCampo( nomeCampo, tab );
+        char tipo = retornaTamanhoTipoDoCampo( nomeCampo, tab );
 
         int nTam = strlen(valorCampo);
 
-        if (tipo == 'S') {
+        if( tipo == 'S' ) {
             nTam = tam;
         }
 
-        e->valorCampo = (char *)malloc(sizeof(char) * (nTam+1));
+        e->valorCampo = (char *)malloc( sizeof(char) * (nTam+1) );
 
-        if (e->valorCampo == NULL) {
-            free(e);
+        if( e->valorCampo == NULL ) {
+            free( e );
             return ERRO_DE_ALOCACAO;
         }
 
@@ -643,23 +639,22 @@ column *insereValor(table  *tab, column *c, char *nomeCampo, char *valorCampo) {
         /**
          * Verifica se o nome ultrapassa o limite, se sim trunca
          */
-        if (n > TAMANHO_NOME_CAMPO) {
+        if( n > TAMANHO_NOME_CAMPO ) {
            n = TAMANHO_NOME_CAMPO;
            printf("WARNING: field name exceeded the size limit and was truncated.\n");
         }
-
-
-        strncpylower(e->nomeCampo, nomeCampo, n-1);
-
+        strncpylower( e->nomeCampo, nomeCampo, n-1 );
         n = strlen(valorCampo);
 
         if (n > tam && tipo == 'S') {
             n = tam;
             printf("WARNING: value of column \"%s\" exceeded the size limit and was truncated.\n", nomeCampo);
         }
-
-        for(i=0; i < n; i++) e->valorCampo[i] = valorCampo[i];
-            e->valorCampo[i] = '\0';
+		
+        for( i=0; i < n; i++ ) { 
+			e->valorCampo[i] = valorCampo[i];
+		}
+		e->valorCampo[i] = '\0';
 
         //strncpy(e->valorCampo, valorCampo,n);
 
@@ -667,43 +662,41 @@ column *insereValor(table  *tab, column *c, char *nomeCampo, char *valorCampo) {
         c = e;
         return c;
     } else {
-        for(aux = c; aux != NULL; aux = aux->next) { // Anda até o final da lista de valores a serem inseridos e adiciona um novo valor.
-            if(aux->next == NULL){
-
+		// Anda até o final da lista de valores a serem inseridos e adiciona um novo valor.
+        for( aux = c; aux != NULL; aux = aux->next ) { 
+            if( aux->next == NULL ) {
                 e = (column *)malloc(sizeof(column));
 
-                if (e == NULL) {
+                if( e == NULL ) {
                     return ERRO_DE_ALOCACAO;
                 }
 
-                memset(e, 0, sizeof(column));
+                memset( e, 0, sizeof(column) );
 
-                int tam = retornaTamanhoValorCampo(nomeCampo, tab);
-                char tipo = retornaTamanhoTipoDoCampo(nomeCampo,tab);
+                int tam = retornaTamanhoValorCampo( nomeCampo, tab );
+                char tipo = retornaTamanhoTipoDoCampo( nomeCampo, tab );
+                int nTam = strlen( valorCampo );
 
-                int nTam = strlen(valorCampo);
-
-                if (tipo == 'S') {
+                if( tipo == 'S' ) {
                     nTam = tam;
                 }
 
-                e->valorCampo = (char *) malloc (sizeof(char) * (nTam+1));
+                e->valorCampo = (char *)malloc( sizeof(char) * (nTam+1) );
 
-                if (e->valorCampo == NULL) {
-                    free(e);
+                if( e->valorCampo == NULL ) {
+                    free( e );
                     return ERRO_DE_ALOCACAO;
                 }
 
                 e->next = NULL;
-
                 int n = strlen(nomeCampo)+1;
 
                 /**
                  * Verifica se o nome do campo ultrapassa o limite, se sim trunca
                  */
-                if (n > TAMANHO_NOME_CAMPO) {
+                if( n > TAMANHO_NOME_CAMPO ) {
                    n = TAMANHO_NOME_CAMPO;
-                   printf("WARNING: field name exceeded the size limit and was truncated.\n");
+                   printf( "WARNING: field name exceeded the size limit and was truncated.\n" );
                 }
 
                 strncpylower(e->nomeCampo, nomeCampo, n-1);
@@ -717,8 +710,11 @@ column *insereValor(table  *tab, column *c, char *nomeCampo, char *valorCampo) {
                     printf("WARNING: value of column \"%s\"exceeded the size limit and was truncated.\n", nomeCampo);
                 }
 
-                for(i=0; i < n; i++) e->valorCampo[i] = valorCampo[i];
+                for( i=0; i < n; i++ ) {
+					e->valorCampo[i] = valorCampo[i];
+				}
                 e->valorCampo[i] = '\0';
+
 
                 //strncpy(e->valorCampo, valorCampo,n);
                 aux->next = e;
@@ -727,7 +723,9 @@ column *insereValor(table  *tab, column *c, char *nomeCampo, char *valorCampo) {
         }
     }
 
-    if (e) free(e);
+    if( e ) {
+		free(e);
+	}
     return ERRO_INSERIR_VALOR;
 }
 //////
