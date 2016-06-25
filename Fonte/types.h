@@ -80,8 +80,20 @@ typedef struct db_options {
 	//char * user_name;
 }db_options;
 
-// Union's utilizados na conversão de variáveis do tipo inteiro e double.
+struct campo {
+	char * nome; // Nome do campo
+	char ** valores;	// Array com todos os valores
+	short int maior;	// Comprimento do maior campo ( em caracteres )	
+};
 
+struct campos_container{
+	struct campo ** campos;
+	int ntuples;
+	int ncampos;
+	short int * maioresColunas;
+};
+
+// Union's utilizados na conversão de variáveis do tipo inteiro e double.
 union c_double{
     double 	dnum;
     char 	double_cnum[sizeof(double)];
