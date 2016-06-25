@@ -1786,7 +1786,7 @@ yyreduce:
 	} else {
 		printf( "Quantidade maxima de colunas permitidas na operacao SELECT excedida.\n" );
 		#if UFFS_DEBUG
-			printf( "\n-----------------------------------------------\n" );
+			printf( "\n--------------------DEBUG----------------------\n" );
 			printf( "GLOBAL_DATA.N excedeu o valor de QTD_COLUNAS_PROJ\n" );
 			printf( "-------------------------------------------------\n" );
 			printf( "ARQUIVO: %s\n LINHA: %d\n", __FILE__, __LINE__ );

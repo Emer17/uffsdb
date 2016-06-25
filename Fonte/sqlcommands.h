@@ -7,6 +7,7 @@
 #ifndef FTYPES // garante que types.h não seja reincluída
   #include "types.h"
 #endif
+
 /* insert: Recebe uma estrutura rc_insert e valida os tokens encontrados pela interface().
  *         Se os valores forem válidos, insere um novo valor.
  */
@@ -35,7 +36,7 @@ int finalizaInsert(char *, column *);
     Parametros: Nome da tabela (char).
     Retorno:    void.
    ---------------------------------------------------------------------------------------------*/
-void imprime( const char [], const struct db_options * );
+void imprime( const char [] );
 /* ----------------------------------------------------------------------------------------------
     
 	Objetivo:   Função para exclusão de tabelas.
@@ -96,3 +97,32 @@ void createTable(rc_insert *);
 int verifyFieldName(char **, int );
 
 int verifyFK(char *, char *);
+
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Conta as colunas repetidas no comando SELECT. ( Ex: SELECT nome,nome retorna 2 )
+    Parametros: Nenhum
+    Retorno:    Valor inteiro que representa colunas repetidas
+   ---------------------------------------------------------------------------------------------*/
+int contaColunasRepetidas( void );
+
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Preenche a array campos com todos os valores de coluna contidos em paginas
+    Parametros: 
+				size ( Quantidade total de tuplas da tabela )
+				campos ( Um array 2D de ponteiros para char )
+				paginas ( Array com as paginas carregadas do bufferpool )
+				objeto ( Informações da tabela, como qtdCampos )
+				nrec ( Array com quantidade de registros que cada pagina[i] contem )
+    Retorno:    Valor inteiro que representa colunas repetidas
+   ---------------------------------------------------------------------------------------------*/
+void preencheCampos( int size, char * campos[][size], column ** paginas, struct fs_objects * objeto, int nrec[QTD_PAGINAS] );
+
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Verifica se a coluna passada no comando SELECT existe na tabela passada após FROM
+    Parametros: fs_objects( campo qtdCampos é utilizado ), tp_table( possuí o nome dos campos na tabela )
+    Retorno:    Valor inteiro que representa colunas repetidas
+   ---------------------------------------------------------------------------------------------*/
+int existeColuna( const struct fs_objects * , const tp_table * );
+
+
+

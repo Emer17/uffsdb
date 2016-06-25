@@ -22,6 +22,10 @@
   #include "dictionary.h"
 #endif
 
+#ifndef FPARSER
+	#include "interface/parser.h"
+#endif
+
 /* ---------------------------------------------------------------------------------------------- 
     Objetivo:   Recebe o nome de uma tabela e engloba as funções leObjeto() e leSchema().
     Parametros: Nome da Tabela, Objeto da Tabela e tabela.
@@ -582,9 +586,182 @@ void insert( rc_insert * s_insert ) {
 	freeTable(tabela);
 }
 
-// Tentar utilizar ssel para impressão de tabelas que nao cabem na tela
-void imprime( const char nomeTabela[], const struct db_options * options ) {
-    int j = 0, erro = 0;
+int contaColunasRepetidas() {
+	int duplicates = 0, skip = 0, index = 0, i = 0, j = 0;
+	// Array que armazena nome dos campos já verificados
+	char camposVerificados[QTD_COLUNAS_PROJ/2][TAMANHO_NOME_CAMPO] = { {'\0'} }; 
+	
+	for( i = 0; i < GLOBAL_DATA.N; i++ ) {
+		for( j = 0; camposVerificados[j][0] != '\0' ; j++ ) {
+			// Verifica se selColumn nao coincide com o nome de alguma coluna ja verificada
+			if( strcmp( GLOBAL_DATA.selColumn[i], camposVerificados[j] ) == 0 ) {															
+				skip = 1;
+				break;
+			}
+		}
+		
+		if( skip ) {					
+			skip = 0; 
+			continue;
+		}
+		
+		for( j = i+1; j < GLOBAL_DATA.N; j++ ) {					
+			if( strcmp( GLOBAL_DATA.selColumn[i], GLOBAL_DATA.selColumn[j] ) == 0 ) {						
+				duplicates++;
+			}
+		}
+		
+		// Armazena o nome da coluna verificada, evitando que seja comparada novamente
+		//  em uma futura iteração
+		strcpy( camposVerificados[index], GLOBAL_DATA.selColumn[i] );
+		camposVerificados[index][strlen( GLOBAL_DATA.selColumn[i] )+1] = '\0';
+		index++;
+	}
+	return duplicates;	
+}
+
+int existeColuna( const struct fs_objects * objeto, const tp_table * esquema ) {
+	int i = 0, j = 0;
+	
+	for( i = 0; i < GLOBAL_DATA.N; i++ ) {
+		#if UFFS_DEBUG
+			printf( "\n------------------DEBUG-----------------\n" );
+		#endif
+		
+		for( j = 0; j < objeto->qtdCampos; j++ ) {
+			#if UFFS_DEBUG		
+				printf( "GLOBAL_DATA.selColumn[%d]: \'%s\'\n", i, GLOBAL_DATA.selColumn[i] );
+				printf( "esquema[%d].nome: \'%s\'\n", j, esquema[j].nome );
+				printf( "Houve correspondencia? : %s",  
+						( strcmp( esquema[j].nome, GLOBAL_DATA.selColumn[i] ) == 0 )
+							? "(SIM)\n"
+							: "(NAO)\n"					
+				);
+				printf( "----------------------------------------\n\n" );
+			#endif
+			if( strcmp( esquema[j].nome, GLOBAL_DATA.selColumn[i] ) == 0 ) { break; } // Encontrou, pula para proxima iteração
+			if( j == objeto->qtdCampos-1 ) { // Iterou todos os campos e nao encontrou nenhuma correspondencia				
+				printf( "ERRO: Campo \'%s\' nao foi encontrado na tabela \'%s\'\n", *GLOBAL_DATA.selColumn, objeto->nome );
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
+
+void preencheCampos( int size, char * campos[GLOBAL_DATA.N][size], column ** paginas, struct fs_objects * objeto, int nrec[QTD_PAGINAS] ) {	
+	int camposIndex = 0, e = 0, hit = 0, i = 0, j = 0;	
+	for( i = 0; paginas[i] != NULL && i < QTD_PAGINAS; i++ ) {
+			
+		int inicio = 0, fim = objeto->qtdCampos-1;			
+		for( j = 0; j < nrec[i] * objeto->qtdCampos; ) {			
+			int tamanho = 0;
+			char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };
+			
+			if( paginas[i][j].tipoCampo == 'S' ) {
+				if( strcmp( paginas[i][j].nomeCampo, GLOBAL_DATA.selColumn[camposIndex] ) == 0 ) {					
+					campos[camposIndex][e] = paginas[i][j].valorCampo;						
+					camposIndex = ( camposIndex + 1 ) % GLOBAL_DATA.N;		
+					hit++;						
+				}				
+			} else if( paginas[i][j].tipoCampo == 'I' ) {
+				int *n = (int *)&paginas[i][j].valorCampo[0];
+				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%d", *n );
+				tamanho = strlen( nomeCampo ) + 1;
+				
+				if( strcmp( paginas[i][j].nomeCampo, GLOBAL_DATA.selColumn[camposIndex] ) == 0 ) {
+					char * aux = malloc( sizeof(char) * tamanho );
+					strcpy( aux, nomeCampo );
+					campos[camposIndex][e] = aux;
+					camposIndex = ( camposIndex + 1 ) % GLOBAL_DATA.N;
+					hit++;
+				}	
+			} else if( paginas[i][j].tipoCampo == 'C' ) {
+				if( strcmp( paginas[i][j].nomeCampo, GLOBAL_DATA.selColumn[camposIndex] ) == 0 ) {
+					campos[camposIndex][e] = paginas[i][j].valorCampo;
+					camposIndex = ( camposIndex + 1 ) % GLOBAL_DATA.N;
+					hit++;
+				}
+			} else if( paginas[i][j].tipoCampo == 'D' ) {
+				double *n = (double *)&paginas[i][j].valorCampo[0];
+				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%.*f", options.numeric_precision, *n );
+				tamanho = strlen( nomeCampo ) + 1;
+				
+				if( strcmp( paginas[i][j].nomeCampo, GLOBAL_DATA.selColumn[camposIndex] ) == 0 ) {
+					char * aux = malloc( sizeof(char) * tamanho );
+					strcpy( aux, nomeCampo );
+					campos[camposIndex][e] = aux;
+					camposIndex = ( camposIndex + 1 ) % GLOBAL_DATA.N;
+					hit++;
+				}
+			}
+
+			// Se encontrou todos os campos necessários, avança p/ próxima tupla
+			if( hit == GLOBAL_DATA.N ) {	
+				hit = 0;				
+				e++;
+				inicio = fim+1;
+				fim = inicio + objeto->qtdCampos-1;
+				j = inicio;
+			} else {
+				if( j == fim ) {
+					j = inicio;
+				} else {
+					j++;
+				}
+			} 	
+		
+		}		
+	}	
+}
+
+void tamanhoTodosCampos( int * tamanhoColuna, column ** paginas, struct fs_objects * objeto, int nrec[QTD_PAGINAS] ) {
+	int columnIndex = 0, i = 0, j = 0;	
+	for( i = 0; paginas[i] != NULL && i < QTD_PAGINAS; i++ ) {
+	
+		for( j = 0; j < nrec[i] * objeto->qtdCampos; j++ ) {
+			int tamanho = 0;
+			char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };
+			
+			if( paginas[i][j].tipoCampo == 'S' ) {
+				tamanho = strlen( paginas[i][j].valorCampo ) + 1;	
+			} else if( paginas[i][j].tipoCampo == 'I' ) {
+				int *n = (int *)&paginas[i][j].valorCampo[0];
+				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%d", *n );
+				tamanho = strlen( nomeCampo ) + 1;
+			} else if( paginas[i][j].tipoCampo == 'C' ) {				
+				tamanho = sizeof(char) + 1;
+			} else if( paginas[i][j].tipoCampo == 'D' ) {
+				double *n = (double *)&paginas[i][j].valorCampo[0];
+				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%.*f", options.numeric_precision, *n );
+				tamanho = strlen( nomeCampo ) + 1;
+			}
+			
+			if( tamanho > tamanhoColuna[columnIndex] ) {
+				tamanhoColuna[columnIndex] = tamanho;
+			}			
+			columnIndex = ( columnIndex + 1 ) % objeto->qtdCampos;						
+		}		
+	}
+}
+
+void tamanhoCampos( int * tamanhoColuna, int ntuples, char * campos[GLOBAL_DATA.N][ntuples] ) {
+	int i = 0, j = 0;	
+	for( i = 0; i < GLOBAL_DATA.N; i++ ) {		
+		for( j = 0; j < ntuples; j++ ) {
+			int tamanho = 0;			
+			tamanho = strlen( campos[i][j] ) + 1;
+			
+			if( tamanho > tamanhoColuna[i] ) {
+				tamanhoColuna[i] = tamanho;
+			}
+		}		
+	} 	
+}
+
+void imprime( const char nomeTabela[] ) {
+    int erro = 0;
+	register int i = 0, j = 0;
     struct fs_objects objeto = {};
 	
 	#if UFFS_DEBUG
@@ -604,9 +781,40 @@ void imprime( const char nomeTabela[], const struct db_options * options ) {
         free(esquema);
         return;
     }
+	
+	int qtdCampos = 0, select_all = 0; 
+	if( *GLOBAL_DATA.selColumn[0] == '*' ) {
+		qtdCampos = objeto.qtdCampos;
+		select_all = 1;
+	} else {				
+		qtdCampos = GLOBAL_DATA.N;
+		
+		// Verifica se a quantidade de colunas passadas no SELECT é <= à quantidade de colunas
+		// 	que existem na tabela
+		if( qtdCampos > objeto.qtdCampos ) {
+			int duplicates = contaColunasRepetidas();
+			
+			#if UFFS_DEBUG
+				puts( "\n---------------------DEBUG---------------------" );
+				printf( "Quantidade de colunas duplicadas no comando SELECT: %d\n", duplicates );
+				puts( "-----------------------------------------------\n" );
+			#endif
+			
+			if( ( qtdCampos - duplicates ) > objeto.qtdCampos ) {
+				printf( "ERRO: Quantidade de colunas em SELECT excede a quantidade de colunas da tabela \'%s\'\n", objeto.nome );
+				return;
+			}			
+		}
+		
+		// Este laço verifica se os nomes das colunas passadas no SELECT existem na tabela
+		if( existeColuna( &objeto, esquema ) == 0 ) {			
+			return;
+		}
+		
+	}
+	printf( "\nqtdCampos: %d\n", qtdCampos );
 
     tp_buffer * bufferpoll = initbuffer();
-
     if( bufferpoll == ERRO_DE_ALOCACAO ){
         free( bufferpoll );
         free( esquema );
@@ -622,21 +830,12 @@ void imprime( const char nomeTabela[], const struct db_options * options ) {
 		if( erro == SUCCESS ) { 
 			qtdTuplas++;
 		}
-	}		
-	
-	FILE * temp = fopen( ".temp.txt", "w+" );	
-	if( temp == NULL ) {
-		#if UFFS_DEBUG
-			printf( "\nArquivo temp.txt para impressao de tabela nao pode ser criado.\nARQUIVO: %s\nLINHA: %d\n", __FILE__, __LINE__ );
-		#endif
-		return;
 	}
 	
-	int ntuples = qtdTuplas, p = 0, nrec[QTD_PAGINAS] = { 0 };
-	register int i = 0;
+	int ntuples = qtdTuplas, p = 0, nrec[QTD_PAGINAS] = { 0 };	
 	column * paginas[QTD_PAGINAS] = { NULL };
-	
-	while( qtdTuplas > 0 ){
+		
+	for( i = 0; qtdTuplas > 0; i++ ) {
 		// NOTA: A quantidade máxima de páginas que cabem no bufferpoll é 1024 no momento
 		// 		  da escrita deste código. Após exceder esse valor a função getPage() não retorna 
 		//		  mais nenhuma página. Felizmente nunca excede porque qtdTuplas chega a ZERO
@@ -655,59 +854,186 @@ void imprime( const char nomeTabela[], const struct db_options * options ) {
 		nrec[i] = bufferpoll[p].nrec;		
 		qtdTuplas -= bufferpoll[p].nrec;		
 		p++;		
-		i++;
+	}
+			
+	#if UFFS_DEBUG
+		puts( "\n----------------DEBUG----------------" );
+		for( i = 0; i < objeto.qtdCampos; i++ ) {		
+			printf( "Capacidade do campo %s: %d bytes\n", esquema[i].nome, esquema[i].tam );		
+		}
+		puts( "-------------------------------------" );
+	#endif
+	
+	char * campos[qtdCampos][ntuples];
+	for( i = 0; i < qtdCampos; i++ ) {
+		for( j = 0; j < ntuples; j++ ) {
+			campos[i][j] = NULL;
+		}
 	}
 	
-	int tamanhoColuna[objeto.qtdCampos];
-	for( i = 0; i < objeto.qtdCampos; i++ ) {
+	if( !select_all ) {
+		preencheCampos( ntuples, campos, paginas, &objeto, nrec );
+		/*
+		int camposIndex = 0, e = 0, hit = 0;	
+		for( i = 0; paginas[i] != NULL && i < QTD_PAGINAS; i++ ) {
+			
+			int inicio = 0, fim = objeto.qtdCampos-1;			
+			for( j = 0; j < nrec[i] * objeto.qtdCampos; ) {			
+				int tamanho = 0;
+				char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };
+				
+				if( paginas[i][j].tipoCampo == 'S' ) {
+					if( strcmp( paginas[i][j].nomeCampo, GLOBAL_DATA.selColumn[camposIndex] ) == 0 ) {					
+						campos[camposIndex][e] = paginas[i][j].valorCampo;						
+						camposIndex = ( camposIndex + 1 ) % qtdCampos;		
+						hit++;						
+					}				
+				} else if( paginas[i][j].tipoCampo == 'I' ) {
+					int *n = (int *)&paginas[i][j].valorCampo[0];
+					snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%d", *n );
+					tamanho = strlen( nomeCampo ) + 1;
+					
+					if( strcmp( paginas[i][j].nomeCampo, GLOBAL_DATA.selColumn[camposIndex] ) == 0 ) {
+						char * aux = malloc( sizeof(char) * tamanho );
+						strcpy( aux, nomeCampo );
+						campos[camposIndex][e] = aux;
+						camposIndex = ( camposIndex + 1 ) % qtdCampos;
+						hit++;
+					}	
+				} else if( paginas[i][j].tipoCampo == 'C' ) {
+					if( strcmp( paginas[i][j].nomeCampo, GLOBAL_DATA.selColumn[camposIndex] ) == 0 ) {
+						campos[camposIndex][e] = paginas[i][j].valorCampo;
+						camposIndex = ( camposIndex + 1 ) % qtdCampos;
+						hit++;
+					}
+				} else if( paginas[i][j].tipoCampo == 'D' ) {
+					double *n = (double *)&paginas[i][j].valorCampo[0];
+					snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%.*f", options.numeric_precision, *n );
+					tamanho = strlen( nomeCampo ) + 1;
+					
+					if( strcmp( paginas[i][j].nomeCampo, GLOBAL_DATA.selColumn[camposIndex] ) == 0 ) {
+						char * aux = malloc( sizeof(char) * tamanho );
+						strcpy( aux, nomeCampo );
+						campos[camposIndex][e] = aux;
+						camposIndex = ( camposIndex + 1 ) % qtdCampos;
+						hit++;
+					}
+				}
+
+				// Se encontrou todos os campos necessários, avança p/ próxima tupla
+				if( hit == qtdCampos ) {	
+					hit = 0;				
+					e++;
+					inicio = fim+1;
+					fim = inicio + objeto.qtdCampos-1;
+					j = inicio;
+				} else {
+					if( j == fim ) {
+						j = inicio;
+					} else {
+						j++;
+					}
+				} 			
+			}
+			
+		}
+		*/		
+		#if UFFS_DEBUG
+			for( i = 0; i < qtdCampos; i++ ) {
+				printf( "\n----Valores em campos[%d]: \'%s\'----\n", i, GLOBAL_DATA.selColumn[i] );
+				for( j = 0; j < ntuples; j++ ) {					
+					printf( "Valor: %s\n", campos[i][j] );					
+				}			
+				puts( "-------------------------------------" );
+			}
+		#endif
+	
+	}
+	
+	// Declara e inicializa tamanhoColuna, que armazena em cada índice do array um tamanho
+	//   associado à cada coluna na ordem em que foram criados na tabela
+	int tamanhoColuna[QTD_COLUNAS_PROJ] = { 0 };
+	/*
+	for( i = 0; i < QTD_COLUNAS_PROJ; i++ ) {
 		tamanhoColuna[i] = 0;
 	}
-		
-	int columnIndex = 0;	
+	*/ 
+	
+	if( select_all ) {
+		tamanhoTodosCampos( tamanhoColuna, paginas, &objeto, nrec );	
+	} else {
+		tamanhoCampos( tamanhoColuna, ntuples, campos );		
+	}
+	
+	
+	// Laço que percorre todas as tuplas e encontra os maiores tamanhos de cada coluna
+	// TODO:	Se select_all for TRUE, utiliza o laço abaixo
+	//			Caso contrario, realiza um for que apenas percorre valores em campos[]
+	/*
+	int columnIndex = 0;
 	for( i = 0; paginas[i] != NULL && i < QTD_PAGINAS; i++ ) {
-		for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {						
+		
+		for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {
 			int tamanho = 0;
-			char length[TAMANHO_NOME_CAMPO] = { '\0' };
+			char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };
+			
+			// O contador sempre passa e ignora as colunas anteriores.
+			// É necessário retornar para poder pegar as colunas anteriores
 			
 			if( paginas[i][j].tipoCampo == 'S' ) {
-				tamanho = strlen( paginas[i][j].valorCampo ) + 1;				
+				tamanho = strlen( paginas[i][j].valorCampo ) + 1;	
 			} else if( paginas[i][j].tipoCampo == 'I' ) {
 				int *n = (int *)&paginas[i][j].valorCampo[0];
-				snprintf( length, TAMANHO_NOME_CAMPO, "%d", *n );
-				tamanho = strlen( length ) + 1;
+				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%d", *n );
+				tamanho = strlen( nomeCampo ) + 1;
 			} else if( paginas[i][j].tipoCampo == 'C' ) {				
 				tamanho = sizeof(char) + 1;
 			} else if( paginas[i][j].tipoCampo == 'D' ) {
 				double *n = (double *)&paginas[i][j].valorCampo[0];
-				snprintf( length, TAMANHO_NOME_CAMPO, "%.*f", options->numeric_precision, *n );
-				tamanho = strlen( length ) + 1;
+				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%.*f", options.numeric_precision, *n );
+				tamanho = strlen( nomeCampo ) + 1;
 			}
 			
 			if( tamanho > tamanhoColuna[columnIndex] ) {
 				tamanhoColuna[columnIndex] = tamanho;
 			}			
 			columnIndex = ( columnIndex + 1 ) % objeto.qtdCampos;			
+			//camposIndex = ( camposIndex + 1 ) % qtdCampos;			
 		}		
 	}
-	
+	*/
 	#if UFFS_DEBUG
-		puts( "-------------------------------------" );
-		for( i = 0; i < objeto.qtdCampos; i++ ) {
-			printf( "Maior tamanho da coluna \'%s\': %d\n", esquema[i].nome, tamanhoColuna[i] );
+		puts( "\n----------------DEBUG----------------" );		
+		for( i = 0; i < qtdCampos; i++ ) {
+			if( select_all ) {
+				printf( "Maior comprimento da coluna \'%s\': %d\n", esquema[i].nome, tamanhoColuna[i] );				
+			} else {
+				printf( "Maior comprimento da coluna \'%s\': %d\n", GLOBAL_DATA.selColumn[i], tamanhoColuna[i] );
+			}
 		}
-		puts( "-------------------------------------" );
+		puts( "-------------------------------------\n" );
 	#endif
 	
-	// Verifica se o ( tam. nome da coluna i ) > ( tam. maior valor da coluna i )
-	for( i = 0; i < objeto.qtdCampos; i++ ) {
+	// Verifica se o ( tam nome da coluna i ) > ( tam maior valor da coluna i )
+	for( i = 0; i < qtdCampos; i++ ) {
 		int size = strlen( esquema[i].nome ) + 1;
 		if( size > tamanhoColuna[i] ) {
 			tamanhoColuna[i] = size;
 		}
 	}
 	
-	// Imprime o header
-	int lineCount = 0;
+	FILE * temp = fopen( ".temp.txt", "w+" );	
+	if( temp == NULL ) {
+		#if UFFS_DEBUG
+			printf( "\nArquivo temp.txt para impressao de tabela nao pode ser criado.\nARQUIVO: %s\nLINHA: %d\n", __FILE__, __LINE__ );
+		#endif
+		return;
+	}
+	
+	// TODO:	Se select_all for TRUE, utiliza laço abaixo
+	//			Caso contrario, utilizar laço que apenas imprime colunas em  GLOBAL_DATA.selColumn
+	// Imprime o header, lineCount determina a quantidade de - (hífens) a imprimir
+	int lineCount = 0;	
 	for( i = 0; i < objeto.qtdCampos; i++ ) {
 		int size = strlen( esquema[i].nome ) + 1;
 		
@@ -730,13 +1056,16 @@ void imprime( const char nomeTabela[], const struct db_options * options ) {
 	}
 	fprintf( temp, "\n" );
 	
+	// Imprime a linha abaixo do header
 	for( i = 0; i < lineCount; i++ ) {
 		fprintf( temp, "-" );
 	}
 	fprintf( temp, "-\n" );
 		
+	// TODO:	Se select_all for TRUE, utiliza laço abaixo
+	//			Senao utiliza outro laço que imprime valores em campos[] apenas
 	// Imprime os valores das colunas
-	columnIndex = 0;	
+	int columnIndex = 0;	
 	for( i = 0; paginas[i] != NULL && i < QTD_PAGINAS; i++ ) {
 		for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {			
 			if( paginas[i][j].tipoCampo == 'S' ) {							
@@ -748,7 +1077,7 @@ void imprime( const char nomeTabela[], const struct db_options * options ) {
 				fprintf( temp, " %c", paginas[i][j].valorCampo[0] );
 			} else if( paginas[i][j].tipoCampo == 'D' ) {				
 				double *n = (double *)&paginas[i][j].valorCampo[0];
-				fprintf( temp, " %.*f", options->numeric_precision, *n );
+				fprintf( temp, " %.*f", options.numeric_precision, *n );
 			}
 			
 			if( j >= 1 && ( (j+1) % objeto.qtdCampos ) == 0 ) {				
@@ -766,10 +1095,13 @@ void imprime( const char nomeTabela[], const struct db_options * options ) {
 	);
 	
 	fclose( temp );
+	
+	// TODO:	Se qtde linhas for < largura do terminal, apenas imprime na tela
+	//			Senao escreve em arquivo temp e utiliza comando less para "imprimir"
 	if( system( "less .temp.txt" ) == -1 ) {
 		printf( "ERRO: Nao foi possivel exibir a tabela!!!" );
 		#if UFFS_DEBUG
-			puts( "\n----------------------------------------------------------" );
+			puts( "\n------------------------DEBUG-----------------------------" );
 			printf( "ERRO: Comando less nao pode ser executado ou o arquivo temp.txt nao existe. \nARQUIVO: %s \nLINHA: %d\n", __FILE__, __LINE__ );
 			puts( "----------------------------------------------------------" );
 		#endif
@@ -778,12 +1110,21 @@ void imprime( const char nomeTabela[], const struct db_options * options ) {
 	for( i = 0; i < QTD_PAGINAS; i++ ) {	
 		if( paginas[i] != NULL ) {
 			for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {
-				free( paginas[i][j].valorCampo );							
-				free( paginas[i][j].next );
+				free( paginas[i][j].valorCampo );				
+				free( paginas[i][j].next );					
 			}
 		}
 		free( paginas[i] );
+	}	
+	
+	/*
+	for( j = 0; j < qtdCampos; j++ ) {
+		for( i = 0; i < ntuples; i++ ) {
+			free( campos[j][i] );
+		}
 	}
+	 */
+	
     free( bufferpoll );
     free( esquema );
 }

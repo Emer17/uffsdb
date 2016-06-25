@@ -14,7 +14,7 @@
 #include "dictionary.h"
 
 tp_buffer * initbuffer() {
-    tp_buffer * bp = (tp_buffer*)malloc( sizeof(tp_buffer) * QTD_PAGINAS );
+    tp_buffer * bp = malloc( sizeof(tp_buffer) * QTD_PAGINAS );
 	if( bp == NULL ) {		
         return ERRO_DE_ALOCACAO;
 	}	

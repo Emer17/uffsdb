@@ -74,11 +74,11 @@ typedef struct db_connected {
     int 	conn_active;
 }db_connected;
 
-struct db_options {
+typedef struct db_options {
 	char * 			db_name;
 	unsigned int	numeric_precision; // Opcao que determina a precisao numerica na impressao de valores DOUBLE
 	//char * user_name;
-};
+}db_options;
 
 // Union's utilizados na conversão de variáveis do tipo inteiro e double.
 
@@ -96,6 +96,8 @@ union c_int{
 **************************************  VARIAVEIS GLOBAIS  **************************************/
 
 extern db_connected connected;
+extern db_options options;
+
 
 /************************************************************************************************
  ************************************************************************************************/

@@ -157,8 +157,10 @@ void initGlobalStructs() {
 	for( i = 0; i < QTD_COLUNAS_PROJ; ++i ) {
 		GLOBAL_DATA.selColumn[i] = malloc( sizeof( char ) * TAMANHO_NOME_CAMPO );
 		GLOBAL_DATA.selColumn[i][0] = '\0';
-	}
+	}	
 	
+	options.db_name = NULL;
+	options.numeric_precision = 3;
 }
 
 void clearGlobalStructs() {
@@ -233,7 +235,7 @@ void interface( int argc, char **argv ) {
 	// Seria interessante implementar uma funcionalidade onde as configurações são salvas
 	//  em um arquivo em disco e carregadas toda vez que o SGDB é executado. Caso o arquivo
 	//  não seja encontrado, os valores padrão poderiam ser utilizados
-	struct db_options options = { NULL, 3 };
+	//struct db_options options = { NULL, 3 };	
 			
 	int i = 1;	
 	while( i < argc ) {
@@ -326,7 +328,7 @@ void interface( int argc, char **argv ) {
 									++i;
 								}
 							#endif
-							imprime( GLOBAL_DATA.objName, &options );
+							imprime( GLOBAL_DATA.objName );
 							
 							break;
                         case OP_CREATE_TABLE:

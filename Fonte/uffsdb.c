@@ -20,10 +20,16 @@
    #include "database.h"
 #endif
 
-#include "interface/y.tab.h"
-#include "interface/parser.h"
+#ifndef YY_YY_Y_TAB_H_INCLUDED
+	#include "interface/y.tab.h"
+#endif
+
+#ifndef FPARSER
+	#include "interface/parser.h"
+#endif
 
 db_connected connected;
+db_options options;
 
 int main( int argc, char ** argv ){
     if( dbInit( NULL ) ) {		
