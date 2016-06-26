@@ -658,12 +658,16 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 		int inicio = 0, fim = objeto->qtdCampos-1;			
 		for( j = 0; j < nrec[i] * objeto->qtdCampos; ) {			
 			int tamanho = 0;
-			char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };
+			char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };			
 			
 			if( paginas[i][j].tipoCampo == 'S' ) {
 				if( strcmp( paginas[i][j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {					
 					camposContainer->campos[camposIndex]->valores[e] = paginas[i][j].valorCampo;
 					tamanho = strlen( paginas[i][j].valorCampo ) + 1;
+					
+					if( i == 0 ) {
+						camposContainer->campos[camposIndex]->tipo = 'S';
+					}
 					
 					if( tamanho > camposContainer->campos[camposIndex]->maior ) {
 						camposContainer->campos[camposIndex]->maior = tamanho;
@@ -676,9 +680,13 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%d", *n );
 				tamanho = strlen( nomeCampo ) + 1;
 				
+				if( i == 0 ) {
+					camposContainer->campos[camposIndex]->tipo = 'I';
+				}
+				
 				if( strcmp( paginas[i][j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
 					char * aux = malloc( sizeof(char) * tamanho );
-					strcpy( aux, nomeCampo );
+					strcpy( aux, nomeCampo );					
 					camposContainer->campos[camposIndex]->valores[e] = aux;
 					
 					if( tamanho > camposContainer->campos[camposIndex]->maior ) {
@@ -692,6 +700,10 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 				if( strcmp( paginas[i][j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
 					camposContainer->campos[camposIndex]->valores[e] = paginas[i][j].valorCampo;
 					tamanho = strlen( paginas[i][j].valorCampo ) + 1;
+					
+					if( i == 0 ) {
+						camposContainer->campos[camposIndex]->tipo = 'C';
+					}
 					
 					if( tamanho > camposContainer->campos[camposIndex]->maior ) {
 						camposContainer->campos[camposIndex]->maior = tamanho;
@@ -707,8 +719,12 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 				
 				if( strcmp( paginas[i][j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
 					char * aux = malloc( sizeof(char) * tamanho );
-					strcpy( aux, nomeCampo );
+					strcpy( aux, nomeCampo );					
 					camposContainer->campos[camposIndex]->valores[e] = aux;
+					
+					if( i == 0 ) {
+						camposContainer->campos[camposIndex]->tipo = 'D';
+					}
 					
 					if( tamanho > camposContainer->campos[camposIndex]->maior ) {
 						camposContainer->campos[camposIndex]->maior = tamanho;
@@ -940,11 +956,10 @@ void imprime( const char nomeTabela[] ) {
 			}			
 		}
 		
-		// Este laço verifica se os nomes das colunas passadas no SELECT existem na tabela
+		// Verifica se os nomes das colunas passadas no SELECT existem na tabela
 		if( existeColuna( &objeto, esquema ) == 0 ) {			
 			return;
-		}
-		
+		}		
 	}	
 
     tp_buffer * bufferpoll = initbuffer();
@@ -954,7 +969,6 @@ void imprime( const char nomeTabela[] ) {
         printf( "ERRO: Nao ha memoria disponivel para alocar o buffer.\n" );
         return;
     }
-
     
 	int qtdTuplas = 0, x = 0;		
 	int erro = SUCCESS;
@@ -1001,7 +1015,7 @@ void imprime( const char nomeTabela[] ) {
 	camposContainer_t.campos 			= malloc( sizeof(struct campo*) * qtdCampos );
 	camposContainer_t.ntuples 			= ntuples;
 	camposContainer_t.ncampos 			= 0;
-	camposContainer_t.maioresColunas 	= malloc( sizeof(int) * qtdCampos );
+	camposContainer_t.maioresColunas 	= malloc( sizeof(int) * qtdCampos );	
 		
 	for( i = 0; i < qtdCampos; i++ ) {
 		struct campo * campo_t = malloc( sizeof(struct campo) );
@@ -1012,23 +1026,25 @@ void imprime( const char nomeTabela[] ) {
 		}
 		campo_t->valores = malloc( sizeof(char*) * ntuples );
 		campo_t->maior 	= 0;
+		campo_t->tipo 	= '\0';
 		camposContainer_t.campos[i] = campo_t;
 		camposContainer_t.ncampos++;
 	}
-	preencheCampos( &camposContainer_t, paginas, &objeto, nrec );
-		
+	preencheCampos( &camposContainer_t, paginas, &objeto, nrec );		
+	
 	/*
 	#if UFFS_DEBUG
 		for( i = 0; i < qtdCampos; i++ ) {
 			printf( "\n----Valores em campos[%d]: \'%s\'----\n", i, camposContainer_t.campos[i]->nome );
+			printf( "Tipo: %c\n", camposContainer_t.campos[i]->tipo );
 			for( j = 0; j < ntuples; j++ ) {					
 				printf( "Valor: %s\n", camposContainer_t.campos[i]->valores[j] );
 			}			
 			puts( "-------------------------------------" );
 		}
 	#endif
-	*/
-	
+	 */
+		
 	#if UFFS_DEBUG
 		puts( "\n----------------DEBUG----------------" );		
 		for( i = 0; i < camposContainer_t.ncampos; i++ ) {			
@@ -1041,33 +1057,59 @@ void imprime( const char nomeTabela[] ) {
 	for( i = 0; i < camposContainer_t.ncampos; i++ ) {
 		int size = strlen( camposContainer_t.campos[i]->nome ) + 1;
 		camposContainer_t.maioresColunas[i] = ( size > camposContainer_t.campos[i]->maior )
-								? size
-								: camposContainer_t.campos[i]->maior;		
+												? size
+												: camposContainer_t.campos[i]->maior;		
 	}
 	
 	if( imprime_tabela( &camposContainer_t ) == 0 ) {
-		printf( "Erro ao exibir tabela\n" ); // Qual erro?
+		printf( "Erro ao exibir tabela\n" ); // Mostrar qual erro, muito ambiguo assim
 	}
 	
-	for( i = 0; i < QTD_PAGINAS; i++ ) {	
+	for( i = 0; i < QTD_PAGINAS; i++ ) {
 		if( paginas[i] != NULL ) {
-			for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {
-				free( paginas[i][j].valorCampo );				
-				free( paginas[i][j].next );					
+			for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {					
+				free( paginas[i][j].valorCampo );
+				free( paginas[i][j].next );				
+				paginas[i][j].valorCampo = NULL;
+				paginas[i][j].next = NULL;
 			}
 		}
 		free( paginas[i] );
-	}	
-	
-	/*
-	for( j = 0; j < qtdCampos; j++ ) {
-		for( i = 0; i < ntuples; i++ ) {
-			free( campos[j][i] );
-		}
+		paginas[i] = NULL;		
 	}
-	 */	
+	
+	char camposVerificados[camposContainer_t.ncampos][TAMANHO_NOME_CAMPO];
+	for( i = 0; i < camposContainer_t.ncampos; i++ ) {
+		camposVerificados[i][0] = '\0';
+	}
+	
+	int index = 0;
+	for( i = 0; i < camposContainer_t.ncampos; i++ ) {		
+		for( j = 0; j < index; j++ ) {
+			if( strcmp( camposContainer_t.campos[i]->nome, camposVerificados[j] ) == 0 ) {
+				continue;
+			}
+		}
+		
+		if( camposContainer_t.campos[i]->tipo == 'D' || camposContainer_t.campos[i]->tipo == 'I' ) {			
+			strcpy( camposVerificados[index], camposContainer_t.campos[i]->nome );
+			index++;
+			for( j = 0; j < camposContainer_t.ntuples; j++ ) {				
+				free( camposContainer_t.campos[i]->valores[j] );
+				camposContainer_t.campos[i]->valores[j] = NULL;
+			}					
+		}		
+		free( camposContainer_t.campos[i]->valores );
+		camposContainer_t.campos[i]->valores = NULL;
+		//free( camposContainer_t.campos[i]->nome ); //NUNCA LIBERAR ESTE CAMPO, pois referencia variável global GLOBAL_DATA.selColumn
+		free( camposContainer_t.campos[i] );
+		camposContainer_t.campos[i] = NULL;		
+	}
+	
+	free( camposContainer_t.campos );
+	free( camposContainer_t.maioresColunas );
     free( bufferpoll );
-    free( esquema );
+    free( esquema );	
 }
 /* ----------------------------------------------------------------------------------------------
     Objetivo:   Copia todas as informações menos a tabela do objeto, que será removida.

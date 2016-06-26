@@ -82,6 +82,7 @@ typedef struct db_options {
 
 struct campo {
 	char * nome; // Nome do campo
+	char tipo; // Tipo do campo
 	char ** valores;	// Array com todos os valores
 	short int maior;	// Comprimento do maior campo ( em caracteres )	
 };
