@@ -26,6 +26,7 @@
 #endif
 
 extern char* yytext[];
+extern int yyleng;
 extern FILE * yyin;
 extern FILE* outFile_p;
 
@@ -44,13 +45,14 @@ int yywrap() {
 
 %%
 
-%token  INSERT      INTO        VALUES      SELECT      FROM
-        CREATE      TABLE       INTEGER     VARCHAR     DOUBLE
-        CHAR        PRIMARY     KEY         REFERENCES  DATABASE
-        DROP        OBJECT      NUMBER      VALUE       QUIT
-        LIST_TABLES LIST_TABLE  ALPHANUM    CONNECT     HELP
-        LIST_DBASES CLEAR       CONTR		RUN_SCRIPT	END_OF_FILE
-		EDITOR;
+%token  INSERT      	INTO        	VALUES      SELECT      FROM
+        CREATE      	TABLE       	INTEGER     VARCHAR     DOUBLE
+        CHAR        	PRIMARY     	KEY         REFERENCES  DATABASE
+        DROP        	OBJECT      	NUMBER      VALUE       QUIT
+        LIST_TABLES 	LIST_TABLE  	ALPHANUM    CONNECT     HELP
+        LIST_DBASES 	CLEAR       	CONTR		RUN_SCRIPT	END_OF_FILE
+		EDITOR			WHERE			EQUAL		LESS		GREATER
+		LESS_EQUAL		GREATER_EQUAL	AND			OR			NOT_EQUAL;		
 
 start: insert | select | create_table | create_database | drop_table | drop_database
      | table_attr | list_tables | connection | exit_program | semicolon {GLOBAL_PARSER.consoleFlag = 1; return 0;}
@@ -137,8 +139,7 @@ run_script: RUN_SCRIPT {
 	return 0; 	
 };
 
-end_of_file: END_OF_FILE {
-	//printf( "FIM\n" );
+end_of_file: END_OF_FILE {	
 	//GLOBAL_PARSER.error = 1;
 	GLOBAL_PARSER.endOfFile = 1;
 	GLOBAL_PARSER.readingFile = 0;
@@ -249,21 +250,25 @@ create_database: CREATE DATABASE {setMode(OP_CREATE_DATABASE);} OBJECT {setObjNa
 drop_database: DROP DATABASE {setMode(OP_DROP_DATABASE);} OBJECT {setObjName(yytext);} semicolon {return 0;};
 
 /* SELECT */
-select:  SELECT {setMode(OP_SELECT);} select_all FROM table_select semicolon {return 0;}
-		| SELECT {setMode(OP_SELECT);} select_multiple FROM table_select semicolon {return 0;};
+select:  SELECT {setMode(OP_SELECT);} select_all FROM table_select opt_where semicolon {return 0;}
+		| SELECT {setMode(OP_SELECT);} select_multiple FROM table_select opt_where semicolon {return 0;};
 
-column_select: OBJECT { strcpy( GLOBAL_DATA.selColumn[GLOBAL_DATA.N], *yytext );
-++GLOBAL_DATA.N; };
+select_multiple: column_select | column_select ',' select_multiple;
+
+column_select: 
+		OBJECT 	{ strcpy( GLOBAL_SELECT.selColumn[GLOBAL_SELECT.qtdColunas], *yytext );
+					++GLOBAL_SELECT.qtdColunas; 
+				};
 
 select_all: '*' { 
-	if( GLOBAL_DATA.N < QTD_COLUNAS_PROJ ) {
-		strcpy( GLOBAL_DATA.selColumn[GLOBAL_DATA.N], *yytext ); 
+	if( GLOBAL_SELECT.qtdColunas < QTD_COLUNAS_PROJ ) {
+		strcpy( GLOBAL_SELECT.selColumn[GLOBAL_SELECT.qtdColunas], *yytext ); 
 		++GLOBAL_DATA.N;		
 	} else {
 		printf( "Quantidade maxima de colunas permitidas na operacao SELECT excedida.\n" );
 		#if UFFS_DEBUG
 			printf( "\n--------------------DEBUG----------------------\n" );
-			printf( "GLOBAL_DATA.N excedeu o valor de QTD_COLUNAS_PROJ\n" );
+			printf( "GLOBAL_SELECT.qtdColunas excedeu o valor de QTD_COLUNAS_PROJ\n" );
 			printf( "-------------------------------------------------\n" );
 			printf( "ARQUIVO: %s\n LINHA: %d\n", __FILE__, __LINE__ );
 			printf( "-------------------------------------------------\n" );
@@ -271,7 +276,101 @@ select_all: '*' {
 	}
 };
 
-select_multiple: column_select | column_select ',' select_multiple;
+opt_where: 	| WHERE {GLOBAL_SELECT.where=1;} exp_where;
+
+exp_where:	lvalue copy_lvalue op rvalue copy_rvalue exp_where_opt;	
+
+copy_lvalue:
+{	
+	char temp[TAMANHO_NOME_CAMPO] = { '\0' };
+	int i, index;
+	
+	if( yyleng+1 > TAMANHO_NOME_CAMPO ) {	
+		if( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo == 'S' ) {
+			index = 1;
+			for( i = 0; i < TAMANHO_NOME_CAMPO-1; i++, index++ ) {
+				temp[i] = yytext[0][index];
+			}
+			temp[TAMANHO_NOME_CAMPO-1] = '\0';
+			strcpy( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].lvalue, temp);
+		} else {			
+			for( i = 0; i < TAMANHO_NOME_CAMPO-1; i++ ) {			
+				temp[i] = yytext[0][i];
+			}
+			temp[TAMANHO_NOME_CAMPO-1] = '\0';
+			strcpy( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].lvalue, temp );
+		}
+	} else {
+		if( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo == 'S' ) {
+			index = 1;
+			for( i = 0; index < yyleng-1; i++, index++ ) {
+				temp[i] = yytext[0][index];
+			}
+			temp[yyleng-1] = '\0';
+			strcpy( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].lvalue, temp);
+		} else {		
+			strcpy( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].lvalue, *yytext );			
+		}
+	}				
+	GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].lvalue[TAMANHO_NOME_CAMPO-1] = '\0';	
+}
+
+copy_rvalue:
+{	
+	char temp[TAMANHO_NOME_CAMPO] = { '\0' };
+	int i, index;
+	
+	if( yyleng+1 > TAMANHO_NOME_CAMPO ) {	
+		if( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo == 'S' ) {
+			index = 1;
+			for( i = 0; i < TAMANHO_NOME_CAMPO-1; i++, index++ ) {
+				temp[i] = yytext[0][index];
+			}
+			temp[TAMANHO_NOME_CAMPO-1] = '\0';
+			strcpy( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rvalue, temp);
+		} else {			
+			for( i = 0; i < TAMANHO_NOME_CAMPO-1; i++ ) {			
+				temp[i] = yytext[0][i];
+			}
+			temp[TAMANHO_NOME_CAMPO-1] = '\0';
+			strcpy( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rvalue, temp );
+		}
+	} else {
+		if( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo == 'S' ) {
+			index = 1;
+			for( i = 0; index < yyleng-1; i++, index++ ) {
+				temp[i] = yytext[0][index];
+			}
+			temp[yyleng-1] = '\0';
+			strcpy( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rvalue, temp);
+		} else {		
+			strcpy( GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rvalue, *yytext );			
+		}
+	}				
+	GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rvalue[TAMANHO_NOME_CAMPO-1] = '\0';
+	GLOBAL_SELECT.qtdExp++;
+}
+			
+lvalue:    OBJECT 	{GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo = 'O';}
+		|  ALPHANUM {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo = 'S';}
+		|  NUMBER	{GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo = 'I';}
+		|  VALUE	{GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo = 'D';};
+
+rvalue:    OBJECT 	{GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo = 'O';}
+		|  ALPHANUM {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo = 'S';}
+		|  NUMBER	{GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo = 'I';}
+		|  VALUE	{GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo = 'D';};
+
+exp_where_opt: | AND { GLOBAL_SELECT.op_bool[GLOBAL_SELECT.qtdExp-1] = OP_AND; } exp_where
+			   | OR { GLOBAL_SELECT.op_bool[GLOBAL_SELECT.qtdExp-1] = OP_OR; } exp_where;
+	
+
+op:   EQUAL 		{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.equal = 1; }
+	| LESS_EQUAL 	{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.less_equal = 1; } 
+	| NOT_EQUAL 	{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.not_equal = 1; } 
+	| GREATER_EQUAL { GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.greater_equal = 1; }
+	| GREATER 		{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.greater = 1; } 
+	| LESS 			{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.less = 1; };
 
 table_select: OBJECT { setObjName(yytext); };
 

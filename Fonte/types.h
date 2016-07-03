@@ -44,9 +44,8 @@ typedef struct rc_insert {
     char *	type;              // Tipo do dado da inserção ou criação de tabela
 	char **	fkTable;           // Recebe o nome da tabela FK
     char **	fkColumn;          // Recebe o nome da coluna FK
-	char ** selColumn;			// *Nome* das colunas da lista de projeção ( SELECT )	
 	int     N;                 // Número de colunas de valores ( Para SELECT determina a *quantidade* de colunas na projeção )
-    int  *	attribute;         // Utilizado na criação (NPK, PK,FK)    
+    int  *	attribute;         // Utilizado na criação (NPK, PK,FK)
 }rc_insert;
 
 typedef struct rc_parser {
@@ -76,23 +75,52 @@ typedef struct db_connected {
 
 typedef struct db_options {
 	char * 			db_name;
-	unsigned int	numeric_precision; // Opcao que determina a precisao numerica na impressao de valores DOUBLE
+	unsigned int	numeric_precision; // Valor que determina a precisao numerica( casas decimais ) na impressao de valores DOUBLE
 	//char * user_name;
 }db_options;
 
 struct campo {
-	char * nome; // Nome do campo
-	char tipo; // Tipo do campo
-	char ** valores;	// Array com todos os valores
+	char * nome; 		// Nome do campo
+	char tipo; 			// Tipo do campo
+	char ** valores;	// Array com todos os valores do campo
 	short int maior;	// Comprimento do maior campo ( em caracteres )	
 };
 
-struct campos_container{
-	struct campo ** campos;
-	int ntuples;
-	int ncampos;
-	short int * maioresColunas;
+struct campos_container {
+	struct campo ** campos;			// Array com todos os campos
+	int ntuples;					// Número de tuplas/registros de todos os campos
+	int ncampos;					// Número de campos( determina o tamanho do array ** campos )
+	short int * maioresColunas;		// Array em que cada índice determina o tamanho ( em caracteres ) dos campos
 };
+
+struct where_operator {
+	unsigned int equal:1;
+	unsigned int not_equal:1;
+	unsigned int less:1;
+	unsigned int less_equal:1;
+	unsigned int greater:1;
+	unsigned int greater_equal:1;
+};
+
+struct where_data {
+	struct where_operator 	op;
+	unsigned int 			result:1;
+	char 					ltipo;
+	char 					rtipo;
+	char  					lvalue[TAMANHO_NOME_CAMPO];
+	char  					rvalue[TAMANHO_NOME_CAMPO];
+};
+
+typedef struct select_data {	
+	char ** 			selColumn;			// *Nome* das colunas passadas na lista de projeção ( SELECT )
+	int     			qtdColunas;          // Determina a *quantidade* de colunas na projeção
+	int     			qtdExp;          	// Determina a quantidade de expressões presentes em WHERE		
+	struct where_data 	expressoes[QTD_COLUNAS_PROJ];
+	int 	 			op_bool[QTD_COLUNAS_PROJ-1];
+	int 				where;
+}select_data;
+
+
 
 // Union's utilizados na conversão de variáveis do tipo inteiro e double.
 union c_double{
@@ -110,7 +138,7 @@ union c_int{
 
 extern db_connected connected;
 extern db_options options;
-
+extern select_data GLOBAL_SELECT;
 
 /************************************************************************************************
  ************************************************************************************************/

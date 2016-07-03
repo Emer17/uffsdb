@@ -19,6 +19,7 @@
 
 (?i:INSERT)						return INSERT;
 (?i:INTO)						return INTO;
+(?i:WHERE)						return WHERE;
 (?i:VALUES)						return VALUES;
 (?i:SELECT)						return SELECT;
 (?i:FROM)						return FROM;
@@ -35,39 +36,52 @@
 (?i:DATABASE)					return DATABASE;
 (?i:DROP)						return DROP;
 (?i:CONTRIBUTORS)               return CONTR;
+(?i:AND)						return AND;
+(?i:OR)							return OR;
 (?i:HELP)						return HELP;
 [\\][h]							return HELP;
 [\\][h]+[^\n]*					{invalidCommand(yytext);};
 [\\][\?]						return HELP;
 (?i:CLEAR)						return CLEAR;
 
-[,]+							return *yytext;
+[,]								return *yytext;
 [;]+							return *yytext;
-[*]+							return *yytext;
-[(]+							return *yytext;
-[)]+							return *yytext;
+[*]								return *yytext;
+[(]								return *yytext;
+[)]								return *yytext;
+"="								return EQUAL;
+"<"								return LESS;
+">"								return GREATER;
+"<="							return LESS_EQUAL;
+">="							return GREATER_EQUAL;
+"!="							return NOT_EQUAL;
+"<>"							return NOT_EQUAL;
 
 ([a-zA-Z_]+[0-9_]*)+			{yylval.strval = yytext; return OBJECT;};
-[\']([^'])+[\']			  		{yylval.strval = yytext; return ALPHANUM;};
+[\']([^'])+[\']					{yylval.strval = yytext; return ALPHANUM;};
 [0-9]*\.[0-9]*					{yylval.strval = yytext; return VALUE;};
-[0-9]+							{yylval.strval = yytext; return NUMBER;}
+[0-9]+							{yylval.strval = yytext; return NUMBER;};
 
 [\n]							{	
-									if( GLOBAL_PARSER.mode != OP_INVALID && !GLOBAL_PARSER.readingFile ) {
-										if( GLOBAL_PARSER.parentesis ) {
-											printf( "%s(# ", connected.db_name );
-										} else {
-											printf( "%s-# ", connected.db_name );
-										}
-									} else if ( connected.conn_active ) {
-								 		if( GLOBAL_PARSER.consoleFlag ) {
-							                //GLOBAL_PARSER.consoleFlag = 0;
-							            } else {
-							                printf( "%s=# ", connected.db_name );
+									if( GLOBAL_PARSER.mode != OP_INVALID ) {
+										if( !GLOBAL_PARSER.readingFile ) {
+											if( GLOBAL_PARSER.parentesis ) {
+												printf( "%s(# ", connected.db_name );
+											} else {
+												printf( "%s-# ", connected.db_name );
+											}
 										}
 									} else {
-								 		printf( ">" );
-									}
+										if ( connected.conn_active ) {
+											if( GLOBAL_PARSER.consoleFlag ) {
+												//GLOBAL_PARSER.consoleFlag = 0;
+											} else {												
+												printf( "%s=# ", connected.db_name );																								
+											}
+										} else {
+											printf( ">" );
+										}
+									} 
 								};
 
 [\\][c]							return CONNECT;

@@ -151,12 +151,33 @@ void setColumnFKColumnCreate( char **nome ) {
 void initGlobalStructs() {	
     GLOBAL_DATA.type = (char *)malloc( sizeof(char) );
 	GLOBAL_DATA.attribute = (int *)malloc( sizeof(int) );	
-	GLOBAL_DATA.selColumn = malloc( sizeof( char * ) * QTD_COLUNAS_PROJ );
+	GLOBAL_SELECT.selColumn = malloc( sizeof( char * ) * QTD_COLUNAS_PROJ );
+	GLOBAL_SELECT.qtdColunas = 0;
+	GLOBAL_SELECT.qtdExp = 0;	
+	GLOBAL_SELECT.where = 0;
 	
-	int i;
+	int i;	
+	for( i = 0; i < QTD_COLUNAS_PROJ; i++ ) {
+		GLOBAL_SELECT.expressoes[i].op.equal = 0;
+		GLOBAL_SELECT.expressoes[i].op.greater = 0;
+		GLOBAL_SELECT.expressoes[i].op.greater_equal = 0;
+		GLOBAL_SELECT.expressoes[i].op.less = 0;
+		GLOBAL_SELECT.expressoes[i].op.less_equal = 0;
+		GLOBAL_SELECT.expressoes[i].op.not_equal= 0;
+		GLOBAL_SELECT.expressoes[i].result = 0;
+		GLOBAL_SELECT.expressoes[i].ltipo = '\0';
+		GLOBAL_SELECT.expressoes[i].rtipo = '\0';
+		GLOBAL_SELECT.expressoes[i].lvalue[0] = '\0';
+		GLOBAL_SELECT.expressoes[i].rvalue[0] = '\0';		
+	}	
+	
+	for( i = 0; i < QTD_COLUNAS_PROJ-1; i++ ) {
+		GLOBAL_SELECT.op_bool[i] = 0;
+	}
+	
 	for( i = 0; i < QTD_COLUNAS_PROJ; ++i ) {
-		GLOBAL_DATA.selColumn[i] = malloc( sizeof( char ) * TAMANHO_NOME_CAMPO );
-		GLOBAL_DATA.selColumn[i][0] = '\0';
+		GLOBAL_SELECT.selColumn[i] = malloc( sizeof( char ) * TAMANHO_NOME_CAMPO );
+		GLOBAL_SELECT.selColumn[i][0] = '\0';
 	}	
 	
 	options.db_name = NULL;
@@ -199,7 +220,28 @@ void clearGlobalStructs() {
     GLOBAL_DATA.fkColumn = NULL;
 	
 	for( i = 0; i < QTD_COLUNAS_PROJ; ++i ) {		
-		GLOBAL_DATA.selColumn[i][0] = '\0';
+		GLOBAL_SELECT.selColumn[i][0] = '\0';
+	}
+	GLOBAL_SELECT.qtdColunas = 0;
+	GLOBAL_SELECT.qtdExp = 0;
+	GLOBAL_SELECT.where = 0;
+	
+	for( i = 0; i < QTD_COLUNAS_PROJ; i++ ) {
+		GLOBAL_SELECT.expressoes[i].op.equal = 0;
+		GLOBAL_SELECT.expressoes[i].op.greater = 0;
+		GLOBAL_SELECT.expressoes[i].op.greater_equal = 0;
+		GLOBAL_SELECT.expressoes[i].op.less = 0;
+		GLOBAL_SELECT.expressoes[i].op.less_equal = 0;
+		GLOBAL_SELECT.expressoes[i].op.not_equal= 0;
+		GLOBAL_SELECT.expressoes[i].result = 0;
+		GLOBAL_SELECT.expressoes[i].ltipo = '\0';
+		GLOBAL_SELECT.expressoes[i].rtipo = '\0';
+		GLOBAL_SELECT.expressoes[i].lvalue[0] = '\0';
+		GLOBAL_SELECT.expressoes[i].rvalue[0] = '\0';
+	}	
+	
+	for( i = 0; i < QTD_COLUNAS_PROJ-1; i++ ) {
+		GLOBAL_SELECT.op_bool[i] = OP_INVALID;
 	}
 	
 	*GLOBAL_DATA.type = '\0';
@@ -323,8 +365,8 @@ void interface( int argc, char **argv ) {
 							#ifdef UFFS_DEBUG
 								puts( "SELECT" );
 								int i = 0;
-								while( i < GLOBAL_DATA.N ) {
-									printf( "Valor: %s\n", GLOBAL_DATA.selColumn[i] );
+								while( i < GLOBAL_SELECT.qtdColunas ) {
+									printf( "Valor: %s\n", GLOBAL_SELECT.selColumn[i] );
 									++i;
 								}
 							#endif

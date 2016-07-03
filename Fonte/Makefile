@@ -1,10 +1,10 @@
-all: prog
+all: release
 
-prog: *.c interface/*.c interface/*.h
-	gcc *.c interface/*.c -lfl -pthread -o uffsdb -Wall -g -O0
+release: *.c interface/*.c interface/*.h
+	gcc *.c interface/*.c -lfl -o uffsdb -Wall -g -O0
 	
 debug: *.c interface/*.c interface/*.h
-	gcc *.c interface/*.c -lfl -pthread -o uffsdb -Wall -g -DUFFS_DEBUG
+	gcc *.c interface/*.c -lfl -o uffsdb -Wall -g -DUFFS_DEBUG
 
 clean:
 	rm uffsdb

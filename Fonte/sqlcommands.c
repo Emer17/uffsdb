@@ -257,8 +257,8 @@ int verificaChavePK(char *nomeTabela, column *c, char *nomeCampo, char *valorCam
     column *pagina = NULL;
 
     struct fs_objects objeto;
-    tp_table *tabela;
-    tp_buffer *bufferpoll;
+    tp_table * tabela = NULL;
+    tp_buffer * bufferpoll = NULL;
 
     erro = existeAtributo(nomeTabela, c);
     if (erro != SUCCESS ) {
@@ -593,10 +593,10 @@ int contaColunasRepetidas() {
 	// Array que armazena nome dos campos já verificados
 	char camposVerificados[QTD_COLUNAS_PROJ/2][TAMANHO_NOME_CAMPO] = { {'\0'} }; 
 	
-	for( i = 0; i < GLOBAL_DATA.N; i++ ) {
+	for( i = 0; i < GLOBAL_SELECT.qtdColunas; i++ ) {
 		for( j = 0; camposVerificados[j][0] != '\0' ; j++ ) {
 			// Verifica se selColumn nao coincide com o nome de alguma coluna ja verificada
-			if( strcmp( GLOBAL_DATA.selColumn[i], camposVerificados[j] ) == 0 ) {															
+			if( strcmp( GLOBAL_SELECT.selColumn[i], camposVerificados[j] ) == 0 ) {															
 				skip = 1;
 				break;
 			}
@@ -607,16 +607,16 @@ int contaColunasRepetidas() {
 			continue;
 		}
 		
-		for( j = i+1; j < GLOBAL_DATA.N; j++ ) {					
-			if( strcmp( GLOBAL_DATA.selColumn[i], GLOBAL_DATA.selColumn[j] ) == 0 ) {						
+		for( j = i+1; j < GLOBAL_SELECT.qtdColunas; j++ ) {					
+			if( strcmp( GLOBAL_SELECT.selColumn[i], GLOBAL_SELECT.selColumn[j] ) == 0 ) {						
 				duplicates++;
 			}
 		}
 		
 		// Armazena o nome da coluna verificada, evitando que seja comparada novamente
 		//  em uma futura iteração
-		strcpy( camposVerificados[index], GLOBAL_DATA.selColumn[i] );
-		camposVerificados[index][strlen( GLOBAL_DATA.selColumn[i] )+1] = '\0';
+		strcpy( camposVerificados[index], GLOBAL_SELECT.selColumn[i] );
+		camposVerificados[index][strlen( GLOBAL_SELECT.selColumn[i] )+1] = '\0';
 		index++;
 	}
 	return duplicates;	
@@ -625,25 +625,25 @@ int contaColunasRepetidas() {
 int existeColuna( const struct fs_objects * objeto, const tp_table * esquema ) {
 	int i = 0, j = 0;
 	
-	for( i = 0; i < GLOBAL_DATA.N; i++ ) {
+	for( i = 0; i < GLOBAL_SELECT.qtdColunas; i++ ) {
 		#if UFFS_DEBUG
 			printf( "\n------------------DEBUG-----------------\n" );
 		#endif
 		
 		for( j = 0; j < objeto->qtdCampos; j++ ) {
 			#if UFFS_DEBUG		
-				printf( "GLOBAL_DATA.selColumn[%d]: \'%s\'\n", i, GLOBAL_DATA.selColumn[i] );
+				printf( "GLOBAL_SELECT.selColumn[%d]: \'%s\'\n", i, GLOBAL_SELECT.selColumn[i] );
 				printf( "esquema[%d].nome: \'%s\'\n", j, esquema[j].nome );
 				printf( "Houve correspondencia? : %s",  
-						( strcmp( esquema[j].nome, GLOBAL_DATA.selColumn[i] ) == 0 )
+						( strcmp( esquema[j].nome, GLOBAL_SELECT.selColumn[i] ) == 0 )
 							? "(SIM)\n"
 							: "(NAO)\n"					
 				);
 				printf( "----------------------------------------\n\n" );
 			#endif
-			if( strcmp( esquema[j].nome, GLOBAL_DATA.selColumn[i] ) == 0 ) { break; } // Encontrou, pula para proxima iteração
+			if( strcmp( esquema[j].nome, GLOBAL_SELECT.selColumn[i] ) == 0 ) { break; } // Encontrou, pula para proxima iteração
 			if( j == objeto->qtdCampos-1 ) { // Iterou todos os campos e nao encontrou nenhuma correspondencia				
-				printf( "ERRO: Campo \'%s\' nao foi encontrado na tabela \'%s\'\n", *GLOBAL_DATA.selColumn, objeto->nome );
+				printf( "ERRO: Campo \'%s\' nao foi encontrado na tabela \'%s\'\n", *GLOBAL_SELECT.selColumn, objeto->nome );
 				return 0;
 			}
 		}
@@ -651,19 +651,214 @@ int existeColuna( const struct fs_objects * objeto, const tp_table * esquema ) {
 	return 1;
 }
 
-void preencheCampos( struct campos_container * camposContainer, column ** paginas, struct fs_objects * objeto, int nrec[QTD_PAGINAS] ) {	
-	int camposIndex = 0, e = 0, hit = 0, i = 0, j = 0;	
-	for( i = 0; paginas[i] != NULL && i < QTD_PAGINAS; i++ ) {
+void preencheCampos( struct campos_container * camposContainer, tp_buffer * bufferpool, struct fs_objects * objeto, tp_table * esquema ) {	
+	int camposIndex = 0, k = 0, e = 0, hit = 0, i = 0, j = 0, qtdTuplas = camposContainer->ntuples, ntuples = 0;
+	for( i = 0; qtdTuplas > 0; i++ ) {
+		column * pagina = getPage( bufferpool, esquema, *objeto, i );
 			
 		int inicio = 0, fim = objeto->qtdCampos-1;			
-		for( j = 0; j < nrec[i] * objeto->qtdCampos; ) {			
-			int tamanho = 0;
-			char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };			
+		for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; ) {
+			int tamanho = 0, y = 0;
+			char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };	
 			
-			if( paginas[i][j].tipoCampo == 'S' ) {
-				if( strcmp( paginas[i][j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {					
-					camposContainer->campos[camposIndex]->valores[e] = paginas[i][j].valorCampo;
-					tamanho = strlen( paginas[i][j].valorCampo ) + 1;
+			if( GLOBAL_SELECT.where ) {
+		
+				char c_lvalue[512] = { '\0' }, c_rvalue[512] = { '\0' }, ltipo = '\0', rtipo = '\0';
+				int i_lvalue = 0, i_rvalue = 0;
+				double d_lvalue = 0, d_rvalue = 0;
+				
+				for( k = 0; k < GLOBAL_SELECT.qtdExp; k++ ) {				
+					switch( GLOBAL_SELECT.expressoes[k].ltipo ) {
+						case 'O':						
+							for( y = inicio; y <= fim; y++ ) {							
+								if( strcmp( pagina[y].nomeCampo, GLOBAL_SELECT.expressoes[k].lvalue ) == 0 ) {								
+									if( pagina[y].tipoCampo == 'S' || pagina[y].tipoCampo == 'C' ) {
+										strcpy( c_lvalue, pagina[y].valorCampo );									
+									} else if( pagina[y].tipoCampo == 'I' ) {
+										i_lvalue = *( &pagina[y].valorCampo[0] );
+									} else if( pagina[y].tipoCampo == 'D' ) {
+										d_lvalue = *( &pagina[y].valorCampo[0] );
+									}
+									ltipo = pagina[y].tipoCampo;
+									break;
+								}
+							}
+						break;
+						
+						case 'S':
+							strcpy( c_lvalue, GLOBAL_SELECT.expressoes[k].lvalue );
+							break;
+						
+						case 'I':
+							i_lvalue = strtol( GLOBAL_SELECT.expressoes[k].lvalue, NULL, 10 );
+							break;
+							
+						case 'D':
+							d_lvalue = strtod( GLOBAL_SELECT.expressoes[k].lvalue, NULL );
+							break;
+					}
+									
+					switch( GLOBAL_SELECT.expressoes[k].rtipo ) {
+						case 'O':						
+							for( y = inicio; y <= fim; y++ ) {							
+								if( strcmp( pagina[y].nomeCampo, GLOBAL_SELECT.expressoes[k].rvalue ) == 0 ) {
+									if( pagina[y].tipoCampo == 'S' || pagina[y].tipoCampo == 'C' ) {
+										strcpy( c_rvalue, pagina[y].valorCampo );
+									} else if( pagina[y].tipoCampo == 'I' ) {
+										i_rvalue = *( &pagina[y].valorCampo[0] );
+									} else if( pagina[y].tipoCampo == 'D' ) {
+										d_rvalue = *( &pagina[y].valorCampo[0] );
+									}
+									rtipo = pagina[y].tipoCampo;								
+									break;
+								}
+							}
+						break;
+						
+						case 'S':
+							strcpy( c_rvalue, GLOBAL_SELECT.expressoes[k].rvalue );						
+						break;
+						
+						case 'I':						
+							i_rvalue = strtol( GLOBAL_SELECT.expressoes[k].rvalue, NULL, 10 );						
+						break;
+							
+						case 'D':
+							d_rvalue = strtod( GLOBAL_SELECT.expressoes[k].rvalue, NULL );
+						break;
+					}
+					
+					if( GLOBAL_SELECT.expressoes[k].op.equal ) {
+						if( GLOBAL_SELECT.expressoes[k].ltipo == 'O' ) {
+							if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {
+								if( ltipo != rtipo ) {
+									printf( "Tipos diferentes de objetos!!!\n" );
+									return;
+								}
+								if( ltipo == 'S' ) {
+									GLOBAL_SELECT.expressoes[k].result =  !strcmp( c_lvalue, c_rvalue );
+								} else if( ltipo == 'I' ) {								
+									GLOBAL_SELECT.expressoes[k].result = ( i_lvalue == i_rvalue );
+								} else if( ltipo == 'D' ) {
+									GLOBAL_SELECT.expressoes[k].result = ( d_lvalue == d_rvalue );
+								}
+							} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
+								if( ltipo != 'S' ) { printf( "NAo e possivel comparar %c com string", ltipo ); return; }
+								GLOBAL_SELECT.expressoes[k].result =  !strcmp( c_lvalue, c_rvalue );
+							} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' ) {	
+								if( ltipo == 'S' ) { printf( "NAo e possivel comparar %c com integer", ltipo ); return; }
+								if( ltipo == 'I' ) {
+									GLOBAL_SELECT.expressoes[k].result = ( i_lvalue == i_rvalue );
+								} else if( ltipo == 'D' ) {
+									GLOBAL_SELECT.expressoes[k].result = ( d_lvalue == i_rvalue );
+								}
+							} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
+								if( ltipo == 'S' ) { printf( "NAo e possivel comparar %c com integer", ltipo ); return; }
+								if( ltipo == 'I' ) {								
+									GLOBAL_SELECT.expressoes[k].result = ( i_lvalue == d_rvalue );
+								} else if( ltipo == 'D' ) {
+									GLOBAL_SELECT.expressoes[k].result = ( d_lvalue == d_rvalue );
+								}							
+							}
+						} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'S' ) {
+							if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {
+								if( rtipo != 'S' ) {
+									printf( "rvalue nao e String!!!\n" );
+									return;
+								}
+								GLOBAL_SELECT.expressoes[k].result =  !strcmp( c_lvalue, c_rvalue );							
+							} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
+								GLOBAL_SELECT.expressoes[k].result =  !strcmp( c_lvalue, c_rvalue );
+							} else if( 	GLOBAL_SELECT.expressoes[k].rtipo == 'I' ) {
+								printf( "String nao pode ser comparada com INTEGER\n" );
+								return;
+							} else if( 	GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
+								printf( "String nao pode ser comparada com DOUBLE\n" );
+								return;
+							}
+						} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'I' ) {
+							if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {							
+								if( rtipo != 'I' && rtipo != 'D' ) {
+									printf( "rvalue nao e Integer nem Double!!!\n" );
+									return;
+								}
+								if( rtipo == 'I' ) {
+									GLOBAL_SELECT.expressoes[k].result = ( i_lvalue == i_rvalue );								
+								} else if( rtipo == 'D' ) {
+									GLOBAL_SELECT.expressoes[k].result = ( i_lvalue == d_rvalue );
+								}							
+							} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' ) {
+								GLOBAL_SELECT.expressoes[k].result = ( i_lvalue == i_rvalue );
+							} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
+								printf( "Integer nao pode ser comparada com String\n" );
+								return;
+							} else if ( GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
+								GLOBAL_SELECT.expressoes[k].result = ( i_lvalue == d_rvalue );
+							}
+						} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'D' ) {
+							if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {							
+								if( rtipo != 'I' && rtipo != 'D' ) {
+									printf( "rvalue nao e Double nem Integer!!!\n" );
+									return;
+								}
+								if( rtipo == 'I' ) {
+									GLOBAL_SELECT.expressoes[k].result = ( d_lvalue == i_rvalue );								
+								} else if( rtipo == 'D' ) {
+									GLOBAL_SELECT.expressoes[k].result = ( d_lvalue == d_rvalue );
+								}							
+							} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' ) {
+								GLOBAL_SELECT.expressoes[k].result = ( d_lvalue == i_rvalue );
+							} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
+								printf( "Double nao pode ser comparado com String\n" );
+								return;
+							} else if ( GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
+								GLOBAL_SELECT.expressoes[k].result = ( d_lvalue == d_rvalue );
+							}
+						}
+					} else if( GLOBAL_SELECT.expressoes[k].op.greater ) {
+						
+					} else if( GLOBAL_SELECT.expressoes[k].op.greater_equal ) {
+						
+					} else if( GLOBAL_SELECT.expressoes[k].op.less ) {
+						
+					} else if( GLOBAL_SELECT.expressoes[k].op.less_equal ) {
+						
+					} else if( GLOBAL_SELECT.expressoes[k].op.not_equal ) {
+						
+					}	
+				}
+				
+				int result = 1;
+				if( GLOBAL_SELECT.op_bool[0] != OP_INVALID ) {				
+					if( GLOBAL_SELECT.op_bool[0] == OP_AND ) {
+						result = GLOBAL_SELECT.expressoes[0].result & GLOBAL_SELECT.expressoes[1].result;
+					} else if( GLOBAL_SELECT.op_bool[0] == OP_OR ) {
+						result = GLOBAL_SELECT.expressoes[0].result | GLOBAL_SELECT.expressoes[1].result;
+					}
+					
+					for( k = 2; k < GLOBAL_SELECT.qtdExp; k++ ) {					
+						if( GLOBAL_SELECT.op_bool[k-1] == OP_AND ) {
+							result = result & GLOBAL_SELECT.expressoes[k].result;
+						} else if( GLOBAL_SELECT.op_bool[k-1] == OP_OR ) {
+							result = result | GLOBAL_SELECT.expressoes[k].result;
+						}
+					}				
+				} else {
+					result = GLOBAL_SELECT.expressoes[0].result;
+				}
+				
+				if( result == 0 ) {
+					inicio = fim+1;
+					fim = inicio + objeto->qtdCampos-1;
+					j = inicio;
+					continue;
+				}
+			}
+			
+			if( pagina[j].tipoCampo == 'S' ) {
+				if( strcmp( pagina[j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {					
+					camposContainer->campos[camposIndex]->valores[e] = pagina[j].valorCampo;
+					tamanho = strlen( pagina[j].valorCampo ) + 1;
 					
 					if( i == 0 ) {
 						camposContainer->campos[camposIndex]->tipo = 'S';
@@ -675,8 +870,8 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 					camposIndex = ( camposIndex + 1 ) % camposContainer->ncampos;		
 					hit++;						
 				}				
-			} else if( paginas[i][j].tipoCampo == 'I' ) {
-				int *n = (int *)&paginas[i][j].valorCampo[0];
+			} else if( pagina[j].tipoCampo == 'I' ) {
+				int *n = (int *)&pagina[j].valorCampo[0];
 				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%d", *n );
 				tamanho = strlen( nomeCampo ) + 1;
 				
@@ -684,7 +879,7 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 					camposContainer->campos[camposIndex]->tipo = 'I';
 				}
 				
-				if( strcmp( paginas[i][j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
+				if( strcmp( pagina[j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
 					char * aux = malloc( sizeof(char) * tamanho );
 					strcpy( aux, nomeCampo );					
 					camposContainer->campos[camposIndex]->valores[e] = aux;
@@ -696,10 +891,10 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 					camposIndex = ( camposIndex + 1 ) % camposContainer->ncampos;
 					hit++;
 				}	
-			} else if( paginas[i][j].tipoCampo == 'C' ) {
-				if( strcmp( paginas[i][j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
-					camposContainer->campos[camposIndex]->valores[e] = paginas[i][j].valorCampo;
-					tamanho = strlen( paginas[i][j].valorCampo ) + 1;
+			} else if( pagina[j].tipoCampo == 'C' ) {
+				if( strcmp( pagina[j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
+					camposContainer->campos[camposIndex]->valores[e] = pagina[j].valorCampo;
+					tamanho = strlen( pagina[j].valorCampo ) + 1;
 					
 					if( i == 0 ) {
 						camposContainer->campos[camposIndex]->tipo = 'C';
@@ -712,12 +907,12 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 					camposIndex = ( camposIndex + 1 ) % camposContainer->ncampos;
 					hit++;
 				}
-			} else if( paginas[i][j].tipoCampo == 'D' ) {
-				double *n = (double *)&paginas[i][j].valorCampo[0];
+			} else if( pagina[j].tipoCampo == 'D' ) {
+				double *n = (double *)&pagina[j].valorCampo[0];
 				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%.*f", options.numeric_precision, *n );
 				tamanho = strlen( nomeCampo ) + 1;
 				
-				if( strcmp( paginas[i][j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
+				if( strcmp( pagina[j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
 					char * aux = malloc( sizeof(char) * tamanho );
 					strcpy( aux, nomeCampo );					
 					camposContainer->campos[camposIndex]->valores[e] = aux;
@@ -742,6 +937,7 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 				inicio = fim+1;
 				fim = inicio + objeto->qtdCampos-1;
 				j = inicio;
+				ntuples++;
 			} else {
 				if( j == fim ) {
 					j = inicio;
@@ -750,8 +946,10 @@ void preencheCampos( struct campos_container * camposContainer, column ** pagina
 				}
 			} 	
 		
-		}		
-	}	
+		}	
+		qtdTuplas -= bufferpool[i].nrec;
+	}
+	camposContainer->ntuples = ntuples;
 }
 
 int terminalWidth() {
@@ -869,6 +1067,7 @@ int imprime_arquivo( struct campos_container * camposContainer_t, int tamLinha )
 
 	int j = 0;	
 	for( i = 0; i < camposContainer_t->ntuples; i ++ ) {
+				
 		for( j = 0; j < camposContainer_t->ncampos; j++ ) {
 			fprintf( temp, " %-*s", camposContainer_t->maioresColunas[j], camposContainer_t->campos[j]->valores[i] );
 			
@@ -896,8 +1095,7 @@ int imprime_arquivo( struct campos_container * camposContainer_t, int tamLinha )
 		#endif
 		return 0;
 	}	
-	return 1;
-	
+	return 1;	
 }
 
 int imprime_tabela( struct campos_container * camposContainer_t ) {
@@ -915,7 +1113,21 @@ void imprime( const char nomeTabela[] ) {
 	#if UFFS_DEBUG
 		puts( "\n-----------------DEBUG-----------------" );
 		printf( "Nome da tabela: \'%s\'\n", nomeTabela );
-		puts( "---------------------------------------\n" );
+		for( i = 0; i < GLOBAL_SELECT.qtdExp; i++ ) {	
+			puts( "-------------------------------------------------------\n" );
+			printf( "GLOBAL_SELECT.expressoes[%d].lvalue: %s\n", i, GLOBAL_SELECT.expressoes[i].lvalue );
+			printf( "GLOBAL_SELECT.expressoes[%d].ltipo: %c\n", i, GLOBAL_SELECT.expressoes[i].ltipo );
+			printf( "GLOBAL_SELECT.expressoes[%d].rvalue: %s\n", i, GLOBAL_SELECT.expressoes[i].rvalue );
+			printf( "GLOBAL_SELECT.expressoes[%d].rtipo: %c\n", i, GLOBAL_SELECT.expressoes[i].rtipo );
+			if( GLOBAL_SELECT.expressoes[i].op.equal ) { puts( "EQUAL" ); }
+			else if( GLOBAL_SELECT.expressoes[i].op.not_equal ) { puts( "NOT_EQUAL" ); }
+			else if( GLOBAL_SELECT.expressoes[i].op.less ) { puts( "LESS" ); }
+			else if( GLOBAL_SELECT.expressoes[i].op.less_equal ) { puts( "LESS_EQUAL" ); }
+			else if( GLOBAL_SELECT.expressoes[i].op.greater ) { puts( "GREATER" ); }
+			else if( GLOBAL_SELECT.expressoes[i].op.greater_equal ) { puts( "GREATER_EQUAL" ); }
+			puts( "-------------------------------------------------------\n" );
+		}
+		//puts( "---------------------------------------\n" );
 	#endif
 
     if( !verificaNomeTabela(nomeTabela) ){
@@ -933,11 +1145,11 @@ void imprime( const char nomeTabela[] ) {
     }
 	
 	int qtdCampos = 0, select_all = 0; 
-	if( *GLOBAL_DATA.selColumn[0] == '*' ) {
+	if( *GLOBAL_SELECT.selColumn[0] == '*' ) {
 		qtdCampos = objeto.qtdCampos;
 		select_all = 1;
 	} else {				
-		qtdCampos = GLOBAL_DATA.N;
+		qtdCampos = GLOBAL_SELECT.qtdColunas;
 		
 		// Verifica se a quantidade de colunas passadas no SELECT é <= à quantidade de colunas
 		// 	que existem na tabela
@@ -960,7 +1172,65 @@ void imprime( const char nomeTabela[] ) {
 		if( existeColuna( &objeto, esquema ) == 0 ) {			
 			return;
 		}		
-	}	
+	}	 
+	
+	// Verifica se lvalue e rvalue estao realcionados da maneira correta
+	for( i = 0; i < GLOBAL_SELECT.qtdExp; i++ ) {	
+		if( GLOBAL_SELECT.expressoes[i].ltipo == 'S' ) {
+			if( GLOBAL_SELECT.expressoes[i].rtipo != 'S' && 
+				GLOBAL_SELECT.expressoes[i].rtipo != 'O' 
+			) {
+				printf( "rvalue nao e STRING ou OBJETO\n" );
+				return;
+			}
+		} else if( GLOBAL_SELECT.expressoes[i].ltipo == 'I' ) {
+			if( GLOBAL_SELECT.expressoes[i].rtipo == 'S' ) {
+				printf( "rvalue nao pode ser STRING\n" );
+				return;
+			}
+		} else if( GLOBAL_SELECT.expressoes[i].ltipo == 'D' ) {
+			if( GLOBAL_SELECT.expressoes[i].rtipo == 'S' ) {
+				printf( "rvalue nao pode ser STRING\n" );
+				return;
+			}
+		}
+		puts( "OK" );
+	}
+	
+	// Verifica se os campos passados no WHERE existem na tabela
+	for( i = 0; i < GLOBAL_SELECT.qtdExp; i++ ) {
+		if( GLOBAL_SELECT.expressoes[i].ltipo == 'O' ) {
+			for( j = 0; j < objeto.qtdCampos; j++ ) {
+				printf( "lvalue: %s\n", GLOBAL_SELECT.expressoes[i].lvalue );
+				printf( "campo: %s\n", esquema[j].nome );
+				puts( "---------------------------------------------" );
+				
+				if( strcmp( GLOBAL_SELECT.expressoes[i].lvalue, esquema[j].nome ) == 0 ) {
+					break;
+				}
+				if( j+1 == objeto.qtdCampos ) {
+					printf( "Campo \'%s\' nao existe na tabela %s\n", GLOBAL_SELECT.expressoes[i].lvalue, nomeTabela );
+					return;
+				}
+			}
+		}
+		if( GLOBAL_SELECT.expressoes[i].rtipo == 'O' ) {
+			for( j = 0; j < objeto.qtdCampos; j++ ) {
+				printf( "rvalue: %s\n", GLOBAL_SELECT.expressoes[i].rvalue );
+				printf( "campo: %s\n", esquema[j].nome );
+				puts( "---------------------------------------------" );
+				
+				if( strcmp( GLOBAL_SELECT.expressoes[i].rvalue, esquema[j].nome ) == 0 ) {
+					break;
+				}
+				printf( "i: %d\n", i );
+				if( j+1 == objeto.qtdCampos ) {
+					printf( "Campo \'%s\' nao existe na tabela %s\n", GLOBAL_SELECT.expressoes[i].rvalue, nomeTabela );
+					return;
+				}
+			}
+		}
+	}
 
     tp_buffer * bufferpoll = initbuffer();
     if( bufferpoll == ERRO_DE_ALOCACAO ){
@@ -978,8 +1248,7 @@ void imprime( const char nomeTabela[] ) {
 			qtdTuplas++;
 		}
 	}
-	
-	int ntuples = qtdTuplas, p = 0, nrec[QTD_PAGINAS] = { 0 };	
+	/*	
 	column * paginas[QTD_PAGINAS] = { NULL };
 		
 	for( i = 0; qtdTuplas > 0; i++ ) {
@@ -1002,7 +1271,7 @@ void imprime( const char nomeTabela[] ) {
 		qtdTuplas -= bufferpoll[p].nrec;		
 		p++;		
 	}
-			
+	*/		
 	#if UFFS_DEBUG
 		puts( "\n----------------DEBUG----------------" );
 		for( i = 0; i < objeto.qtdCampos; i++ ) {		
@@ -1013,24 +1282,34 @@ void imprime( const char nomeTabela[] ) {
 	
 	struct campos_container camposContainer_t;
 	camposContainer_t.campos 			= malloc( sizeof(struct campo*) * qtdCampos );
-	camposContainer_t.ntuples 			= ntuples;
+	camposContainer_t.ntuples 			= qtdTuplas;
 	camposContainer_t.ncampos 			= 0;
-	camposContainer_t.maioresColunas 	= malloc( sizeof(int) * qtdCampos );	
+	camposContainer_t.maioresColunas 	= malloc( sizeof(int) * qtdCampos );
+
+	if( camposContainer_t.campos == NULL || camposContainer_t.maioresColunas == NULL ) {
+		puts( "\n----------------DEBUG----------------" );
+		printf( "Erro de alocacao de memoria\nArquivo: %s\nLinha: %d\n", __FILE__, __LINE__ );
+		puts( "-------------------------------------" );
+		return;
+	}
 		
 	for( i = 0; i < qtdCampos; i++ ) {
 		struct campo * campo_t = malloc( sizeof(struct campo) );
 		if( select_all ) {
 			campo_t->nome 	= esquema[i].nome;
 		} else {
-			campo_t->nome 	= GLOBAL_DATA.selColumn[i];
+			campo_t->nome 	= GLOBAL_SELECT.selColumn[i];
 		}
-		campo_t->valores = malloc( sizeof(char*) * ntuples );
+		campo_t->valores = malloc( sizeof(char*) * qtdTuplas );
 		campo_t->maior 	= 0;
 		campo_t->tipo 	= '\0';
 		camposContainer_t.campos[i] = campo_t;
 		camposContainer_t.ncampos++;
 	}
-	preencheCampos( &camposContainer_t, paginas, &objeto, nrec );		
+	
+	preencheCampos( &camposContainer_t, bufferpoll, &objeto, esquema);
+		
+	
 	
 	/*
 	#if UFFS_DEBUG
@@ -1064,7 +1343,7 @@ void imprime( const char nomeTabela[] ) {
 	if( imprime_tabela( &camposContainer_t ) == 0 ) {
 		printf( "Erro ao exibir tabela\n" ); // Mostrar qual erro, muito ambiguo assim
 	}
-	
+	/*
 	for( i = 0; i < QTD_PAGINAS; i++ ) {
 		if( paginas[i] != NULL ) {
 			for( j = 0; j < nrec[i] * objeto.qtdCampos; j++ ) {					
@@ -1077,6 +1356,7 @@ void imprime( const char nomeTabela[] ) {
 		free( paginas[i] );
 		paginas[i] = NULL;		
 	}
+	 */
 	
 	char camposVerificados[camposContainer_t.ncampos][TAMANHO_NOME_CAMPO];
 	for( i = 0; i < camposContainer_t.ncampos; i++ ) {
@@ -1101,7 +1381,7 @@ void imprime( const char nomeTabela[] ) {
 		}		
 		free( camposContainer_t.campos[i]->valores );
 		camposContainer_t.campos[i]->valores = NULL;
-		//free( camposContainer_t.campos[i]->nome ); //NUNCA LIBERAR ESTE CAMPO, pois referencia variável global GLOBAL_DATA.selColumn
+		//free( camposContainer_t.campos[i]->nome ); //NUNCA LIBERAR ESTE CAMPO, pois referencia variável global GLOBAL_SELECT.selColumn
 		free( camposContainer_t.campos[i] );
 		camposContainer_t.campos[i] = NULL;		
 	}

@@ -75,7 +75,16 @@ extern int yydebug;
     CONTR = 285,
     RUN_SCRIPT = 286,
     END_OF_FILE = 287,
-    EDITOR = 288
+    EDITOR = 288,
+    WHERE = 289,
+    EQUAL = 290,
+    LESS = 291,
+    GREATER = 292,
+    LESS_EQUAL = 293,
+    GREATER_EQUAL = 294,
+    AND = 295,
+    OR = 296,
+    NOT_EQUAL = 297
   };
 #endif
 /* Tokens.  */
@@ -110,20 +119,29 @@ extern int yydebug;
 #define RUN_SCRIPT 286
 #define END_OF_FILE 287
 #define EDITOR 288
+#define WHERE 289
+#define EQUAL 290
+#define LESS 291
+#define GREATER 292
+#define LESS_EQUAL 293
+#define GREATER_EQUAL 294
+#define AND 295
+#define OR 296
+#define NOT_EQUAL 297
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 38 "yacc.y" /* yacc.c:1909  */
+#line 39 "yacc.y" /* yacc.c:1909  */
 
     int intval;
     double floatval;
     int subtok;
     char *strval;
 
-#line 127 "y.tab.h" /* yacc.c:1909  */
+#line 145 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

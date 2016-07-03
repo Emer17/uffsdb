@@ -30,6 +30,7 @@
 
 db_connected connected;
 db_options options;
+select_data GLOBAL_SELECT;
 
 int main( int argc, char ** argv ){
     if( dbInit( NULL ) ) {		
