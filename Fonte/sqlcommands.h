@@ -36,7 +36,7 @@ int finalizaInsert(char *, column *);
     Parametros: Nome da tabela (char).
     Retorno:    void.
    ---------------------------------------------------------------------------------------------*/
-void imprime( const char [] );
+void consulta( const char [] );
 /* ----------------------------------------------------------------------------------------------
     
 	Objetivo:   Função para exclusão de tabelas.
@@ -106,23 +106,28 @@ int verifyFK(char *, char *);
 int contaColunasRepetidas( void );
 
 /* ----------------------------------------------------------------------------------------------
-    Objetivo:   Preenche a array campos com todos os valores de coluna contidos em paginas
-    Parametros: 
-				size ( Quantidade total de tuplas da tabela )
-				campos ( Um array 2D de ponteiros para char )
-				paginas ( Array com as paginas carregadas do bufferpool )
-				objeto ( Informações da tabela, como qtdCampos )
-				nrec ( Array com quantidade de registros que cada pagina[i] contem )
-    Retorno:    Valor inteiro que representa colunas repetidas
-   ---------------------------------------------------------------------------------------------*/
-void preencheCampos( int size, char * campos[][size], column ** paginas, struct fs_objects * objeto, int nrec[QTD_PAGINAS] );
-
-/* ----------------------------------------------------------------------------------------------
     Objetivo:   Verifica se a coluna passada no comando SELECT existe na tabela passada após FROM
     Parametros: fs_objects( campo qtdCampos é utilizado ), tp_table( possuí o nome dos campos na tabela )
     Retorno:    Valor inteiro que representa colunas repetidas
    ---------------------------------------------------------------------------------------------*/
-int existeColuna( const struct fs_objects * , const tp_table * );
+int existeColuna( const struct fs_objects *, const tp_table * );
 
+int comparaValoresNumericos( const double *, const double *, const enum where_operator );
+
+int comparaValoresString( const char *, const char *, const enum where_operator );
+
+int preencheCampos( struct campos_container *, tp_buffer *, const struct fs_objects *, tp_table * );
+
+int terminalWidth( void );
+
+int terminalHeight( void );
+
+int calculaTamLinha( const struct campos_container * );
+
+int imprime_tela( const struct campos_container *, const int );
+
+int imprime_arquivo( const struct campos_container *, const int );
+
+int imprime_tabela( const struct campos_container * );
 
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <pthread.h>
+
 #ifndef FMACROS
    #include "../macros.h"
 #endif
@@ -265,17 +265,13 @@ void setMode( const char mode ) {
     GLOBAL_PARSER.step++;
 }
 
-void interface( int argc, char **argv ) {
-    //pthread_t pth;
-    //pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
-    //pthread_join( pth, NULL );
+void interface( int argc, char **argv ) {    
 	initGlobalStructs();
 	clearGlobalStructs();
 	
 	// Seria interessante implementar uma funcionalidade onde as configurações são salvas
 	//  em um arquivo em disco e carregadas toda vez que o SGDB é executado. Caso o arquivo
-	//  não seja encontrado, os valores padrão poderiam ser utilizados
-	//struct db_options options = { NULL, 3 };	
+	//  não seja encontrado, os valores padrão poderiam ser utilizados	
 			
 	int i = 1;	
 	while( i < argc ) {
@@ -331,8 +327,7 @@ void interface( int argc, char **argv ) {
 			printf( "Conectando ao banco padrão...\n\n" );
 			connect( "uffsdb" ); 
 		}
-	}    
-	
+	}    	
 	printf( "uffsdb (15.1).\nType \"help\" for help.\n\n" );	
 
     while( 1 ) {
@@ -341,9 +336,8 @@ void interface( int argc, char **argv ) {
         } else {
             printf( "%s=# ", connected.db_name );
         }
-
-        //pthread_create( &pth, NULL, (void*)yyparse, &GLOBAL_PARSER );
-        //pthread_join( pth, NULL );
+        
+		// A interpretação dos comandos começa aqui
 		yyparse();		
 
         if( !GLOBAL_PARSER.error ) {
@@ -368,7 +362,7 @@ void interface( int argc, char **argv ) {
 									++i;
 								}
 							#endif
-							imprime( GLOBAL_DATA.objName );
+							consulta( GLOBAL_DATA.objName );
 							
 							break;
                         case OP_CREATE_TABLE:
@@ -430,9 +424,7 @@ void interface( int argc, char **argv ) {
         }
 
 		
-        if ( GLOBAL_PARSER.mode != OP_INVALID || GLOBAL_PARSER.endOfFile || GLOBAL_PARSER.error == 1 ) {
-            //pthread_create( &pth, NULL, (void*)clearGlobalStructs, NULL );
-            //pthread_join( pth, NULL );
+        if ( GLOBAL_PARSER.mode != OP_INVALID || GLOBAL_PARSER.endOfFile || GLOBAL_PARSER.error == 1 ) {            
 			clearGlobalStructs();
 			GLOBAL_PARSER.error = 0;
         }
@@ -460,7 +452,7 @@ FILE * loadScript( char * scriptPath ) {
 	
 	FILE * script = fopen( scriptPath, "r" );	
 	if( script == NULL ) {
-		printf( "ERRO: Nao foi possivel abrir o arquivo %s\n", scriptPath );
+		printf( "ERRO: Nao foi possivel abrir o arquivo de script %s\n", scriptPath );
 	}	
 	return script;	
 }
