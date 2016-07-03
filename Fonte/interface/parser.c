@@ -20,6 +20,14 @@
 #ifndef FPARSER
    #include "parser.h"
 #endif
+#ifdef UFFS_DEBUG
+	#ifndef DEBUG_PRINT
+		#define DEBUG_PRINT(x) puts( "-----------------DEBUG--------------------" ); printf x; puts( "\n------------------------------------------" );
+	#endif
+	#ifndef ERROR_PRINT
+		#define ERROR_PRINT(x) puts( "#################ERROR####################" ); printf x; printf( "\nArquivo: %s\nLinha: %d\n", __FILE__, __LINE__ ); puts( "##########################################" );
+	#endif
+#endif
 
 /* Estrutura global que guarda as informações obtidas pelo yacc
  * na identificação dos tokens
@@ -158,12 +166,7 @@ void initGlobalStructs() {
 	
 	int i;	
 	for( i = 0; i < QTD_COLUNAS_PROJ; i++ ) {
-		GLOBAL_SELECT.expressoes[i].op.equal = 0;
-		GLOBAL_SELECT.expressoes[i].op.greater = 0;
-		GLOBAL_SELECT.expressoes[i].op.greater_equal = 0;
-		GLOBAL_SELECT.expressoes[i].op.less = 0;
-		GLOBAL_SELECT.expressoes[i].op.less_equal = 0;
-		GLOBAL_SELECT.expressoes[i].op.not_equal= 0;
+		GLOBAL_SELECT.expressoes[i].op = COMPARISON_EQUAL;
 		GLOBAL_SELECT.expressoes[i].result = 0;
 		GLOBAL_SELECT.expressoes[i].ltipo = '\0';
 		GLOBAL_SELECT.expressoes[i].rtipo = '\0';
@@ -227,12 +230,7 @@ void clearGlobalStructs() {
 	GLOBAL_SELECT.where = 0;
 	
 	for( i = 0; i < QTD_COLUNAS_PROJ; i++ ) {
-		GLOBAL_SELECT.expressoes[i].op.equal = 0;
-		GLOBAL_SELECT.expressoes[i].op.greater = 0;
-		GLOBAL_SELECT.expressoes[i].op.greater_equal = 0;
-		GLOBAL_SELECT.expressoes[i].op.less = 0;
-		GLOBAL_SELECT.expressoes[i].op.less_equal = 0;
-		GLOBAL_SELECT.expressoes[i].op.not_equal= 0;
+		GLOBAL_SELECT.expressoes[i].op = COMPARISON_EQUAL;
 		GLOBAL_SELECT.expressoes[i].result = 0;
 		GLOBAL_SELECT.expressoes[i].ltipo = '\0';
 		GLOBAL_SELECT.expressoes[i].rtipo = '\0';

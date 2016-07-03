@@ -50,8 +50,7 @@ int printbufferpoll(tp_buffer *buffpoll, tp_table *s,struct fs_objects objeto, i
 }
 
 column * getPage( tp_buffer *buffer, tp_table *campos, struct fs_objects objeto, int page ) {
-    if( page >= QTD_PAGINAS ) {
-		puts( "\nSecou a fonte :(\n" );
+    if( page >= QTD_PAGINAS ) {		
         return ERRO_PAGINA_INVALIDA;		
 	}
 

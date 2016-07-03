@@ -266,7 +266,7 @@ select_all: '*' {
 		++GLOBAL_DATA.N;		
 	} else {
 		printf( "Quantidade maxima de colunas permitidas na operacao SELECT excedida.\n" );
-		#if UFFS_DEBUG
+		#ifdef UFFS_DEBUG
 			printf( "\n--------------------DEBUG----------------------\n" );
 			printf( "GLOBAL_SELECT.qtdColunas excedeu o valor de QTD_COLUNAS_PROJ\n" );
 			printf( "-------------------------------------------------\n" );
@@ -365,12 +365,12 @@ exp_where_opt: | AND { GLOBAL_SELECT.op_bool[GLOBAL_SELECT.qtdExp-1] = OP_AND; }
 			   | OR { GLOBAL_SELECT.op_bool[GLOBAL_SELECT.qtdExp-1] = OP_OR; } exp_where;
 	
 
-op:   EQUAL 		{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.equal = 1; }
-	| LESS_EQUAL 	{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.less_equal = 1; } 
-	| NOT_EQUAL 	{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.not_equal = 1; } 
-	| GREATER_EQUAL { GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.greater_equal = 1; }
-	| GREATER 		{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.greater = 1; } 
-	| LESS 			{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op.less = 1; };
+op:   EQUAL 		{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_EQUAL; }
+	| LESS_EQUAL 	{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_LESS_EQUAL; } 
+	| NOT_EQUAL 	{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_NOT_EQUAL; } 
+	| GREATER_EQUAL { GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_GREATER_EQUAL; }
+	| GREATER 		{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_GREATER; } 
+	| LESS 			{ GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_LESS; };
 
 table_select: OBJECT { setObjName(yytext); };
 

@@ -28,6 +28,15 @@
 	#include "interface/parser.h"
 #endif
 
+#ifdef UFFS_DEBUG
+	#ifndef DEBUG_PRINT
+		#define DEBUG_PRINT(x) puts( "-----------------DEBUG--------------------" ); printf x; puts( "\n------------------------------------------" );
+	#endif
+	#ifndef ERROR_PRINT
+		#define ERROR_PRINT(x) puts( "#################ERROR####################" ); printf x; printf( "\nArquivo: %s\nLinha: %d\n", __FILE__, __LINE__ ); puts( "##########################################" );
+	#endif
+#endif
+
 db_connected connected;
 db_options options;
 select_data GLOBAL_SELECT;

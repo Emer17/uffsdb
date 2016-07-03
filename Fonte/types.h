@@ -93,6 +93,7 @@ struct campos_container {
 	short int * maioresColunas;		// Array em que cada índice determina o tamanho ( em caracteres ) dos campos
 };
 
+/*
 struct where_operator {
 	unsigned int equal:1;
 	unsigned int not_equal:1;
@@ -101,15 +102,28 @@ struct where_operator {
 	unsigned int greater:1;
 	unsigned int greater_equal:1;
 };
+*/
+
+enum where_operator {
+	COMPARISON_EQUAL,
+	COMPARISON_NOT_EQUAL,
+	COMPARISON_GREATER_EQUAL,
+	COMPARISON_LESS_EQUAL,
+	COMPARISON_LESS,
+	COMPARISON_GREATER
+};
 
 struct where_data {
-	struct where_operator 	op;
+	//struct where_operator 	op;
+	enum where_operator		op;
 	unsigned int 			result:1;
 	char 					ltipo;
 	char 					rtipo;
 	char  					lvalue[TAMANHO_NOME_CAMPO];
 	char  					rvalue[TAMANHO_NOME_CAMPO];
 };
+
+
 
 typedef struct select_data {	
 	char ** 			selColumn;			// *Nome* das colunas passadas na lista de projeção ( SELECT )
