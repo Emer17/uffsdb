@@ -12,10 +12,19 @@
  *         Se os valores forem válidos, insere um novo valor.
  */
 void insert(rc_insert *);
+
+// Se foram especificadas colunas no *s_insert, verifica se elas existem no esquema
 int allColumnsExists(rc_insert *, table *);
+
+// Busca o tipo do valor na inserção *s_insert do valor que irá para *columnName
+// Se não existe em *s_insert, assume o tipo do esquema já que não receberá nada.
 char getInsertedType(rc_insert *, char *c, table *);
+
+// Busca o valor na inserção *s_insert designado à *columnName.
+// Se não existe, retorna 0, 0.0 ou \0
 char *getInsertedValue(rc_insert *, char *, table *);
-int typesCompatible(char , char);
+
+int typesCompatible( const char, const char );
 /*
     Esta função finaliza a inserção de valores em uma tabela. Assume que o usuário entrou com todos
     os campos de uma tupla completa.
@@ -48,6 +57,7 @@ void consulta( const char [] );
                 ERRO_LEITURA_DADOS.
    ---------------------------------------------------------------------------------------------*/
 int excluirTabela(char *);
+
 /* ----------------------------------------------------------------------------------------------
     Objetivo:   Copia todas as informações menos a tabela do objeto, que será removida.
     Parametros: Objeto que será removido do schema.
@@ -56,6 +66,7 @@ int excluirTabela(char *);
                 ERRO_REMOVER_ARQUIVO_SCHEMA
    ---------------------------------------------------------------------------------------------*/
 int procuraSchemaArquivo(struct fs_objects);
+
 /* ----------------------------------------------------------------------------------------------
     Objetivo:   Gera as verificações em relação a chave FK.
     Parametros: Nome da Tabela, Coluna C, Nome do Campo, Valor do Campo, Tabela Apontada e Atributo Apontado.
@@ -75,6 +86,7 @@ int verificaChaveFK(char *, column *, char *, char *, char *, char *);
                 ERRO_CHAVE_PRIMARIA
    ---------------------------------------------------------------------------------------------*/
 int verificaChavePK(char *, column *, char *, char *);
+
 /* ----------------------------------------------------------------------------------------------
     Objetivo:   Inicializa os atributos necessários para a verificação de FK e PK.
     Parametros: Objeto da tabela, Tabela, Buffer e nome da tabela.
@@ -83,12 +95,14 @@ int verificaChavePK(char *, column *, char *, char *);
                 ERRO_DE_PARAMETRO,
    ---------------------------------------------------------------------------------------------*/
 int iniciaAtributos(struct fs_objects *, tp_table **, tp_buffer **, char *);
+
 /* ----------------------------------------------------------------------------------------------
     Objetivo:   Recebe o nome de uma tabela e engloba as funções leObjeto() e leSchema().
     Parametros: Nome da Tabela, Objeto da Tabela e tabela.
     Retorno:    tp_table
    ---------------------------------------------------------------------------------------------*/
-tp_table *abreTabela(char *, struct fs_objects *, tp_table **);
+tp_table * abreTabela( const char *, struct fs_objects *, tp_table ** );
+
 /* createTable: Recebe uma estrutura contendo os parâmetros do CREATE TABLE
  *              e cria uma tabela no banco corrente
  */

@@ -30,124 +30,108 @@
 
 #ifdef UFFS_DEBUG
 	#ifndef DEBUG_PRINT
-		#define DEBUG_PRINT(x) puts( "-----------------DEBUG--------------------" ); printf x; puts( "\n------------------------------------------" );
+		#define DEBUG_PRINT(x) puts( "-----------------DEBUG--------------------" ); printf x; puts( "\n------------------------------------------\n" );
 	#endif
 	#ifndef ERROR_PRINT
-		#define ERROR_PRINT(x) puts( "#################ERROR####################" ); printf x; printf( "\nArquivo: %s\nLinha: %d\n", __FILE__, __LINE__ ); puts( "##########################################" );
+		#define ERROR_PRINT(x) puts( "#################ERROR####################" ); printf x; printf( "\nArquivo: %s\nLinha: %d\n", __FILE__, __LINE__ ); puts( "##########################################\n" );
 	#endif
 #endif
 
-/* ---------------------------------------------------------------------------------------------- 
-    Objetivo:   Recebe o nome de uma tabela e engloba as funções leObjeto() e leSchema().
-    Parametros: Nome da Tabela, Objeto da Tabela e tabela.
-    Retorno:    tp_table
-   ---------------------------------------------------------------------------------------------*/
-tp_table *abreTabela(char *nomeTabela, struct fs_objects *objeto, tp_table **tabela) {
-    *objeto     = leObjeto(nomeTabela);
-    *tabela     = leSchema(*objeto);
 
+tp_table * abreTabela( const char * nomeTabela, struct fs_objects * objeto, tp_table ** tabela ) {
+    *objeto = leObjeto( nomeTabela );
+    *tabela = leSchema( *objeto );
     return *tabela;
 }
-// Se foram especificadas colunas no *s_insert, verifica se elas existem no esquema.
-int allColumnsExists(rc_insert *s_insert, table *tabela) {
+
+int allColumnsExists( rc_insert * s_insert, table * tabela ) {	
+	if( !s_insert->columnName ) {
+		return 0;
+	}
+
 	int i;
-	if (!s_insert->columnName) return 0;
-
-	for (i = 0; i < s_insert->N; i++)
-		if (retornaTamanhoTipoDoCampo(s_insert->columnName[i], tabela) == 0) {
-			printf("ERROR: column \"%s\" of relation \"%s\" does not exist.\n", s_insert->columnName[i], tabela->nome);
+	for( i = 0; i < s_insert->N; i++ ) {
+		if( retornaTamanhoTipoDoCampo( s_insert->columnName[i], tabela ) == 0 ) {
+			printf( "ERROR: column \"%s\" of relation \"%s\" does not exist.\n", s_insert->columnName[i], tabela->nome );
 			return 0;
-		}
-
+		}		
+	}
 	return 1;
 }
-////
-int typesCompatible(char table_type, char insert_type) {
-	return (table_type == 'D' && insert_type == 'I')
-		|| (table_type == 'D' && insert_type == 'D')
-		|| (table_type == 'I' && insert_type == 'I')
-		|| (table_type == 'S' && insert_type == 'S')
-		|| (table_type == 'S' && insert_type == 'C')
-		|| (table_type == 'C' && insert_type == 'C')
-		|| (table_type == 'C' && insert_type == 'S');
+
+int typesCompatible( const char table_type, const char insert_type ) {
+	return ( table_type == 'D' && insert_type == 'I' )
+		|| ( table_type == 'D' && insert_type == 'D' )
+		|| ( table_type == 'I' && insert_type == 'I' )
+		|| ( table_type == 'S' && insert_type == 'S' )
+		|| ( table_type == 'S' && insert_type == 'C' )
+		|| ( table_type == 'C' && insert_type == 'C' )
+		|| ( table_type == 'C' && insert_type == 'S' );
 }
-////
-// Busca o tipo do valor na inserção *s_insert do valor que irá para *columnName
-// Se não existe em *s_insert, assume o tipo do esquema já que não receberá nada.
-char getInsertedType(rc_insert *s_insert, char *columnName, table *tabela) {
+
+char getInsertedType( rc_insert * s_insert, char * columnName, table * tabela ) {
 	int i;
-	char noValue;
-	for (i = 0; i < s_insert->N; i++) {
-		if (objcmp(s_insert->columnName[i], columnName) == 0) {
+	char noValue = '\0';
+	
+	for( i = 0; i < s_insert->N; i++ ) {
+		if( objcmp( s_insert->columnName[i], columnName ) == 0 ) {
 			return s_insert->type[i];
 		}
 	}
-
-	noValue = retornaTamanhoTipoDoCampo(columnName, tabela);
-
+	noValue = retornaTamanhoTipoDoCampo( columnName, tabela );
 	return noValue;
 }
-// Busca o valor na inserção *s_insert designado à *columnName.
-// Se não existe, retorna 0, 0.0 ou \0
-char *getInsertedValue(rc_insert *s_insert, char *columnName, table *tabela) {
-	int i;
-	char tipo, *noValue;
 
-	for (i = 0; i < s_insert->N; i++) {
-		if (objcmp(s_insert->columnName[i], columnName) == 0) {
+char * getInsertedValue( rc_insert * s_insert, char * columnName, table * tabela ) {
+	int i;
+	char tipo, * noValue = NULL;
+
+	for( i = 0; i < s_insert->N; i++ ) {
+		if( objcmp( s_insert->columnName[i], columnName ) == 0 ) {
 			return s_insert->values[i];
 		}
 	}
 
-	tipo = retornaTamanhoTipoDoCampo(columnName, tabela);
-	noValue = (char *)malloc(sizeof(char)*3);
+	tipo = retornaTamanhoTipoDoCampo( columnName, tabela );
+	noValue = (char *)malloc( sizeof(char) * 3 );
 
-	if (tipo == 'I') {
+	if( tipo == 'I' ) {
 		noValue = "0";
-	} else if (tipo == 'D') {
+	} else if ( tipo == 'D' ) {
 		noValue = "0.0";
-	} else
+	} else {
 		noValue[0] = '\0';
-
+	}
 	return noValue;
 }
-/* ----------------------------------------------------------------------------------------------
-    Objetivo:   Inicializa os atributos necessários para a verificação de FK e PK.
-    Parametros: Objeto da tabela, Tabela, Buffer e nome da tabela.
-    Retorno:    INT
-                SUCCESS,
-                ERRO_DE_PARAMETRO,
-   ---------------------------------------------------------------------------------------------*/
 
-int iniciaAtributos(struct fs_objects *objeto, tp_table **tabela, tp_buffer **bufferpool, char *nomeT){
-
-
-    *objeto     = leObjeto(nomeT);
-    *tabela     = leSchema(*objeto);
+int iniciaAtributos( struct fs_objects * objeto, tp_table ** tabela, tp_buffer ** bufferpool, char * nomeT ){
+    *objeto     = leObjeto( nomeT );
+    *tabela     = leSchema( *objeto );
     *bufferpool = initbuffer();
 
-    if(*tabela == ERRO_ABRIR_ESQUEMA) {
+    if( *tabela == ERRO_ABRIR_ESQUEMA ) {
         return ERRO_DE_PARAMETRO;
     }
-
-    if(*bufferpool == ERRO_DE_ALOCACAO)
-        return ERRO_DE_PARAMETRO;
-
+    if( *bufferpool == ERRO_DE_ALOCACAO ) {
+        return ERRO_DE_PARAMETRO;		
+	}
     return SUCCESS;
 }
-////
-int verifyFK(char *tableName, char *column){
-    if(verificaNomeTabela(tableName) == 1){
-        struct fs_objects objeto = leObjeto(tableName);
-        tp_table *esquema = leSchema(objeto);
-		if(esquema == ERRO_ABRIR_ESQUEMA){
-            printf("ERROR: cannot create schema.\n");
+
+int verifyFK( char * tableName, char * column ) {
+    if( verificaNomeTabela( tableName ) == 1 ) {
+        struct fs_objects objeto = leObjeto( tableName );
+        tp_table * esquema = leSchema( objeto );
+		
+		if( esquema == ERRO_ABRIR_ESQUEMA ) {
+            printf( "ERROR: cannot create schema.\n" );
             return 0;
         }
 
-        for(; esquema != NULL; esquema = esquema->next){
-            if(objcmp(esquema->nome, column) == 0){
-                if(esquema->chave == PK){
+        for(; esquema != NULL; esquema = esquema->next ) {
+            if( objcmp( esquema->nome, column ) == 0 ) {
+                if( esquema->chave == PK ) {
                     return 1;
                 }
             }
@@ -156,90 +140,86 @@ int verifyFK(char *tableName, char *column){
 	return 0;
 }
 
-////////
-/* ----------------------------------------------------------------------------------------------
-    Objetivo:   Gera as verificações em relação a chave FK.
-    Parametros: Nome da Tabela, Coluna C, Nome do Campo, Valor do Campo, Tabela Apontada e Atributo Apontado.
-    Retorno:    INT
-                SUCCESS,
-                ERRO_DE_PARAMETRO,
-                ERRO_CHAVE_ESTRANGEIRA
-   ---------------------------------------------------------------------------------------------*/
-
-int verificaChaveFK(char *nomeTabela,column *c, char *nomeCampo, char *valorCampo, char *tabelaApt, char *attApt){
-    int x,j, erro, page;
-    char str[20];
+int verificaChaveFK( char * nomeTabela, column * c, char * nomeCampo, char * valorCampo, char * tabelaApt, char * attApt ) {    
+    char str[20] = { '\0' };
     char dat[5] = ".dat";
-    struct fs_objects objeto;
-    tp_table *tabela;
-    tp_buffer *bufferpoll;
-    column *pagina = NULL;
+    struct fs_objects objeto = {};
+    tp_table * tabela = NULL;
+    tp_buffer * bufferpoll = NULL;
+    column * pagina = NULL;
 
-    strcpylower(str, tabelaApt);
-    strcat(str, dat);              //Concatena e junta o nome com .dat
+    strcpylower( str, tabelaApt );
+    strcat( str, dat ); // Concatena e junta o nome com .dat
 
-    erro = existeAtributo(nomeTabela, c);
+    int erro = existeAtributo( nomeTabela, c );
     /*if(erro != SUCCESS )
         return ERRO_DE_PARAMETRO;*/
 
     //if(existeAtributo(tabelaApt, c))
         //return ERRO_CHAVE_ESTRANGEIRA;
 
-    if(iniciaAtributos(&objeto, &tabela, &bufferpoll, tabelaApt) != SUCCESS) {
-        free(bufferpoll);
-        free(tabela);
+    if( iniciaAtributos( &objeto, &tabela, &bufferpoll, tabelaApt ) != SUCCESS ) {
+        free( bufferpoll );
+        free( tabela );
         return ERRO_DE_PARAMETRO;
     }
 
-
     erro = SUCCESS;
-    for(x = 0; erro == SUCCESS; x++)
-        erro = colocaTuplaBuffer(bufferpoll, x, tabela, objeto);
+	int x;
+    for( x = 0; erro == SUCCESS; x++ ) {
+        erro = colocaTuplaBuffer(bufferpoll, x, tabela, objeto);		
+	}
 
-    for (page = 0; page < QTD_PAGINAS; page++) {
-        if (pagina) free(pagina);
+	int page;
+    for( page = 0; page < QTD_PAGINAS; page++ ) {
+        if( pagina ) {
+			free(pagina);
+		}
+		
         pagina = getPage(bufferpoll, tabela, objeto, page);
-        if (!pagina) break;
+        if( !pagina ) {
+			break;
+		}
 
-        for(j = 0; j < objeto.qtdCampos * bufferpoll[page].nrec; j++){
-            if (pagina[j].nomeCampo) {
-                if(objcmp(pagina[j].nomeCampo, attApt) == 0){
-
-                    if(pagina[j].tipoCampo == 'S'){
-                        if(objcmp(pagina[j].valorCampo, valorCampo) == 0){
-                            free(pagina);
-                            free(bufferpoll);
-                            free(tabela);
+		int j;
+        for( j = 0; j < objeto.qtdCampos * bufferpoll[page].nrec; j++ ) {
+            if( pagina[j].nomeCampo ) {
+                if( objcmp( pagina[j].nomeCampo, attApt ) == 0 ) {
+                    if( pagina[j].tipoCampo == 'S' ) {
+                        if( objcmp( pagina[j].valorCampo, valorCampo ) == 0 ) {
+                            free( pagina );
+                            free( bufferpoll );
+                            free( tabela );
                             return SUCCESS;
                         }
-                    } else if(pagina[j].tipoCampo == 'I'){
+                    } else if( pagina[j].tipoCampo == 'I' ) {
                         int *n = (int *)&pagina[j].valorCampo[0];
-                        if(*n == atoi(valorCampo)){
-                            free(pagina);
-                            free(bufferpoll);
-                            free(tabela);
+                        if( *n == atoi(valorCampo) ){
+                            free( pagina );
+                            free( bufferpoll );
+                            free( tabela );
                             return SUCCESS;
                         }
-                    } else if(pagina[j].tipoCampo == 'D'){
+                    } else if( pagina[j].tipoCampo == 'D' ) {
                         double *nn = (double *)&pagina[j].valorCampo[0];
 
-                        if(*nn == atof(valorCampo)){
-                            free(pagina);
-                            free(bufferpoll);
-                            free(tabela);
+                        if( *nn == atof(valorCampo) ){
+                            free( pagina );
+                            free( bufferpoll );
+                            free( tabela );
                             return SUCCESS;
                         }
-                    } else if(pagina[j].tipoCampo == 'C'){
-                        if(pagina[j].valorCampo == valorCampo){
-                            free(pagina);
-                            free(bufferpoll);
-                            free(tabela);
+                    } else if( pagina[j].tipoCampo == 'C' ) {
+                        if( pagina[j].valorCampo == valorCampo ) {
+                            free( pagina );
+                            free( bufferpoll );
+                            free( tabela );
                             return SUCCESS;
                         }
                     } else {
-                        free(pagina);
-                        free(bufferpoll);
-                        free(tabela);
+                        free( pagina );
+                        free( bufferpoll );
+                        free( tabela );
                         return ERRO_CHAVE_ESTRANGEIRA;
                     }
                 }
@@ -247,84 +227,84 @@ int verificaChaveFK(char *nomeTabela,column *c, char *nomeCampo, char *valorCamp
         }
     }
 
-    if (pagina) free(pagina);
-    free(bufferpoll);
-    free(tabela);
+    if( pagina ) {
+		free( pagina );
+	}
+    free( bufferpoll );
+    free( tabela );
     return ERRO_CHAVE_ESTRANGEIRA;
 }
-/* ----------------------------------------------------------------------------------------------
-    Objetivo:   Gera as verificações em relação a chave PK.
-    Parametros: Nome da Tabela, Coluna C, Nome do Campo, Valor do Campo
-    Retorno:    INT
-                SUCCESS,
-                ERRO_DE_PARAMETRO,
-                ERRO_CHAVE_PRIMARIA
-   ---------------------------------------------------------------------------------------------*/
 
-int verificaChavePK(char *nomeTabela, column *c, char *nomeCampo, char *valorCampo) {
-    int j, x, erro, page;
+int verificaChavePK( char * nomeTabela, column * c, char * nomeCampo, char * valorCampo ) {    
     column *pagina = NULL;
 
-    struct fs_objects objeto;
+    struct fs_objects objeto = {};
     tp_table * tabela = NULL;
     tp_buffer * bufferpoll = NULL;
 
-    erro = existeAtributo(nomeTabela, c);
-    if (erro != SUCCESS ) {
-        free(bufferpoll);
+    int erro = existeAtributo( nomeTabela, c );
+    if( erro != SUCCESS ) {
+        free( bufferpoll );
         return ERRO_DE_PARAMETRO;
     }
 
-
-    if (iniciaAtributos(&objeto, &tabela, &bufferpoll, nomeTabela) != SUCCESS) {
-        free(bufferpoll);
-        free(tabela);
+    if( iniciaAtributos( &objeto, &tabela, &bufferpoll, nomeTabela ) != SUCCESS ) {
+        free( bufferpoll );
+        free( tabela );
         return ERRO_DE_PARAMETRO;
     }
-
     erro = SUCCESS;
-    for(x = 0; erro == SUCCESS; x++)
-        erro = colocaTuplaBuffer(bufferpoll, x, tabela, objeto);
+	
+	int x;
+    for( x = 0; erro == SUCCESS; x++ ) {
+        erro = colocaTuplaBuffer( bufferpoll, x, tabela, objeto );		
+	}
 
-    page = 0;
-    for (page = 0; page < QTD_PAGINAS; page++) {
-        if (pagina) free(pagina);
+    int page;
+    for( page = 0; page < QTD_PAGINAS; page++ ) {
+        if( pagina ) {
+			free( pagina );
+		}
         pagina = getPage(bufferpoll, tabela, objeto, page);
-        if (!pagina) break;
+		
+        if( !pagina ) {
+			break;
+		}
 
-        for(j = 0; j < objeto.qtdCampos * bufferpoll[page].nrec; j++){
-            if (pagina[j].nomeCampo) {
-                if (objcmp(pagina[j].nomeCampo, nomeCampo) == 0) {
-                    if (pagina[j].tipoCampo == 'S') {
-                        if (objcmp(pagina[j].valorCampo, valorCampo) == 0){
-                            free(pagina);
-                            free(bufferpoll);
-                            free(tabela);
+		int j;
+        for( j = 0; j < objeto.qtdCampos * bufferpoll[page].nrec; j++ ){
+            if( pagina[j].nomeCampo ) {
+                if( objcmp(pagina[j].nomeCampo, nomeCampo ) == 0 ) {
+                    if( pagina[j].tipoCampo == 'S' ) {
+                        if( objcmp( pagina[j].valorCampo, valorCampo ) == 0 ){
+                            free( pagina );
+                            free( bufferpoll );
+                            free( tabela );
                             return ERRO_CHAVE_PRIMARIA;
                         }
-                    } else if (pagina[j].tipoCampo == 'I') {
+                    } else if( pagina[j].tipoCampo == 'I' ) {
                         int *n = (int *)&pagina[j].valorCampo[0];
 
-                        if (*n == atoi(valorCampo)) {
-                            free(pagina);
-                            free(bufferpoll);
-                            free(tabela);
+                        if( *n == atoi(valorCampo) ) {
+                            free( pagina );
+                            free( bufferpoll );
+                            free( tabela );
                             return ERRO_CHAVE_PRIMARIA;
                         }
-                    } else if (pagina[j].tipoCampo == 'D'){
+                    } else if( pagina[j].tipoCampo == 'D' ) {
                         double *nn = (double *)&pagina[j].valorCampo[0];
 
-                        if (*nn == atof(valorCampo)){
-                            free(pagina);
-                            free(bufferpoll);
-                            free(tabela);
+                        if( *nn == atof(valorCampo) ) {
+                            free( pagina );
+                            free( bufferpoll );
+                            free( tabela );
                             return ERRO_CHAVE_PRIMARIA;
                         }
-                    } else if (pagina[j].tipoCampo == 'C'){
-                        if (pagina[j].valorCampo == valorCampo){
-                            free(pagina);
-                            free(bufferpoll);
-                            free(tabela);
+                    } else if ( pagina[j].tipoCampo == 'C' ){
+                        if( pagina[j].valorCampo == valorCampo ) {
+                            free( pagina );
+                            free( bufferpoll );
+                            free( tabela );
                             return ERRO_CHAVE_PRIMARIA;
                         }
                     }
@@ -333,13 +313,14 @@ int verificaChavePK(char *nomeTabela, column *c, char *nomeCampo, char *valorCam
         }
     }
 
-    if (pagina) free(pagina);
-    free(bufferpoll);
-    free(tabela);
+    if( pagina ) {
+		free( pagina );
+	}
+    free( bufferpoll );
+    free( tabela );
     return SUCCESS;
 }
 
-/////
 int finalizaInsert( char * nome, column * c ) {
     column * auxC = NULL, * temp = NULL;
     int i = 0, x = 0, t, erro = SUCCESS, j = 0;
@@ -519,17 +500,14 @@ int finalizaInsert( char * nome, column * c ) {
 
     }
 
-    fclose(dados);
-    free(tab); // Libera a memoria da estrutura.
-	free(tab2); // Libera a memoria da estrutura.
-    free(auxT); // Libera a memoria da estrutura.
-    free(temp); // Libera a memoria da estrutura.
+    fclose( dados );
+    free( tab ); // Libera a memoria da estrutura.
+	free( tab2 ); // Libera a memoria da estrutura.
+    free( auxT ); // Libera a memoria da estrutura.
+    free( temp ); // Libera a memoria da estrutura.
     return SUCCESS;
 }
 
-/* insert: Recebe uma estrutura rc_insert e valida os tokens encontrados pela interface().
- *         Se os valores forem válidos, insere um novo valor.
- */
 void insert( rc_insert * s_insert ) {
 	table * tabela = (table *)malloc( sizeof(table) );
 	tabela->esquema = NULL;
@@ -609,13 +587,11 @@ int contaColunasRepetidas() {
 				skip = 1;
 				break;
 			}
-		}
-		
+		}		
 		if( skip ) {					
 			skip = 0; 
 			continue;
-		}
-		
+		}		
 		for( j = i+1; j < GLOBAL_SELECT.qtdColunas; j++ ) {					
 			if( strcmp( GLOBAL_SELECT.selColumn[i], GLOBAL_SELECT.selColumn[j] ) == 0 ) {						
 				duplicates++;
@@ -696,263 +672,197 @@ int comparaValoresString( const char * a, const char * b, const enum where_opera
 	return 0;
 }
 
+int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina, const column * pagina ) {
+	char c_lvalue[512] = { '\0' }, c_rvalue[512] = { '\0' }, ltipo = '\0', rtipo = '\0';
+	int y = 0, k = 0;
+	double d_lvalue = 0, d_rvalue = 0;
+	
+	for( k = 0; k < GLOBAL_SELECT.qtdExp; k++ ) {				
+		switch( GLOBAL_SELECT.expressoes[k].ltipo ) {
+			case 'O':						
+				for( y = inicio; y <= fim; y++ ) {							
+					if( strcmp( pagina[y].nomeCampo, GLOBAL_SELECT.expressoes[k].lvalue ) == 0 ) {								
+						if( pagina[y].tipoCampo == 'S' || pagina[y].tipoCampo == 'C' ) {
+							strcpy( c_lvalue, pagina[y].valorCampo );									
+						} else if( pagina[y].tipoCampo == 'I' || pagina[y].tipoCampo == 'D' ) {
+							d_lvalue = *( &pagina[y].valorCampo[0] );
+						} 
+						ltipo = pagina[y].tipoCampo;
+						break;
+					}
+				}
+			break;
+			
+			case 'S':
+				strcpy( c_lvalue, GLOBAL_SELECT.expressoes[k].lvalue );
+				break;
+			
+			case 'I':
+				d_lvalue = strtol( GLOBAL_SELECT.expressoes[k].lvalue, NULL, 10 );
+				break;
+				
+			case 'D':
+				d_lvalue = strtod( GLOBAL_SELECT.expressoes[k].lvalue, NULL );
+				break;
+		}
+						
+		switch( GLOBAL_SELECT.expressoes[k].rtipo ) {
+			case 'O':						
+				for( y = inicio; y <= fim; y++ ) {							
+					if( strcmp( pagina[y].nomeCampo, GLOBAL_SELECT.expressoes[k].rvalue ) == 0 ) {
+						if( pagina[y].tipoCampo == 'S' || pagina[y].tipoCampo == 'C' ) {
+							strcpy( c_rvalue, pagina[y].valorCampo );
+						} else if( pagina[y].tipoCampo == 'I' || pagina[y].tipoCampo == 'D' ) {
+							d_rvalue = *( &pagina[y].valorCampo[0] );
+						}
+						rtipo = pagina[y].tipoCampo;								
+						break;
+					}
+				}
+			break;
+			
+			case 'S':
+				strcpy( c_rvalue, GLOBAL_SELECT.expressoes[k].rvalue );						
+			break;
+			
+			case 'I':						
+				d_rvalue = strtol( GLOBAL_SELECT.expressoes[k].rvalue, NULL, 10 );						
+			break;
+				
+			case 'D':
+				d_rvalue = strtod( GLOBAL_SELECT.expressoes[k].rvalue, NULL );
+			break;
+		}
+		
+		if( GLOBAL_SELECT.expressoes[k].ltipo == 'O' ) {
+			if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {
+				if( ltipo != rtipo ) {
+					#ifdef UFFS_DEBUG										
+						ERROR_PRINT(( "WHERE: Comparacao com objetos de tipos diferentes" ));
+					#endif
+					return ERRO_WHERE_COMPARACAO;
+				}
+				if( ltipo == 'S' ) {
+					GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
+				} else if( ltipo == 'I' || ltipo == 'D' ) {								
+					GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
+				}
+			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
+				if( ltipo != 'S' ) { 
+					#ifdef UFFS_DEBUG										
+						ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com STRING", ltipo ));
+					#endif
+					return ERRO_WHERE_COMPARACAO; 
+				}
+				GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
+			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' ) {	
+				if( ltipo == 'S' ) { 
+					#ifdef UFFS_DEBUG										
+						ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com STRING", ltipo ));
+					#endif
+					return ERRO_WHERE_COMPARACAO; 
+				}
+				if( ltipo == 'I' || ltipo == 'D' ) {								
+					GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
+				}
+			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
+				if( ltipo == 'S' ) { 
+					#ifdef UFFS_DEBUG										
+						ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com INTEGER", ltipo ));
+					#endif
+					return ERRO_WHERE_COMPARACAO; 
+				}
+				if( ltipo == 'I' || ltipo == 'D' ) {								
+					GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
+				}							
+			}
+		} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'S' ) {
+			if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {
+				if( rtipo != 'S' ) {
+					#ifdef UFFS_DEBUG										
+						ERROR_PRINT(( "WHERE: lvalue: STRING, porem rvalue nao e STRING" )); 										
+					#endif	
+					return ERRO_WHERE_COMPARACAO;
+				}
+				GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
+			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
+				GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
+			} else if( 	GLOBAL_SELECT.expressoes[k].rtipo == 'I' ) {
+				#ifdef UFFS_DEBUG									
+					ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com STRING", ltipo ));
+				#endif
+				return ERRO_WHERE_COMPARACAO;
+			} else if( 	GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
+				#if DEBUG									
+					ERROR_PRINT(( "WHERE: Nao e possivel comparar STRING com DOUBLE" ));
+				#endif
+				return ERRO_WHERE_COMPARACAO;
+			}
+		} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'I' ) {
+			if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {							
+				if( rtipo != 'I' && rtipo != 'D' ) {
+					#ifdef UFFS_DEBUG										
+						ERROR_PRINT(( "WHERE: lvalue: INTEGER, porem rvalue nao e INTEGER nem DOUBLE" ));
+					#endif	
+					return ERRO_WHERE_COMPARACAO;
+				}
+				if( rtipo == 'I' || rtipo == 'D' ) {								
+					GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
+				}							
+			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' || GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
+				GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
+			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
+				#ifdef UFFS_DEBUG									
+					ERROR_PRINT(( "WHERE: Nao e possivel comparar INTEGER com STRING" ));
+				#endif
+				return ERRO_WHERE_COMPARACAO;
+			}
+		} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'D' ) {
+			if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {							
+				if( rtipo != 'I' && rtipo != 'D' ) {
+					#ifdef UFFS_DEBUG										
+						ERROR_PRINT(( "WHERE: lvalue: DOUBLE, porem rvalue nao e INTEGER nem DOUBLE" ));
+					#endif
+					return ERRO_WHERE_COMPARACAO;
+				}
+				if( rtipo == 'I' || rtipo == 'D' ) {
+					GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
+				}						
+			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' ||  GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
+				GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
+			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {	
+				#ifdef UFFS_DEBUG									
+					ERROR_PRINT(( "WHERE: Nao e possivel comparar DOUBLE com STRING" )); 
+				#endif
+				return ERRO_WHERE_COMPARACAO;
+			}
+		}
+
+	}
+	return SUCCESS;
+}
+
 int preencheCampos( struct campos_container * camposContainer, tp_buffer * bufferpool, const struct fs_objects * objeto, tp_table * esquema ) {	
 	int camposIndex = 0, k = 0, e = 0, hit = 0, i = 0, j = 0, qtdTuplas = camposContainer->ntuples, ntuples = 0;
 	for( i = 0; qtdTuplas > 0; i++ ) {
 		column * pagina = getPage( bufferpool, esquema, *objeto, i );
+		int tamPagina = bufferpool[i].nrec * objeto->qtdCampos;
 			
 		int inicio = 0, fim = objeto->qtdCampos-1;			
-		for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; ) {
-			if( GLOBAL_SELECT.where ) {		
-				char c_lvalue[512] = { '\0' }, c_rvalue[512] = { '\0' }, ltipo = '\0', rtipo = '\0';
-				int y = 0;
-				double d_lvalue = 0, d_rvalue = 0;
+		for( j = 0; j < tamPagina; ) {
+			if( GLOBAL_SELECT.where ) {
+				int err = calculaResultadoWhere( inicio, fim, tamPagina, pagina );
 				
-				for( k = 0; k < GLOBAL_SELECT.qtdExp; k++ ) {				
-					switch( GLOBAL_SELECT.expressoes[k].ltipo ) {
-						case 'O':						
-							for( y = inicio; y <= fim; y++ ) {							
-								if( strcmp( pagina[y].nomeCampo, GLOBAL_SELECT.expressoes[k].lvalue ) == 0 ) {								
-									if( pagina[y].tipoCampo == 'S' || pagina[y].tipoCampo == 'C' ) {
-										strcpy( c_lvalue, pagina[y].valorCampo );									
-									} else if( pagina[y].tipoCampo == 'I' || pagina[y].tipoCampo == 'D' ) {
-										d_lvalue = *( &pagina[y].valorCampo[0] );
-									} 
-									ltipo = pagina[y].tipoCampo;
-									break;
-								}
-							}
-						break;
-						
-						case 'S':
-							strcpy( c_lvalue, GLOBAL_SELECT.expressoes[k].lvalue );
-							break;
-						
-						case 'I':
-							d_lvalue = strtol( GLOBAL_SELECT.expressoes[k].lvalue, NULL, 10 );
-							break;
-							
-						case 'D':
-							d_lvalue = strtod( GLOBAL_SELECT.expressoes[k].lvalue, NULL );
-							break;
-					}
-									
-					switch( GLOBAL_SELECT.expressoes[k].rtipo ) {
-						case 'O':						
-							for( y = inicio; y <= fim; y++ ) {							
-								if( strcmp( pagina[y].nomeCampo, GLOBAL_SELECT.expressoes[k].rvalue ) == 0 ) {
-									if( pagina[y].tipoCampo == 'S' || pagina[y].tipoCampo == 'C' ) {
-										strcpy( c_rvalue, pagina[y].valorCampo );
-									} else if( pagina[y].tipoCampo == 'I' || pagina[y].tipoCampo == 'D' ) {
-										d_rvalue = *( &pagina[y].valorCampo[0] );
-									}
-									rtipo = pagina[y].tipoCampo;								
-									break;
-								}
-							}
-						break;
-						
-						case 'S':
-							strcpy( c_rvalue, GLOBAL_SELECT.expressoes[k].rvalue );						
-						break;
-						
-						case 'I':						
-							d_rvalue = strtol( GLOBAL_SELECT.expressoes[k].rvalue, NULL, 10 );						
-						break;
-							
-						case 'D':
-							d_rvalue = strtod( GLOBAL_SELECT.expressoes[k].rvalue, NULL );
-						break;
-					}
-					
-					
-					if( GLOBAL_SELECT.expressoes[k].ltipo == 'O' ) {
-						if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {
-							if( ltipo != rtipo ) {
-								#ifdef UFFS_DEBUG										
-									ERROR_PRINT(( "WHERE: Comparacao com objetos de tipos diferentes" ));
-								#endif
-								camposContainer->ntuples = ntuples;
-								
-								for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-									free( pagina[j].valorCampo );	
-								}		
-								free( pagina );
-								
-								return ERRO_WHERE_COMPARACAO;
-							}
-							if( ltipo == 'S' ) {
-								GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
-							} else if( ltipo == 'I' || ltipo == 'D' ) {								
-								GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
-							}
-						} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
-							if( ltipo != 'S' ) { 
-								#ifdef UFFS_DEBUG										
-									ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com STRING", ltipo ));
-								#endif	
-								camposContainer->ntuples = ntuples;
-								
-								for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-									free( pagina[j].valorCampo );	
-								}		
-								free( pagina );
-								
-								return ERRO_WHERE_COMPARACAO; 
-							}
-							GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
-						} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' ) {	
-							if( ltipo == 'S' ) { 
-								#ifdef UFFS_DEBUG										
-									ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com STRING", ltipo ));
-								#endif	 
-								camposContainer->ntuples = ntuples;
-								
-								for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-									free( pagina[j].valorCampo );	
-								}		
-								free( pagina );
-								
-								return ERRO_WHERE_COMPARACAO; 
-							}
-							if( ltipo == 'I' || ltipo == 'D' ) {								
-								GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
-							}
-						} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
-							if( ltipo == 'S' ) { 
-								#ifdef UFFS_DEBUG										
-									ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com INTEGER", ltipo ));
-								#endif	
-								camposContainer->ntuples = ntuples;
-								
-								for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-									free( pagina[j].valorCampo );	
-								}		
-								free( pagina );
-								
-								return ERRO_WHERE_COMPARACAO; 
-							}
-							if( ltipo == 'I' || ltipo == 'D' ) {								
-								GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
-							}							
-						}
-					} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'S' ) {
-						if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {
-							if( rtipo != 'S' ) {
-								#ifdef UFFS_DEBUG										
-									ERROR_PRINT(( "WHERE: lvalue: STRING, porem rvalue nao e STRING" )); 										
-								#endif	
-								camposContainer->ntuples = ntuples;
-								
-								for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-									free( pagina[j].valorCampo );	
-								}		
-								free( pagina );
-								
-								return ERRO_WHERE_COMPARACAO;
-							}
-							GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
-						} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
-							GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
-						} else if( 	GLOBAL_SELECT.expressoes[k].rtipo == 'I' ) {
-							#ifdef UFFS_DEBUG									
-								ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com STRING", ltipo ));
-							#endif	
-							camposContainer->ntuples = ntuples;
-							
-							for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-								free( pagina[j].valorCampo );	
-							}		
-							free( pagina );
-							
-							return ERRO_WHERE_COMPARACAO;
-						} else if( 	GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
-							#if DEBUG									
-								ERROR_PRINT(( "WHERE: Nao e possivel comparar STRING com DOUBLE" ));
-							#endif
-							camposContainer->ntuples = ntuples;
-							
-							for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-								free( pagina[j].valorCampo );	
-							}		
-							free( pagina );
-							
-							return ERRO_WHERE_COMPARACAO;
-						}
-					} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'I' ) {
-						if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {							
-							if( rtipo != 'I' && rtipo != 'D' ) {
-								#ifdef UFFS_DEBUG										
-									ERROR_PRINT(( "WHERE: lvalue: INTEGER, porem rvalue nao e INTEGER nem DOUBLE" ));
-								#endif	
-								
-								camposContainer->ntuples = ntuples;
-								
-								for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-									free( pagina[j].valorCampo );	
-								}		
-								free( pagina );
-								
-								return ERRO_WHERE_COMPARACAO;
-							}
-							if( rtipo == 'I' || rtipo == 'D' ) {								
-								GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
-							}							
-						} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' || GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
-							GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
-						} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
-							#ifdef UFFS_DEBUG									
-								ERROR_PRINT(( "WHERE: Nao e possivel comparar INTEGER com STRING" ));
-							#endif
-							
-							camposContainer->ntuples = ntuples;
-							
-							for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-								free( pagina[j].valorCampo );	
-							}		
-							free( pagina );
-							
-							return ERRO_WHERE_COMPARACAO;
-						}
-					} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'D' ) {
-						if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {							
-							if( rtipo != 'I' && rtipo != 'D' ) {
-								camposContainer->ntuples = ntuples;
-								
-								#ifdef UFFS_DEBUG										
-									ERROR_PRINT(( "WHERE: lvalue: DOUBLE, porem rvalue nao e INTEGER nem DOUBLE" ));
-								#endif
-								
-								for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-									free( pagina[j].valorCampo );	
-								}		
-								free( pagina );
-								
-								return ERRO_WHERE_COMPARACAO;
-							}
-							if( rtipo == 'I' || rtipo == 'D' ) {
-								GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
-							}						
-						} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' ||  GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
-							GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
-						} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
-							#ifdef UFFS_DEBUG									
-								ERROR_PRINT(( "WHERE: Nao e possivel comparar DOUBLE com STRING" )); 
-							#endif
-							
-							camposContainer->ntuples = ntuples;
-							
-							for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
-								free( pagina[j].valorCampo );	
-							}		
-							free( pagina );
-							
-							return ERRO_WHERE_COMPARACAO;
-						}
-					}
-
+				if( err != SUCCESS ) {
+					camposContainer->ntuples = ntuples;
+					for( j = 0; j < tamPagina; j++ ) {
+						free( pagina[j].valorCampo );	
+					}		
+					free( pagina );
+					return ERRO_WHERE_COMPARACAO;
 				}
-
+				
+				
 				int result = 1;
 				if( GLOBAL_SELECT.op_bool[0] != OP_INVALID ) {
 					if( GLOBAL_SELECT.op_bool[0] == OP_AND ) {
@@ -991,7 +901,6 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 					if( i == 0 ) {
 						camposContainer->campos[camposIndex]->tipo = 'S';
 					}
-					
 					if( tamanho > camposContainer->campos[camposIndex]->maior ) {
 						camposContainer->campos[camposIndex]->maior = tamanho;
 					}
@@ -1030,7 +939,6 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 					if( i == 0 ) {
 						camposContainer->campos[camposIndex]->tipo = 'C';
 					}
-					
 					if( tamanho > camposContainer->campos[camposIndex]->maior ) {
 						camposContainer->campos[camposIndex]->maior = tamanho;
 					}
@@ -1052,7 +960,6 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 					if( i == 0 ) {
 						camposContainer->campos[camposIndex]->tipo = 'D';
 					}
-					
 					if( tamanho > camposContainer->campos[camposIndex]->maior ) {
 						camposContainer->campos[camposIndex]->maior = tamanho;
 					}
@@ -1062,6 +969,8 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 				}
 			}
 
+			
+			// OBS: hit representa a quantidade de campos encontrados com sucesso
 			// Se encontrou todos os campos necessários, avança p/ próxima tupla
 			if( hit == camposContainer->ncampos ) {	
 				hit = 0;				
@@ -1077,7 +986,6 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 					j++;
 				}
 			} 	
-		
 		}	
 		qtdTuplas -= bufferpool[i].nrec;
 		for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
