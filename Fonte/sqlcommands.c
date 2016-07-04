@@ -637,6 +637,8 @@ int existeColuna( const struct fs_objects * objeto, const tp_table * esquema ) {
 }
 
 int comparaValoresNumericos( const double * a, const double * b, const enum where_operator op  ) {
+	printf( "a: %f\n", *a );
+	printf( "b: %f\n", *b );
 	switch( op ) {
 		case COMPARISON_EQUAL:			
 			return *a == *b;
@@ -684,8 +686,8 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 					if( strcmp( pagina[y].nomeCampo, GLOBAL_SELECT.expressoes[k].lvalue ) == 0 ) {								
 						if( pagina[y].tipoCampo == 'S' || pagina[y].tipoCampo == 'C' ) {
 							strcpy( c_lvalue, pagina[y].valorCampo );									
-						} else if( pagina[y].tipoCampo == 'I' || pagina[y].tipoCampo == 'D' ) {
-							d_lvalue = *( &pagina[y].valorCampo[0] );
+						} else if( pagina[y].tipoCampo == 'I' || pagina[y].tipoCampo == 'D' ) {							
+							d_lvalue = *((double *)&pagina[y].valorCampo[0]);
 						} 
 						ltipo = pagina[y].tipoCampo;
 						break;
@@ -698,7 +700,7 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 				break;
 			
 			case 'I':
-				d_lvalue = strtol( GLOBAL_SELECT.expressoes[k].lvalue, NULL, 10 );
+				d_lvalue = strtod( GLOBAL_SELECT.expressoes[k].lvalue, NULL );
 				break;
 				
 			case 'D':
@@ -713,7 +715,7 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 						if( pagina[y].tipoCampo == 'S' || pagina[y].tipoCampo == 'C' ) {
 							strcpy( c_rvalue, pagina[y].valorCampo );
 						} else if( pagina[y].tipoCampo == 'I' || pagina[y].tipoCampo == 'D' ) {
-							d_rvalue = *( &pagina[y].valorCampo[0] );
+							d_rvalue = *((double *)&pagina[y].valorCampo[0]);
 						}
 						rtipo = pagina[y].tipoCampo;								
 						break;
@@ -726,7 +728,7 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 			break;
 			
 			case 'I':						
-				d_rvalue = strtol( GLOBAL_SELECT.expressoes[k].rvalue, NULL, 10 );						
+				d_rvalue = strtod( GLOBAL_SELECT.expressoes[k].rvalue, NULL );						
 			break;
 				
 			case 'D':
