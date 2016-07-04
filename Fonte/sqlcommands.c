@@ -744,13 +744,13 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 					#endif
 					return ERRO_WHERE_COMPARACAO;
 				}
-				if( ltipo == 'S' ) {
+				if( ltipo == 'S' || ltipo == 'C' ) {
 					GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
 				} else if( ltipo == 'I' || ltipo == 'D' ) {								
 					GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
 				}
 			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'S' ) {
-				if( ltipo != 'S' ) { 
+				if( ltipo != 'S' && ltipo != 'C' ) { 
 					#ifdef UFFS_DEBUG										
 						ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com STRING", ltipo ));
 					#endif
@@ -758,7 +758,7 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 				}
 				GLOBAL_SELECT.expressoes[k].result =  comparaValoresString( c_lvalue, c_rvalue, GLOBAL_SELECT.expressoes[k].op );
 			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'I' ) {	
-				if( ltipo == 'S' ) { 
+				if( ltipo == 'S' || ltipo == 'C' ) { 
 					#ifdef UFFS_DEBUG										
 						ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com STRING", ltipo ));
 					#endif
@@ -768,7 +768,7 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 					GLOBAL_SELECT.expressoes[k].result = comparaValoresNumericos( &d_lvalue, &d_rvalue, GLOBAL_SELECT.expressoes[k].op );
 				}
 			} else if( GLOBAL_SELECT.expressoes[k].rtipo == 'D' ) {
-				if( ltipo == 'S' ) { 
+				if( ltipo == 'S' || ltipo == 'C' ) { 
 					#ifdef UFFS_DEBUG										
 						ERROR_PRINT(( "WHERE: Nao e possivel comparar %c com INTEGER", ltipo ));
 					#endif
@@ -780,7 +780,7 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 			}
 		} else if( GLOBAL_SELECT.expressoes[k].ltipo == 'S' ) {
 			if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {
-				if( rtipo != 'S' ) {
+				if( rtipo != 'S' && rtipo != 'C' ) {
 					#ifdef UFFS_DEBUG										
 						ERROR_PRINT(( "WHERE: lvalue: STRING, porem rvalue nao e STRING" )); 										
 					#endif	
