@@ -126,22 +126,67 @@ int contaColunasRepetidas( void );
    ---------------------------------------------------------------------------------------------*/
 int existeColuna( const struct fs_objects *, const tp_table * );
 
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Compara 'a' e 'b' sobre o operador 'op'
+    Parametros: Variaveis 'a' e 'b' do tipo DOUBLE, um valor ENUM para determinar o operador
+    Retorno:    Resultado da operação realizada
+   ---------------------------------------------------------------------------------------------*/
 int comparaValoresNumericos( const double *, const double *, const enum where_operator );
 
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Compara 'a' e 'b' sobre o operador 'op'
+    Parametros: Variaveis 'a' e 'b' do tipo CHAR *, um valor ENUM para determinar o operador
+    Retorno:    Resultado da operação realizada
+   ---------------------------------------------------------------------------------------------*/
 int comparaValoresString( const char *, const char *, const enum where_operator );
 
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Armazenar na estrutura campos_container todas as tuplas resultantes do comando SELECT e WHERE
+    Parametros: struct para armazenar tuplas, bufferpool, informação de tabela e campos
+    Retorno:    SUCCESS ou ERRO
+   ---------------------------------------------------------------------------------------------*/
 int preencheCampos( struct campos_container *, tp_buffer *, const struct fs_objects *, tp_table * );
 
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Calcular a largura do terminal
+    Parametros: 
+    Retorno:    Um INT que representa a largura do terminal
+   ---------------------------------------------------------------------------------------------*/
 int terminalWidth( void );
 
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Calcular a altura do terminal
+    Parametros: 
+    Retorno:    Um INT que representa altura do terminal
+   ---------------------------------------------------------------------------------------------*/
 int terminalHeight( void );
 
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Calcular a largura do terminal
+    Parametros: 
+    Retorno:    A largura do terminal
+   ---------------------------------------------------------------------------------------------*/
 int calculaTamLinha( const struct campos_container * );
 
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Imprime os campos e tuplas contidos em campos_container na tela
+    Parametros: struct com campos e tuplas, e um INT que representa o tamanho da linha do header
+    Retorno:    Resultado da operação ( 1 sucesso, 0 falha )
+   ---------------------------------------------------------------------------------------------*/
 int imprime_tela( const struct campos_container *, const int );
 
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Imprime na tela ( a partir de um arquivo ) os campos e tuplas contidos em campos_container
+    Parametros: struct com campos e tuplas, e um INT que representa o tamanho da linha do header
+    Retorno:    Resultado da operação ( 1 sucesso, 0 falha )
+   ---------------------------------------------------------------------------------------------*/
 int imprime_arquivo( const struct campos_container *, const int );
 
+/* ----------------------------------------------------------------------------------------------
+    Objetivo:   Função que determina se a impressao ocorerrá por meio de um arquivo ou não
+    Parametros: struct com campos e tuplas
+    Retorno:    Resultado da operação ( 1 sucesso, 0 falha )
+   ---------------------------------------------------------------------------------------------*/
 int imprime_tabela( const struct campos_container * );
 
 

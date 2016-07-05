@@ -1,0 +1,50 @@
+--- 04/07/2016 ---
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> Comando SELECT com múltiplas colunas
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> Comando WHERE com operadores =, >, <, <=, >=, != ou <>
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> Utilização simples do operador AND e OR nas expressões do WHERE, analisado da ESQUERDA para a DIREITA
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> A impressão da tabela é dinâmica, ou seja, o comprimento da mesma varia de acordo com o maior tamanho de um campo
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> Para a impressão de arquivos muito grandes, é verificado a largura e a altura do terminal. Caso a quantidade de caracteres exceda o tamanho
+>	de ambas as propriedades, os dados são escritos em um arquivo oculto chamado ".temp.txt" e seus dados são lidos por meio do comando LESS
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> É possível ler scripts com extensão .sql a partir do comando:
+>
+>	\i <nome_script.sql>
+>
+> Os scripts devem estar localizados na mesma pasta que o executável "uffsdb" para que eles possam ser acessados
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> Foi alterado o arquivo make para que fosse possível existir uma versão "release" e uma versão "debug". Na versão debug, uma macro UFFS_DEBUG é
+>	definida, o que permite que mensagens adicionais sejam impressas para propósitos de correção de erros e compreensão do comportamento do programa
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> Junto com a macro UFFS_DEBUG, foram definidas duas macros DEBUG_PRINT e ERROR_PRINT. Estas são utilizadas da seguinte maneira:
+>
+>	DEBUG_PRINT(( "Mensagem" ));
+>	ERROR_PRINT(( "Mensagem" ));
+>
+> Essas chamadas automaticamente colocam um \n no final da mensagem, e imprimem antes da mensagem um cabeçário para especificar o propósito.
+> Respectivamente:
+>
+>	-----------------DEBUG--------------------
+>	Mensagem
+>	------------------------------------------
+>
+>	#################ERROR####################
+>	Mensagem
+>	Arquivo: <nome_arquivo>
+>	Linha: <número da linha>
+>	##########################################
+>
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> É possível se conectar à um banco antes da execução do uffsdb, bastando passar um argumento da seguinte maneira:
+>	./uffsdb -d <nome_do_banco>
+>
+> Isto equivale a executar apenas ./uffsdb e utilizar o comando \c para se conectar à um banco existente
+> Caso o banco passado no comando -d não exista, uma conexão ao banco padrão "uffsdb" é realizada
+----------------------------------------------------------------------------------------------------------------------------------------------------
+> Existe uma variável global chamada GLOBAL_OPTIONS que possui uma variável que armazena o nome do campo passado pelo comando -d informado acima, 
+> assim como também possuí uma variável que determina a precisão numérica na impressão de valores do tipo DOUBLE
+----------------------------------------------------------------------------------------------------------------------------------------------------

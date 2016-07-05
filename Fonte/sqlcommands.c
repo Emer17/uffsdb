@@ -540,8 +540,8 @@ void insert( rc_insert * s_insert ) {
 			for( i=0; i < objeto.qtdCampos; i++ ) {
 
 				if( s_insert->type[i] == 'S' && tabela->esquema[i].tipo == 'C' ) {
-					printf( "\nWARNING: Attempted to write value of type \'string\' to attribute of type \'char\'.\n" );
-					printf( "String \'%s\' will be truncated to \'%c\'\n", s_insert->values[i], s_insert->values[i][0] );
+					//printf( "\nWARNING: Attempted to write value of type \'string\' to attribute of type \'char\'.\n" );
+					//printf( "String \'%s\' will be truncated to \'%c\'\n", s_insert->values[i], s_insert->values[i][0] );
 					s_insert->values[i][1] = '\0';
 					s_insert->type[i] = 'C';
 				}
@@ -615,6 +615,8 @@ int existeColuna( const struct fs_objects * objeto, const tp_table * esquema ) {
 			printf( "\n------------------DEBUG-----------------\n" );
 		#endif
 		
+		// Percorre todos os campos da tabela em busca de uma correspondência com o valor atual
+		// 		de GLOBAL_SELECT.selColumn[i]
 		for( j = 0; j < objeto->qtdCampos; j++ ) {
 			#ifdef UFFS_DEBUG		
 				printf( "GLOBAL_SELECT.selColumn[%d]: \'%s\'\n", i, GLOBAL_SELECT.selColumn[i] );
@@ -626,9 +628,12 @@ int existeColuna( const struct fs_objects * objeto, const tp_table * esquema ) {
 				);
 				printf( "----------------------------------------\n\n" );
 			#endif
-			if( strcmp( esquema[j].nome, GLOBAL_SELECT.selColumn[i] ) == 0 ) { break; } // Encontrou, pula para proxima iteração
+			
+			if( strcmp( esquema[j].nome, GLOBAL_SELECT.selColumn[i] ) == 0 ) { 
+				break; // Encontrou, pula para proxima iteração
+			}
 			if( j == objeto->qtdCampos-1 ) { // Iterou todos os campos e nao encontrou nenhuma correspondencia				
-				printf( "ERRO: Campo \'%s\' nao foi encontrado na tabela \'%s\'\n", *GLOBAL_SELECT.selColumn, objeto->nome );
+				printf( "ERRO: Campo \'%s\' nao foi encontrado na tabela \'%s\'\n", GLOBAL_SELECT.selColumn[i], objeto->nome );
 				return 0;
 			}
 		}
@@ -657,7 +662,7 @@ int comparaValoresNumericos( const double * a, const double * b, const enum wher
 int comparaValoresString( const char * a, const char * b, const enum where_operator op ) {
 	switch( op ) {
 		case COMPARISON_EQUAL:			
-			return !( objcmp( a, b ) );
+			return !( strcmp( a, b ) );
 		case COMPARISON_GREATER:
 			return ( objcmp( a, b ) > 0 ) ? 1 : 0;
 		case COMPARISON_GREATER_EQUAL:
@@ -667,7 +672,7 @@ int comparaValoresString( const char * a, const char * b, const enum where_opera
 		case COMPARISON_LESS_EQUAL:
 			return ( objcmp( a, b ) <= 0 ) ? 1 : 0;
 		case COMPARISON_NOT_EQUAL:
-			return ( objcmp( a, b ) ) ? 1 : 0;
+			return ( strcmp( a, b ) ) ? 1 : 0;
 	}
 	return 0;
 }
@@ -677,7 +682,8 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 	int y = 0, k = 0;
 	double d_lvalue = 0, d_rvalue = 0;
 	
-	for( k = 0; k < GLOBAL_SELECT.qtdExp; k++ ) {				
+	for( k = 0; k < GLOBAL_SELECT.qtdExp; k++ ) {
+		// Armazena o valor do lado esquerdo em uma variável
 		switch( GLOBAL_SELECT.expressoes[k].ltipo ) {
 			case 'O':						
 				for( y = inicio; y <= fim; y++ ) {							
@@ -707,7 +713,8 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 				d_lvalue = strtod( GLOBAL_SELECT.expressoes[k].lvalue, NULL );
 				break;
 		}
-						
+		
+		// Armazena o valor do lado direito em uma variável
 		switch( GLOBAL_SELECT.expressoes[k].rtipo ) {
 			case 'O':						
 				for( y = inicio; y <= fim; y++ ) {							
@@ -738,6 +745,8 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 			break;
 		}
 		
+		// A partir daqui verifica o tipo do lado esquerdo e do lado direito, comparando um com o outro para
+		// 	certificar-se de que uma operação pode ser realizada entre seus valores
 		if( GLOBAL_SELECT.expressoes[k].ltipo == 'O' ) {
 			if( GLOBAL_SELECT.expressoes[k].rtipo == 'O' ) {
 				if( ltipo != rtipo ) {
@@ -841,7 +850,6 @@ int calculaResultadoWhere( const int inicio, const int fim, const int tamPagina,
 				return ERRO_WHERE_COMPARACAO;
 			}
 		}
-
 	}
 	return SUCCESS;
 }
@@ -850,31 +858,34 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 	int camposIndex = 0, k = 0, e = 0, hit = 0, i = 0, j = 0, qtdTuplas = camposContainer->ntuples, ntuples = 0;
 	for( i = 0; qtdTuplas > 0; i++ ) {
 		column * pagina = getPage( bufferpool, esquema, *objeto, i );
-		int tamPagina = bufferpool[i].nrec * objeto->qtdCampos;
+		int tamPagina = bufferpool[i].nrec * objeto->qtdCampos; // Quantidade de tuplas * Quantidade de campos na página
 			
 		int inicio = 0, fim = objeto->qtdCampos-1;			
 		for( j = 0; j < tamPagina; ) {
 			if( GLOBAL_SELECT.where ) {
+				// Se WHERE está sendo utilizado, calcula o resultado de cada expressão e armazena na variavel GLOBAL_SELECT
 				int err = calculaResultadoWhere( inicio, fim, tamPagina, pagina );
 				
 				if( err != SUCCESS ) {
-					camposContainer->ntuples = ntuples;
+					camposContainer->ntuples = ntuples; // Substitui o valor de ntuplas para nao dar erro na impressão
 					for( j = 0; j < tamPagina; j++ ) {
 						free( pagina[j].valorCampo );	
 					}		
 					free( pagina );
 					return ERRO_WHERE_COMPARACAO;
-				}
-				
+				}				
 				
 				int result = 1;
+				// Verifica se existe o uso dos operadores AND ou OR
 				if( GLOBAL_SELECT.op_bool[0] != OP_INVALID ) {
+					// Calcula o resultado das duas primeiras expressões
 					if( GLOBAL_SELECT.op_bool[0] == OP_AND ) {
 						result = GLOBAL_SELECT.expressoes[0].result & GLOBAL_SELECT.expressoes[1].result;
 					} else if( GLOBAL_SELECT.op_bool[0] == OP_OR ) {
 						result = GLOBAL_SELECT.expressoes[0].result | GLOBAL_SELECT.expressoes[1].result;
 					}
 					
+					// Calcula o resultado das próximas N expressões
 					for( k = 2; k < GLOBAL_SELECT.qtdExp; k++ ) {
 						if( GLOBAL_SELECT.op_bool[k-1] == OP_AND ) {
 							result = result & GLOBAL_SELECT.expressoes[k].result;
@@ -883,8 +894,11 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 						}
 					}
 				} else {
+					// Caso não seja usado AND ou OR, pega o resultado da única expressão existente
 					result = GLOBAL_SELECT.expressoes[0].result;
 				}
+				
+				// Se o resultado final for FALSO, ignora a tupla atual e avança para a proxima
 				if( result == 0 ) {
 					inicio = fim+1;
 					fim = inicio + objeto->qtdCampos-1;
@@ -895,6 +909,7 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 
 			int tamanho = 0;
 			char nomeCampo[TAMANHO_NOME_CAMPO] = { '\0' };
+			
 			if( pagina[j].tipoCampo == 'S' ) {
 				if( strcmp( pagina[j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {					
 					camposContainer->campos[camposIndex]->valores = realloc( camposContainer->campos[camposIndex]->valores, sizeof( char* ) * (e+1) );
@@ -902,9 +917,11 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 					strcpy( camposContainer->campos[camposIndex]->valores[e], pagina[j].valorCampo );
 					tamanho = strlen( pagina[j].valorCampo ) + 1;
 					
-					if( i == 0 ) {
+					// Se for a primeira iteração, seta os tipos dos campos
+					if( i == 0 ) {						
 						camposContainer->campos[camposIndex]->tipo = 'S';
 					}
+					// Se o tamanho do valor do campo for o maior, guarda ele
 					if( tamanho > camposContainer->campos[camposIndex]->maior ) {
 						camposContainer->campos[camposIndex]->maior = tamanho;
 					}
@@ -952,7 +969,7 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 				}
 			} else if( pagina[j].tipoCampo == 'D' ) {
 				double *n = (double *)&pagina[j].valorCampo[0];
-				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%.*f", options.numeric_precision, *n );
+				snprintf( nomeCampo, TAMANHO_NOME_CAMPO, "%.*f", GLOBAL_OPTIONS.numeric_precision, *n );
 				tamanho = strlen( nomeCampo ) + 1;
 				
 				if( strcmp( pagina[j].nomeCampo, camposContainer->campos[camposIndex]->nome ) == 0 ) {
@@ -972,7 +989,6 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 					hit++;
 				}
 			}
-
 			
 			// OBS: hit representa a quantidade de campos encontrados com sucesso
 			// Se encontrou todos os campos necessários, avança p/ próxima tupla
@@ -991,13 +1007,13 @@ int preencheCampos( struct campos_container * camposContainer, tp_buffer * buffe
 				}
 			} 	
 		}	
-		qtdTuplas -= bufferpool[i].nrec;
+		qtdTuplas -= bufferpool[i].nrec; // Decrementa da quantidade total de tuplas a quantidade presente na página atual
 		for( j = 0; j < bufferpool[i].nrec * objeto->qtdCampos; j++ ) {
 			free( pagina[j].valorCampo );	
 		}		
 		free( pagina );
 	}
-	camposContainer->ntuples = ntuples;
+	camposContainer->ntuples = ntuples; // Substitui o valor de ntuplas para nao dar erro na impressão
 	return SUCCESS;
 }
 
@@ -1019,6 +1035,7 @@ int calculaTamLinha( const struct campos_container * camposContainer_t ) {
 		int size = strlen( camposContainer_t->campos[i]->nome ) + 1;
 		tamLinha += ( size  );
 		
+		// Algoritmo semelhante ao de imprimir header, mas apenas conta os caracteres e nao os imprime
 		if( camposContainer_t->maioresColunas[i] != size ) {
 			int spaces = camposContainer_t->maioresColunas[i] - size;
 			int k = 0;
@@ -1035,6 +1052,8 @@ int calculaTamLinha( const struct campos_container * camposContainer_t ) {
 }
 
 int imprime_tela( const struct campos_container * camposContainer_t, int tamLinha ) {
+	
+	// Imprime o header/cabeçario com os nomes das colunas
 	int i = 0;
 	for( i = 0; i < camposContainer_t->ncampos; i++ ) {
 		int size = strlen( camposContainer_t->campos[i]->nome ) + 1;		
@@ -1060,6 +1079,7 @@ int imprime_tela( const struct campos_container * camposContainer_t, int tamLinh
 	}
 	printf( "-\n" );
 
+	// Imprime as tuplas
 	int j = 0;	
 	for( i = 0; i < camposContainer_t->ntuples; i ++ ) {
 		for( j = 0; j < camposContainer_t->ncampos; j++ ) {
@@ -1081,14 +1101,15 @@ int imprime_tela( const struct campos_container * camposContainer_t, int tamLinh
 }
 
 int imprime_arquivo( const struct campos_container * camposContainer_t, int tamLinha ) {
-	FILE * temp = fopen( ".temp.txt", "w+" );	
+	FILE * temp = fopen( ".temp.txt", "w+" );
 	if( temp == NULL ) {
 		#ifdef UFFS_DEBUG
 			ERROR_PRINT(( "Arquivo temp.txt para impressao de tabela nao pode ser criado" ));
 		#endif
 		return 0;
 	}
-	
+		
+	// Imprime o header/cabeçario com os nomes das colunas
 	int i = 0;
 	for( i = 0; i < camposContainer_t->ncampos; i++ ) {
 		int size = strlen( camposContainer_t->campos[i]->nome ) + 1;		
@@ -1114,6 +1135,7 @@ int imprime_arquivo( const struct campos_container * camposContainer_t, int tamL
 	}
 	fprintf( temp, "-\n" );
 
+	// Imprime as tuplas
 	int j = 0;	
 	for( i = 0; i < camposContainer_t->ntuples; i ++ ) {
 				
@@ -1154,7 +1176,7 @@ int imprime_tabela( const struct campos_container * camposContainer_t ) {
 }
 
 void consulta( const char nomeTabela[] ) {    
-	register int i = 0, j = 0;
+	int i = 0, j = 0;
     struct fs_objects objeto = {};
 	
 	#ifdef UFFS_DEBUG
@@ -1173,7 +1195,7 @@ void consulta( const char nomeTabela[] ) {
 		}
 	#endif
 
-    if( !verificaNomeTabela(nomeTabela) ){
+    if( !verificaNomeTabela(nomeTabela) ) {
         printf( "\nERRO: A relacao \"%s\" nao foi encontrada.\n\n", nomeTabela );
         return;
     }
@@ -1181,7 +1203,7 @@ void consulta( const char nomeTabela[] ) {
     objeto = leObjeto( nomeTabela );
     tp_table * esquema = leSchema( objeto );
 
-    if( esquema == ERRO_ABRIR_ESQUEMA ){
+    if( esquema == ERRO_ABRIR_ESQUEMA ) {
 		#ifdef UFFS_DEBUG
 			ERROR_PRINT(( "Nao foi possivel criar o esquema" ));
 		#endif
@@ -1191,13 +1213,20 @@ void consulta( const char nomeTabela[] ) {
 	
 	int qtdCampos = 0, select_all = 0; 
 	if( *GLOBAL_SELECT.selColumn[0] == '*' ) {
+		// Se for SELECT *, qtdCampos vai ser igual a quantidade total de campos na tabela
 		qtdCampos = objeto.qtdCampos;
 		select_all = 1;
 	} else {				
+		// Caso contrário, qtdCampos terá a quantidade campos passados no SELECT
 		qtdCampos = GLOBAL_SELECT.qtdColunas;
 		
+		// Verifica se os nomes das colunas passadas no SELECT existem na tabela
+		if( existeColuna( &objeto, esquema ) == 0 ) {			
+			return;
+		}
+		
 		// Verifica se a quantidade de colunas passadas no SELECT é <= à quantidade de colunas
-		// 	que existem na tabela
+		// 	que existem na tabela ( Talvez não seja necessário )
 		if( qtdCampos > objeto.qtdCampos ) {
 			int duplicates = contaColunasRepetidas();
 			
@@ -1205,47 +1234,51 @@ void consulta( const char nomeTabela[] ) {
 				DEBUG_PRINT(( "Quantidade de colunas duplicadas no comando SELECT: %d", duplicates ));
 			#endif
 			
+			// Subtrai a quantidade de campos duplicados do total de campos no SELECT para descobrir
+			// 		se existem colunas à mais. ( Porém aparentemente este IF não é necessário, pois
+			//		a função existeColuna() já verifica se foram passados campos de nome inexistentes )
 			if( ( qtdCampos - duplicates ) > objeto.qtdCampos ) {
 				printf( "Quantidade de colunas em SELECT excede a quantidade de colunas da tabela \'%s\'\n", objeto.nome );
 				return;
 			}			
 		}
 		
-		// Verifica se os nomes das colunas passadas no SELECT existem na tabela
-		if( existeColuna( &objeto, esquema ) == 0 ) {			
-			return;
-		}		
+				
 	}	 
 	
 	// Verifica se lvalue e rvalue estao relacionados da maneira correta
+	// 	Tipo OBJECT não é verificado, pois é necessário acessar seu valor na tabela, e isto
+	//	é realizado na função preencheCampos()
 	for( i = 0; i < GLOBAL_SELECT.qtdExp; i++ ) {	
 		if( GLOBAL_SELECT.expressoes[i].ltipo == 'S' ) {
 			if( GLOBAL_SELECT.expressoes[i].rtipo != 'S' && 
 				GLOBAL_SELECT.expressoes[i].rtipo != 'O' 
 			) {
-				printf( "rvalue nao e STRING ou OBJETO\n" );
+				printf( "Lado DIREITO da expressao nao e STRING ou OBJETO\n" );
 				return;
 			}
 		} else if( GLOBAL_SELECT.expressoes[i].ltipo == 'I' ) {
 			if( GLOBAL_SELECT.expressoes[i].rtipo == 'S' ) {
-				printf( "rvalue nao pode ser STRING\n" );
+				printf( "Lado DIREITO da expressao nao pode ser STRING\n" );
 				return;
 			}
 		} else if( GLOBAL_SELECT.expressoes[i].ltipo == 'D' ) {
 			if( GLOBAL_SELECT.expressoes[i].rtipo == 'S' ) {
-				printf( "rvalue nao pode ser STRING\n" );
+				printf( "Lado DIREITO da expressao nao pode ser STRING\n" );
 				return;
 			}
 		}		
 	}
 	
-	// Verifica se os campos passados no WHERE existem na tabela
+	// Verifica se os valores do tipo OBJECT passados no WHERE existem na tabela
 	for( i = 0; i < GLOBAL_SELECT.qtdExp; i++ ) {
 		if( GLOBAL_SELECT.expressoes[i].ltipo == 'O' ) {
 			for( j = 0; j < objeto.qtdCampos; j++ ) {
+				// Se encontrou correspondencia, avança pro próximo
 				if( strcmp( GLOBAL_SELECT.expressoes[i].lvalue, esquema[j].nome ) == 0 ) {
 					break;
 				}
+				// Se chegou ao fim e não encontrou correspondência
 				if( j+1 == objeto.qtdCampos ) {
 					printf( "Campo \'%s\' nao existe na tabela \'%s\'\n", GLOBAL_SELECT.expressoes[i].lvalue, nomeTabela );
 					return;
@@ -1254,9 +1287,11 @@ void consulta( const char nomeTabela[] ) {
 		}
 		if( GLOBAL_SELECT.expressoes[i].rtipo == 'O' ) {
 			for( j = 0; j < objeto.qtdCampos; j++ ) {
+				// Se encontrou correspondencia, avança pro próximo
 				if( strcmp( GLOBAL_SELECT.expressoes[i].rvalue, esquema[j].nome ) == 0 ) {
 					break;
 				}				
+				// Se chegou ao fim e não encontrou correspondência
 				if( j+1 == objeto.qtdCampos ) {
 					printf( "Campo \'%s\' nao existe na tabela %s\n", GLOBAL_SELECT.expressoes[i].rvalue, nomeTabela );
 					return;
@@ -1307,11 +1342,11 @@ void consulta( const char nomeTabela[] ) {
 		return;
 	}
 		
+	// Aloca memoria para os campos da variavel membro 'campos' da struct campos_container
 	for( i = 0; i < qtdCampos; i++ ) {
 		struct campo * campo_t = malloc( sizeof(struct campo) );
 		if( select_all ) {
-			campo_t->nome = malloc( sizeof(char) * strlen( esquema[i].nome ) + 1 );
-			//campo_t->nome 	= esquema[i].nome;
+			campo_t->nome = malloc( sizeof(char) * strlen( esquema[i].nome ) + 1 );			
 			strcpy( campo_t->nome, esquema[i].nome );
 		} else {
 			campo_t->nome = malloc( sizeof(char) * strlen( GLOBAL_SELECT.selColumn[i] ) + 1 );
@@ -1326,6 +1361,7 @@ void consulta( const char nomeTabela[] ) {
 	
 	int err = preencheCampos( &camposContainer_t, bufferpoll, &objeto, esquema );
 	
+	// Se houve erro ao preencher os campos, libera a memoria alocada
 	if( err != SUCCESS ) {
 		#ifdef UFFS_DEBUG
 			if( err == ERRO_WHERE_COMPARACAO ) {
@@ -1358,7 +1394,7 @@ void consulta( const char nomeTabela[] ) {
 	}
 	
 	if( imprime_tabela( &camposContainer_t ) == 0 ) {
-		printf( "Erro ao exibir tabela\n" ); // Mostrar qual erro, muito ambiguo assim
+		printf( "Erro ao exibir tabela\n" );
 	}
 	
 	for( i = 0; i < camposContainer_t.ncampos; i++ ) {
@@ -1368,7 +1404,7 @@ void consulta( const char nomeTabela[] ) {
 		}
 		free( camposContainer_t.campos[i]->valores );
 		camposContainer_t.campos[i]->valores = NULL;
-		free( camposContainer_t.campos[i]->nome ); //NUNCA LIBERAR ESTE CAMPO, pois referencia variável global GLOBAL_SELECT.selColumn
+		free( camposContainer_t.campos[i]->nome );
 		free( camposContainer_t.campos[i] );
 		camposContainer_t.campos[i] = NULL;		
 	}
@@ -1378,13 +1414,6 @@ void consulta( const char nomeTabela[] ) {
     free( bufferpoll );
     free( esquema );	
 }
-/* ----------------------------------------------------------------------------------------------
-    Objetivo:   Copia todas as informações menos a tabela do objeto, que será removida.
-    Parametros: Objeto que será removido do schema.
-    Retorno:    INT
-                SUCCESS,
-                ERRO_REMOVER_ARQUIVO_SCHEMA
-   ---------------------------------------------------------------------------------------------*/
 
 int procuraSchemaArquivo( struct fs_objects objeto ) {
     FILE * schema = NULL; 
@@ -1473,16 +1502,6 @@ int procuraSchemaArquivo( struct fs_objects objeto ) {
     return SUCCESS;
 }
 
-/* ----------------------------------------------------------------------------------------------
-    Objetivo:   Função para exclusão de tabelas.
-    Parametros: Nome da tabela (char).
-    Retorno:    INT
-                SUCCESS,
-                ERRO_REMOVER_ARQUIVO_OBJECT,
-                ERRO_REMOVER_ARQUIVO_SCHEMA,
-                ERRO_LEITURA_DADOS.
-   ---------------------------------------------------------------------------------------------*/
-
 int excluirTabela( char * nomeTabela ) {	
     struct fs_objects objeto, objeto1;
     tp_table * esquema = NULL; 
@@ -1495,8 +1514,7 @@ int excluirTabela( char * nomeTabela ) {
     if ( !verificaNomeTabela( nomeTabela ) ) {
         printf("ERROR: table \"%s\" does not exist.\n", nomeTabela);
         return ERRO_NOME_TABELA;
-    }
-	
+    }	
 
     strcpylower(str, nomeTabela);
     strcat(str, dat);              //Concatena e junta o nome com .dat
@@ -1527,8 +1545,7 @@ int excluirTabela( char * nomeTabela ) {
     if((dicionario = fopen(directory,"a+b")) == NULL) {
 		free( tab2 );
         return ERRO_ABRIR_ARQUIVO;	
-	}
-	
+	}	
 
     int k = 0;
     while(fgetc (dicionario) != EOF){

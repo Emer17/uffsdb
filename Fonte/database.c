@@ -1,17 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-////
+
 #ifndef FMACROS // garante que macros.h não seja reincluída
    #include "macros.h"
 #endif
-///
+
 #ifndef FTYPES // garante que types.h não seja reincluída
   #include "types.h"
 #endif
-////
+
 #ifndef FMISC // garante que misc.h não seja reincluída
   #include "misc.h"
+#endif
+
+#ifdef UFFS_DEBUG
+	#ifndef DEBUG_PRINT
+		#define DEBUG_PRINT(x) puts( "-----------------DEBUG--------------------" ); printf x; puts( "\n------------------------------------------\n" );
+	#endif
+	#ifndef ERROR_PRINT
+		#define ERROR_PRINT(x) puts( "#################ERROR####################" ); printf x; printf( "\nArquivo: %s\nLinha: %d\n", __FILE__, __LINE__ ); puts( "##########################################\n" );
+	#endif
 #endif
 
 char connectDB( const char *db_name ) {
@@ -218,17 +227,13 @@ void showDB() {
 }
 
 int dbInit( const char *db ) {	
-	if(system("mkdir data > /dev/null 2>&1") == -1) {
+	if( system("mkdir data > /dev/null 2>&1") == -1 ) {
 		printf("ERROR: Nao foi possivel inicializar o uffsdb\n");
 		return 0;
 	}
-	if( system( "mkdir .temp > /dev/null 2>&1" ) == -1 ) {
-		printf("ERROR: Nao foi possivel criar a pasta temp\n");
-		return 0;
-	}
 	
-    if( db == NULL ) {
-		// Se o nome do banco não foi especificado, cria o banco padrão
+	// Se o nome do banco não foi especificado, cria o banco padrão
+    if( db == NULL ) {		
 		createDB( "uffsdb" );		
     } else {
 		createDB( db );

@@ -73,37 +73,27 @@ typedef struct db_connected {
     int 	conn_active;
 }db_connected;
 
-typedef struct db_options {
-	char * 			db_name;
+typedef struct db_options { // Armazena as opções do banco
+	char * 			db_name; // Nome do banco passado pela linha de comando
 	unsigned int	numeric_precision; // Valor que determina a precisao numerica( casas decimais ) na impressao de valores DOUBLE
 	//char * user_name;
 }db_options;
 
-struct campo {
+struct campo {			// Estrutura que armazena INFORMAÇÕES dos campos a serem impressos
 	char * nome; 		// Nome do campo
 	char tipo; 			// Tipo do campo
 	char ** valores;	// Array com todos os valores do campo
 	short int maior;	// Comprimento do maior campo ( em caracteres )	
 };
 
-struct campos_container {
+struct campos_container {			// Estrutura que armazena os campos a serem impressos
 	struct campo ** campos;			// Array com todos os campos
 	int ntuples;					// Número de tuplas/registros de todos os campos
 	int ncampos;					// Número de campos( determina o tamanho do array ** campos )
 	short int * maioresColunas;		// Array em que cada índice determina o tamanho ( em caracteres ) dos campos
 };
 
-/*
-struct where_operator {
-	unsigned int equal:1;
-	unsigned int not_equal:1;
-	unsigned int less:1;
-	unsigned int less_equal:1;
-	unsigned int greater:1;
-	unsigned int greater_equal:1;
-};
-*/
-
+// Enum que identifica as operações realizadas no WHERE
 enum where_operator {
 	COMPARISON_EQUAL,
 	COMPARISON_NOT_EQUAL,
@@ -113,28 +103,25 @@ enum where_operator {
 	COMPARISON_GREATER
 };
 
-struct where_data {
-	//struct where_operator 	op;
-	enum where_operator		op;
-	unsigned int 			result:1;
-	char 					ltipo;
-	char 					rtipo;
-	char  					lvalue[TAMANHO_NOME_CAMPO];
-	char  					rvalue[TAMANHO_NOME_CAMPO];
+// Estrutura que armazena informações do WHERE
+struct where_data {	
+	enum where_operator		op;	// Operador a ser utilizado na expressão
+	unsigned int 			result:1;	// Resultado da operação sobre as duas expressões
+	char 					ltipo;	// TIPO do lado esquerdo da expressão
+	char 					rtipo;  // TIPO do lado direito da expressão
+	char  					lvalue[TAMANHO_NOME_CAMPO]; // VALOR do lado esquerdo da expressão
+	char  					rvalue[TAMANHO_NOME_CAMPO]; // VALOR do lado direito da expressão
 };
 
-
-
-typedef struct select_data {	
+// Estrutura que armazena informações do SELECT e do WHERE
+typedef struct select_data {
 	char ** 			selColumn;			// *Nome* das colunas passadas na lista de projeção ( SELECT )
 	int     			qtdColunas;          // Determina a *quantidade* de colunas na projeção
 	int     			qtdExp;          	// Determina a quantidade de expressões presentes em WHERE		
-	struct where_data 	expressoes[QTD_COLUNAS_PROJ];
-	int 	 			op_bool[QTD_COLUNAS_PROJ-1];
-	int 				where;
+	struct where_data 	expressoes[QTD_COLUNAS_PROJ]; // Armazena todas as expressões do WHERE
+	int 	 			op_bool[QTD_COLUNAS_PROJ-1]; // Armazena todos os operadores utilizados nas expressões
+	int 				where; // Determina se foi utilizado WHERE na consulta
 }select_data;
-
-
 
 // Union's utilizados na conversão de variáveis do tipo inteiro e double.
 union c_double{
@@ -151,7 +138,7 @@ union c_int{
 **************************************  VARIAVEIS GLOBAIS  **************************************/
 
 extern db_connected connected;
-extern db_options options;
+extern db_options GLOBAL_OPTIONS;
 extern select_data GLOBAL_SELECT;
 
 /************************************************************************************************

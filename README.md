@@ -1,24 +1,37 @@
 # uffsdb
 A simple teaching DBMS
 
-# how to compile
- uffsdb/Fonte/make
+# Contributors
+  André Luiz Maso	  		1221101059
+  Eduardo Ogliari			1211100008
+  Emerson Martins			1611101009
+  João Ricardo Barp Neto	1311100026
 
-#Ps: how to compile on Fedora
+# Informações sobre a implementação:
+  As informações sobre os comandos SELECT e WHERE 
+  podem ser encontradas no final do arquivo "Leia-me[Instrucoes].txt"
+  
+# Listagem com todas as novas funcionalidades
+  Presente no arquivo "Novas Funcionalidades.txt"
+
+# How to compile:
+  Release:	make 
+  Debug:	make debug
+
+#Ps: How to compile on Fedora
 	dnf install byacc flex
 	dnf install flex-static
 	uffsdb/Fonte/make
 
-# how to execute
+# How to execute
  `uffsdb/Fonte/./uffsdb`
  
-# compiler
+# Compiler
  uffsdb commands are interpreted using `yacc` and `lex`.
  In the `interface` folder type `make` to compile both.
  You can edit the following files: `parser.h`, `parser.c`, `lex.l`, and `yacc.y`.
  
-# Erros não corrigidos
- 
+# Erros não corrigidos 
 
 *4) Prompt aparece várias vezes na tela ( Não corrigido )*
 

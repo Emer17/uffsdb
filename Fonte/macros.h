@@ -34,7 +34,7 @@
 #define NPK 0
 #define PK 1
 #define FK 2
-//// 
+
 #define TAMANHO_PAGINA 512      // Tamanho da página.
 #define QTD_PAGINAS 1024        // Número de páginas.
 #define TAMANHO_NOME_CAMPO 40   // Tamanho do nome dos campos de uma tabela.

@@ -25,6 +25,15 @@
    #include "parser.h"
 #endif
 
+#ifdef UFFS_DEBUG
+	#ifndef DEBUG_PRINT
+		#define DEBUG_PRINT(x) puts( "-----------------DEBUG--------------------" ); printf x; puts( "\n------------------------------------------\n" );
+	#endif
+	#ifndef ERROR_PRINT
+		#define ERROR_PRINT(x) puts( "#################ERROR####################" ); printf x; printf( "\nArquivo: %s\nLinha: %d\n", __FILE__, __LINE__ ); puts( "##########################################\n" );
+	#endif
+#endif
+
 extern char* yytext[];
 extern int yyleng;
 extern FILE * yyin;
@@ -266,12 +275,8 @@ select_all: '*' {
 		++GLOBAL_DATA.N;		
 	} else {
 		printf( "Quantidade maxima de colunas permitidas na operacao SELECT excedida.\n" );
-		#ifdef UFFS_DEBUG
-			printf( "\n--------------------DEBUG----------------------\n" );
-			printf( "GLOBAL_SELECT.qtdColunas excedeu o valor de QTD_COLUNAS_PROJ\n" );
-			printf( "-------------------------------------------------\n" );
-			printf( "ARQUIVO: %s\n LINHA: %d\n", __FILE__, __LINE__ );
-			printf( "-------------------------------------------------\n" );
+		#ifdef UFFS_DEBUG			
+			ERROR_PRINT(( "GLOBAL_SELECT.qtdColunas excedeu o valor de QTD_COLUNAS_PROJ" ));			
 		#endif
 	}
 };

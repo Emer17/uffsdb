@@ -499,7 +499,3 @@ insert into Funcionario values (2158771,'fPaulo',27,'Chapeco',1400.00);
 insert into Funcionario values (2158772,'fPaulo',27,'Chapeco',1400.00);
 insert into Funcionario values (2158773,'fPaulo',27,'Chapeco',1400.00);
 insert into Funcionario values (2158774,'fPaulo',27,'Chapeco',1400.00);
-
-
-\c ibetres
-

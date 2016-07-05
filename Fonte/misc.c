@@ -100,15 +100,15 @@ int drawline( tp_buffer *buffpoll, tp_table *s, struct fs_objects objeto, int p,
     printf( "\n" );
     return SUCCESS;
 }
-////
+
 void contr() {
-	printf("Who is helping to developing uffsdb:\n");
+	printf("Who is helping to develop uffsdb:\n");
 	printf("\t Gabrielle Almeida de Souza e Lais Borin (14-1)\n");
 	printf("\t Natan J. Mai, Ricardo Zanuzzo, Rogerio T. Schmidt (14-2)\n");
 	printf("\t Igor Beilner, Eliton Traverssini, Régis T. Feyh (15-1)\n");
-	printf("\t YOU?\n\n");
+	printf("\t Andre Luiz Maso, Eduardo Ogliari, Emerson Martins, Joao Ricardo Barp Neto (16-1)\n");
 }
-////
+
 void help() {
 	printf("Você está utilizando o DBMS-Interface\n");
 	printf("-------------------------- Comandos gerais --------------------------\n");
@@ -136,7 +136,7 @@ void help() {
 	printf("\nSELECT * FROM NOME;\t\t\t\t- Não é a implementação padrão do SELECT mas serve para\n");
 	printf("\t\t\t\t\t\t  imprmir todos os valores de uma tabela\n");
 }
-////
+
 int objcmp( const char * obj, const char * str ) {	
 	size_t objSize = strlen( obj ) + 1;
 	size_t strSize = strlen( str ) + 1;

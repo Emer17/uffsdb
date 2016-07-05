@@ -90,6 +90,15 @@
    #include "parser.h"
 #endif
 
+#ifdef UFFS_DEBUG
+	#ifndef DEBUG_PRINT
+		#define DEBUG_PRINT(x) puts( "-----------------DEBUG--------------------" ); printf x; puts( "\n------------------------------------------\n" );
+	#endif
+	#ifndef ERROR_PRINT
+		#define ERROR_PRINT(x) puts( "#################ERROR####################" ); printf x; printf( "\nArquivo: %s\nLinha: %d\n", __FILE__, __LINE__ ); puts( "##########################################\n" );
+	#endif
+#endif
+
 extern char* yytext[];
 extern int yyleng;
 extern FILE * yyin;
@@ -100,7 +109,7 @@ int yywrap() {
 }
 
 
-#line 104 "y.tab.c" /* yacc.c:339  */
+#line 113 "y.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -224,14 +233,14 @@ extern int yydebug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 39 "yacc.y" /* yacc.c:355  */
+#line 48 "yacc.y" /* yacc.c:355  */
 
     int intval;
     double floatval;
     int subtok;
     char *strval;
 
-#line 235 "y.tab.c" /* yacc.c:355  */
+#line 244 "y.tab.c" /* yacc.c:355  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -246,7 +255,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 250 "y.tab.c" /* yacc.c:358  */
+#line 259 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -547,17 +556,17 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    57,    57,    57,    57,    57,    57,    57,    58,    58,
-      58,    58,    58,    59,    59,    59,    59,    59,    59,    60,
-      60,    60,    60,    60,    67,    69,    72,    74,   131,   142,
-     150,   152,   154,   157,   167,   177,   184,   187,   194,   194,
-     204,   206,   208,   208,   210,   210,   212,   214,   214,   216,
-     217,   218,   221,   221,   226,   226,   228,   229,   229,   230,
-     231,   233,   235,   236,   237,   239,   241,   244,   244,   244,
-     247,   247,   247,   250,   250,   250,   253,   253,   254,   254,
-     256,   256,   259,   263,   279,   279,   279,   281,   284,   319,
-     354,   355,   356,   357,   359,   360,   361,   362,   364,   364,
-     364,   365,   365,   368,   369,   370,   371,   372,   373,   375
+       0,    66,    66,    66,    66,    66,    66,    66,    67,    67,
+      67,    67,    67,    68,    68,    68,    68,    68,    68,    69,
+      69,    69,    69,    69,    76,    78,    81,    83,   140,   151,
+     159,   161,   163,   166,   176,   186,   193,   196,   203,   203,
+     213,   215,   217,   217,   219,   219,   221,   223,   223,   225,
+     226,   227,   230,   230,   235,   235,   237,   238,   238,   239,
+     240,   242,   244,   245,   246,   248,   250,   253,   253,   253,
+     256,   256,   256,   259,   259,   259,   262,   262,   263,   263,
+     265,   265,   268,   272,   284,   284,   284,   286,   289,   324,
+     359,   360,   361,   362,   364,   365,   366,   367,   369,   369,
+     369,   370,   370,   373,   374,   375,   376,   377,   378,   380
 };
 #endif
 
@@ -1441,31 +1450,31 @@ yyreduce:
   switch (yyn)
     {
         case 12:
-#line 58 "yacc.y" /* yacc.c:1646  */
+#line 67 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1447 "y.tab.c" /* yacc.c:1646  */
+#line 1456 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 67 "yacc.y" /* yacc.c:1646  */
+#line 76 "yacc.y" /* yacc.c:1646  */
     {connect(*yytext); GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1453 "y.tab.c" /* yacc.c:1646  */
+#line 1462 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 69 "yacc.y" /* yacc.c:1646  */
+#line 78 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_PARSER.consoleFlag = 1; GLOBAL_PARSER.error = 1; return 0;}
-#line 1459 "y.tab.c" /* yacc.c:1646  */
+#line 1468 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 72 "yacc.y" /* yacc.c:1646  */
+#line 81 "yacc.y" /* yacc.c:1646  */
     {exit(0);}
-#line 1465 "y.tab.c" /* yacc.c:1646  */
+#line 1474 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 74 "yacc.y" /* yacc.c:1646  */
+#line 83 "yacc.y" /* yacc.c:1646  */
     {
 	// Aqui vai a parte de abrir um editor de texto
 	/*
@@ -1522,11 +1531,11 @@ yyreduce:
 	*/
 	return 0;
 }
-#line 1526 "y.tab.c" /* yacc.c:1646  */
+#line 1535 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 131 "yacc.y" /* yacc.c:1646  */
+#line 140 "yacc.y" /* yacc.c:1646  */
     {
 	FILE * scriptData = loadScript( *yytext );
 	if( scriptData == NULL ) {
@@ -1537,11 +1546,11 @@ yyreduce:
 	GLOBAL_PARSER.readingFile = 1;
 	return 0; 	
 }
-#line 1541 "y.tab.c" /* yacc.c:1646  */
+#line 1550 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 142 "yacc.y" /* yacc.c:1646  */
+#line 151 "yacc.y" /* yacc.c:1646  */
     {	
 	//GLOBAL_PARSER.error = 1;
 	GLOBAL_PARSER.endOfFile = 1;
@@ -1549,29 +1558,29 @@ yyreduce:
 	GLOBAL_PARSER.consoleFlag = 1;
 	return 0;
 }
-#line 1553 "y.tab.c" /* yacc.c:1646  */
+#line 1562 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 150 "yacc.y" /* yacc.c:1646  */
+#line 159 "yacc.y" /* yacc.c:1646  */
     {clear(); GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1559 "y.tab.c" /* yacc.c:1646  */
+#line 1568 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 152 "yacc.y" /* yacc.c:1646  */
+#line 161 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_PARSER.parentesis++;}
-#line 1565 "y.tab.c" /* yacc.c:1646  */
+#line 1574 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 154 "yacc.y" /* yacc.c:1646  */
+#line 163 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_PARSER.parentesis--;}
-#line 1571 "y.tab.c" /* yacc.c:1646  */
+#line 1580 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 157 "yacc.y" /* yacc.c:1646  */
+#line 166 "yacc.y" /* yacc.c:1646  */
     {
     if(connected.conn_active) {
         printTable(yylval.strval);
@@ -1580,11 +1589,11 @@ yyreduce:
         notConnected();
     return 0;
 }
-#line 1584 "y.tab.c" /* yacc.c:1646  */
+#line 1593 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 167 "yacc.y" /* yacc.c:1646  */
+#line 176 "yacc.y" /* yacc.c:1646  */
     {
     if(connected.conn_active) {
         printTable(NULL);
@@ -1593,39 +1602,39 @@ yyreduce:
         notConnected();
     return 0;
 }
-#line 1597 "y.tab.c" /* yacc.c:1646  */
+#line 1606 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 177 "yacc.y" /* yacc.c:1646  */
+#line 186 "yacc.y" /* yacc.c:1646  */
     {
     showDB();
     GLOBAL_PARSER.consoleFlag = 1;
     return 0;
 }
-#line 1607 "y.tab.c" /* yacc.c:1646  */
+#line 1616 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 184 "yacc.y" /* yacc.c:1646  */
+#line 193 "yacc.y" /* yacc.c:1646  */
     {help(); GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1613 "y.tab.c" /* yacc.c:1646  */
+#line 1622 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 187 "yacc.y" /* yacc.c:1646  */
+#line 196 "yacc.y" /* yacc.c:1646  */
     {contr(); GLOBAL_PARSER.consoleFlag = 1; return 0;}
-#line 1619 "y.tab.c" /* yacc.c:1646  */
+#line 1628 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 194 "yacc.y" /* yacc.c:1646  */
+#line 203 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_INSERT);}
-#line 1625 "y.tab.c" /* yacc.c:1646  */
+#line 1634 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 194 "yacc.y" /* yacc.c:1646  */
+#line 203 "yacc.y" /* yacc.c:1646  */
     {
     if (GLOBAL_PARSER.col_count == GLOBAL_PARSER.val_count || GLOBAL_DATA.columnName == NULL)
         GLOBAL_DATA.N = GLOBAL_PARSER.val_count;
@@ -1635,222 +1644,218 @@ yyreduce:
     }
     return 0;
 }
-#line 1639 "y.tab.c" /* yacc.c:1646  */
+#line 1648 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 206 "yacc.y" /* yacc.c:1646  */
+#line 215 "yacc.y" /* yacc.c:1646  */
     {setObjName(yytext);}
-#line 1645 "y.tab.c" /* yacc.c:1646  */
+#line 1654 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 212 "yacc.y" /* yacc.c:1646  */
+#line 221 "yacc.y" /* yacc.c:1646  */
     {setColumnInsert(yytext);}
-#line 1651 "y.tab.c" /* yacc.c:1646  */
+#line 1660 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 216 "yacc.y" /* yacc.c:1646  */
+#line 225 "yacc.y" /* yacc.c:1646  */
     {setValueInsert(yylval.strval, 'D');}
-#line 1657 "y.tab.c" /* yacc.c:1646  */
+#line 1666 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 217 "yacc.y" /* yacc.c:1646  */
+#line 226 "yacc.y" /* yacc.c:1646  */
     {setValueInsert(yylval.strval, 'I');}
-#line 1663 "y.tab.c" /* yacc.c:1646  */
+#line 1672 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 218 "yacc.y" /* yacc.c:1646  */
+#line 227 "yacc.y" /* yacc.c:1646  */
     {setValueInsert(yylval.strval, 'S');}
-#line 1669 "y.tab.c" /* yacc.c:1646  */
+#line 1678 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 221 "yacc.y" /* yacc.c:1646  */
+#line 230 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_CREATE_TABLE);}
-#line 1675 "y.tab.c" /* yacc.c:1646  */
+#line 1684 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 221 "yacc.y" /* yacc.c:1646  */
+#line 230 "yacc.y" /* yacc.c:1646  */
     {
     GLOBAL_DATA.N = GLOBAL_PARSER.col_count;	
     return 0;
 }
-#line 1684 "y.tab.c" /* yacc.c:1646  */
+#line 1693 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 228 "yacc.y" /* yacc.c:1646  */
+#line 237 "yacc.y" /* yacc.c:1646  */
     {setColumnTypeCreate('I');}
-#line 1690 "y.tab.c" /* yacc.c:1646  */
+#line 1699 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 229 "yacc.y" /* yacc.c:1646  */
+#line 238 "yacc.y" /* yacc.c:1646  */
     {setColumnTypeCreate('S');}
-#line 1696 "y.tab.c" /* yacc.c:1646  */
+#line 1705 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 229 "yacc.y" /* yacc.c:1646  */
+#line 238 "yacc.y" /* yacc.c:1646  */
     {setColumnSizeCreate(yylval.strval);}
-#line 1702 "y.tab.c" /* yacc.c:1646  */
+#line 1711 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 230 "yacc.y" /* yacc.c:1646  */
+#line 239 "yacc.y" /* yacc.c:1646  */
     {setColumnTypeCreate('D');}
-#line 1708 "y.tab.c" /* yacc.c:1646  */
+#line 1717 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 231 "yacc.y" /* yacc.c:1646  */
+#line 240 "yacc.y" /* yacc.c:1646  */
     {setColumnTypeCreate('C');}
-#line 1714 "y.tab.c" /* yacc.c:1646  */
+#line 1723 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 233 "yacc.y" /* yacc.c:1646  */
+#line 242 "yacc.y" /* yacc.c:1646  */
     {setColumnCreate(yytext);}
-#line 1720 "y.tab.c" /* yacc.c:1646  */
+#line 1729 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 236 "yacc.y" /* yacc.c:1646  */
+#line 245 "yacc.y" /* yacc.c:1646  */
     {setColumnPKCreate();}
-#line 1726 "y.tab.c" /* yacc.c:1646  */
+#line 1735 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 239 "yacc.y" /* yacc.c:1646  */
+#line 248 "yacc.y" /* yacc.c:1646  */
     {setColumnFKTableCreate(yytext);}
-#line 1732 "y.tab.c" /* yacc.c:1646  */
+#line 1741 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 241 "yacc.y" /* yacc.c:1646  */
+#line 250 "yacc.y" /* yacc.c:1646  */
     {setColumnFKColumnCreate(yytext);}
-#line 1738 "y.tab.c" /* yacc.c:1646  */
+#line 1747 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 244 "yacc.y" /* yacc.c:1646  */
+#line 253 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_DROP_TABLE);}
-#line 1744 "y.tab.c" /* yacc.c:1646  */
+#line 1753 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 244 "yacc.y" /* yacc.c:1646  */
+#line 253 "yacc.y" /* yacc.c:1646  */
     {setObjName(yytext);}
-#line 1750 "y.tab.c" /* yacc.c:1646  */
+#line 1759 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 244 "yacc.y" /* yacc.c:1646  */
+#line 253 "yacc.y" /* yacc.c:1646  */
     {return 0;}
-#line 1756 "y.tab.c" /* yacc.c:1646  */
+#line 1765 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 247 "yacc.y" /* yacc.c:1646  */
+#line 256 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_CREATE_DATABASE);}
-#line 1762 "y.tab.c" /* yacc.c:1646  */
+#line 1771 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 247 "yacc.y" /* yacc.c:1646  */
+#line 256 "yacc.y" /* yacc.c:1646  */
     {setObjName(yytext);}
-#line 1768 "y.tab.c" /* yacc.c:1646  */
+#line 1777 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 247 "yacc.y" /* yacc.c:1646  */
+#line 256 "yacc.y" /* yacc.c:1646  */
     {return 0;}
-#line 1774 "y.tab.c" /* yacc.c:1646  */
+#line 1783 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 250 "yacc.y" /* yacc.c:1646  */
+#line 259 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_DROP_DATABASE);}
-#line 1780 "y.tab.c" /* yacc.c:1646  */
+#line 1789 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 250 "yacc.y" /* yacc.c:1646  */
+#line 259 "yacc.y" /* yacc.c:1646  */
     {setObjName(yytext);}
-#line 1786 "y.tab.c" /* yacc.c:1646  */
+#line 1795 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 250 "yacc.y" /* yacc.c:1646  */
+#line 259 "yacc.y" /* yacc.c:1646  */
     {return 0;}
-#line 1792 "y.tab.c" /* yacc.c:1646  */
+#line 1801 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 253 "yacc.y" /* yacc.c:1646  */
+#line 262 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_SELECT);}
-#line 1798 "y.tab.c" /* yacc.c:1646  */
+#line 1807 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 253 "yacc.y" /* yacc.c:1646  */
+#line 262 "yacc.y" /* yacc.c:1646  */
     {return 0;}
-#line 1804 "y.tab.c" /* yacc.c:1646  */
+#line 1813 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 254 "yacc.y" /* yacc.c:1646  */
+#line 263 "yacc.y" /* yacc.c:1646  */
     {setMode(OP_SELECT);}
-#line 1810 "y.tab.c" /* yacc.c:1646  */
+#line 1819 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 254 "yacc.y" /* yacc.c:1646  */
+#line 263 "yacc.y" /* yacc.c:1646  */
     {return 0;}
-#line 1816 "y.tab.c" /* yacc.c:1646  */
+#line 1825 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 259 "yacc.y" /* yacc.c:1646  */
+#line 268 "yacc.y" /* yacc.c:1646  */
     { strcpy( GLOBAL_SELECT.selColumn[GLOBAL_SELECT.qtdColunas], *yytext );
 					++GLOBAL_SELECT.qtdColunas; 
 				}
-#line 1824 "y.tab.c" /* yacc.c:1646  */
+#line 1833 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 263 "yacc.y" /* yacc.c:1646  */
+#line 272 "yacc.y" /* yacc.c:1646  */
     { 
 	if( GLOBAL_SELECT.qtdColunas < QTD_COLUNAS_PROJ ) {
 		strcpy( GLOBAL_SELECT.selColumn[GLOBAL_SELECT.qtdColunas], *yytext ); 
 		++GLOBAL_DATA.N;		
 	} else {
 		printf( "Quantidade maxima de colunas permitidas na operacao SELECT excedida.\n" );
-		#ifdef UFFS_DEBUG
-			printf( "\n--------------------DEBUG----------------------\n" );
-			printf( "GLOBAL_SELECT.qtdColunas excedeu o valor de QTD_COLUNAS_PROJ\n" );
-			printf( "-------------------------------------------------\n" );
-			printf( "ARQUIVO: %s\n LINHA: %d\n", __FILE__, __LINE__ );
-			printf( "-------------------------------------------------\n" );
+		#ifdef UFFS_DEBUG			
+			ERROR_PRINT(( "GLOBAL_SELECT.qtdColunas excedeu o valor de QTD_COLUNAS_PROJ" ));			
 		#endif
 	}
 }
-#line 1844 "y.tab.c" /* yacc.c:1646  */
+#line 1849 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 279 "yacc.y" /* yacc.c:1646  */
+#line 284 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_SELECT.where=1;}
-#line 1850 "y.tab.c" /* yacc.c:1646  */
+#line 1855 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 284 "yacc.y" /* yacc.c:1646  */
+#line 289 "yacc.y" /* yacc.c:1646  */
     {	
 	char temp[TAMANHO_NOME_CAMPO] = { '\0' };
 	int i, index;
@@ -1884,11 +1889,11 @@ yyreduce:
 	}				
 	GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].lvalue[TAMANHO_NOME_CAMPO-1] = '\0';	
 }
-#line 1888 "y.tab.c" /* yacc.c:1646  */
+#line 1893 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 319 "yacc.y" /* yacc.c:1646  */
+#line 324 "yacc.y" /* yacc.c:1646  */
     {	
 	char temp[TAMANHO_NOME_CAMPO] = { '\0' };
 	int i, index;
@@ -1923,113 +1928,113 @@ yyreduce:
 	GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rvalue[TAMANHO_NOME_CAMPO-1] = '\0';
 	GLOBAL_SELECT.qtdExp++;
 }
-#line 1927 "y.tab.c" /* yacc.c:1646  */
+#line 1932 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 354 "yacc.y" /* yacc.c:1646  */
+#line 359 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo = 'O';}
-#line 1933 "y.tab.c" /* yacc.c:1646  */
+#line 1938 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 355 "yacc.y" /* yacc.c:1646  */
+#line 360 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo = 'S';}
-#line 1939 "y.tab.c" /* yacc.c:1646  */
+#line 1944 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 356 "yacc.y" /* yacc.c:1646  */
+#line 361 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo = 'I';}
-#line 1945 "y.tab.c" /* yacc.c:1646  */
+#line 1950 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 357 "yacc.y" /* yacc.c:1646  */
+#line 362 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].ltipo = 'D';}
-#line 1951 "y.tab.c" /* yacc.c:1646  */
+#line 1956 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 359 "yacc.y" /* yacc.c:1646  */
+#line 364 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo = 'O';}
-#line 1957 "y.tab.c" /* yacc.c:1646  */
+#line 1962 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 360 "yacc.y" /* yacc.c:1646  */
+#line 365 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo = 'S';}
-#line 1963 "y.tab.c" /* yacc.c:1646  */
+#line 1968 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 361 "yacc.y" /* yacc.c:1646  */
+#line 366 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo = 'I';}
-#line 1969 "y.tab.c" /* yacc.c:1646  */
+#line 1974 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 362 "yacc.y" /* yacc.c:1646  */
+#line 367 "yacc.y" /* yacc.c:1646  */
     {GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].rtipo = 'D';}
-#line 1975 "y.tab.c" /* yacc.c:1646  */
+#line 1980 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 364 "yacc.y" /* yacc.c:1646  */
+#line 369 "yacc.y" /* yacc.c:1646  */
     { GLOBAL_SELECT.op_bool[GLOBAL_SELECT.qtdExp-1] = OP_AND; }
-#line 1981 "y.tab.c" /* yacc.c:1646  */
+#line 1986 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 365 "yacc.y" /* yacc.c:1646  */
+#line 370 "yacc.y" /* yacc.c:1646  */
     { GLOBAL_SELECT.op_bool[GLOBAL_SELECT.qtdExp-1] = OP_OR; }
-#line 1987 "y.tab.c" /* yacc.c:1646  */
+#line 1992 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 368 "yacc.y" /* yacc.c:1646  */
+#line 373 "yacc.y" /* yacc.c:1646  */
     { GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_EQUAL; }
-#line 1993 "y.tab.c" /* yacc.c:1646  */
+#line 1998 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 369 "yacc.y" /* yacc.c:1646  */
+#line 374 "yacc.y" /* yacc.c:1646  */
     { GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_LESS_EQUAL; }
-#line 1999 "y.tab.c" /* yacc.c:1646  */
+#line 2004 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 370 "yacc.y" /* yacc.c:1646  */
+#line 375 "yacc.y" /* yacc.c:1646  */
     { GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_NOT_EQUAL; }
-#line 2005 "y.tab.c" /* yacc.c:1646  */
+#line 2010 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 371 "yacc.y" /* yacc.c:1646  */
+#line 376 "yacc.y" /* yacc.c:1646  */
     { GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_GREATER_EQUAL; }
-#line 2011 "y.tab.c" /* yacc.c:1646  */
+#line 2016 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 372 "yacc.y" /* yacc.c:1646  */
+#line 377 "yacc.y" /* yacc.c:1646  */
     { GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_GREATER; }
-#line 2017 "y.tab.c" /* yacc.c:1646  */
+#line 2022 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 373 "yacc.y" /* yacc.c:1646  */
+#line 378 "yacc.y" /* yacc.c:1646  */
     { GLOBAL_SELECT.expressoes[GLOBAL_SELECT.qtdExp].op = COMPARISON_LESS; }
-#line 2023 "y.tab.c" /* yacc.c:1646  */
+#line 2028 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 375 "yacc.y" /* yacc.c:1646  */
+#line 380 "yacc.y" /* yacc.c:1646  */
     { setObjName(yytext); }
-#line 2029 "y.tab.c" /* yacc.c:1646  */
+#line 2034 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2033 "y.tab.c" /* yacc.c:1646  */
+#line 2038 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2257,5 +2262,5 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 378 "yacc.y" /* yacc.c:1906  */
+#line 383 "yacc.y" /* yacc.c:1906  */
 

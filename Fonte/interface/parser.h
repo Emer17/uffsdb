@@ -115,6 +115,8 @@ void setMode( const char mode );
  */
 void interface( int argc, char ** argv );
 
+// Esta função carrega o script passado no comando \i <nome_script.sql>
 FILE * loadScript( char * scriptPath );
 
+// Inicializa algumas variáveis globais
 void initGlobalStructs( void );

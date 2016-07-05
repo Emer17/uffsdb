@@ -183,8 +183,8 @@ void initGlobalStructs() {
 		GLOBAL_SELECT.selColumn[i][0] = '\0';
 	}	
 	
-	options.db_name = NULL;
-	options.numeric_precision = 3;
+	GLOBAL_OPTIONS.db_name = NULL;
+	GLOBAL_OPTIONS.numeric_precision = 3;
 }
 
 void clearGlobalStructs() {
@@ -268,11 +268,8 @@ void setMode( const char mode ) {
 void interface( int argc, char **argv ) {    
 	initGlobalStructs();
 	clearGlobalStructs();
-	
-	// Seria interessante implementar uma funcionalidade onde as configurações são salvas
-	//  em um arquivo em disco e carregadas toda vez que o SGDB é executado. Caso o arquivo
-	//  não seja encontrado, os valores padrão poderiam ser utilizados	
 			
+	// Este while apenas verifica se algum comando foi passado como argumento antes da execução
 	int i = 1;	
 	while( i < argc ) {
 		if( argv[i][0] == '-' ) {
@@ -296,13 +293,13 @@ void interface( int argc, char **argv ) {
 			
 			switch( optionName ) {
 				case 'd':										
-					if( options.db_name != NULL ) {
+					if( GLOBAL_OPTIONS.db_name != NULL ) {
 						printf( "ERRO: A opcao -d foi configurada multiplas vezes\n" );
 						return;
 					}
 					char * name = argv[i];
-					options.db_name = malloc( sizeof(char) * ( strlen(name) + 1 ) );
-					options.db_name = name;
+					GLOBAL_OPTIONS.db_name = malloc( sizeof(char) * ( strlen(name) + 1 ) );
+					GLOBAL_OPTIONS.db_name = name;
 					break;
 					
 				default:
@@ -318,17 +315,17 @@ void interface( int argc, char **argv ) {
 		i++;
 	}
 
-	if( options.db_name == NULL ) {
-		// Conecta automaticamente no banco padrão caso nenhum nome tenha sido passado
+	if( GLOBAL_OPTIONS.db_name == NULL ) {
+		// Conecta automaticamente no banco padrão caso nenhum nome tenha sido passado como argumento
 		connect( "uffsdb" ); 
 	} else {
-		if( !connect( options.db_name ) ) {
-			// Caso o banco de nome 'options.db_name' não exista, conecta no banco padrão.
+		if( !connect( GLOBAL_OPTIONS.db_name ) ) {
+			// Caso o banco de nome 'GLOBAL_OPTIONS.db_name' não exista, conecta no banco padrão.
 			printf( "Conectando ao banco padrão...\n\n" );
 			connect( "uffsdb" ); 
 		}
 	}    	
-	printf( "uffsdb (15.1).\nType \"help\" for help.\n\n" );	
+	printf( "uffsdb (16.1).\nType \"help\" for help.\n\n" );
 
     while( 1 ) {
         if( !connected.conn_active ) {
@@ -437,10 +434,7 @@ FILE * loadScript( char * scriptPath ) {
 	if( scriptPath == NULL ) {
 		printf( "ERRO: Nenhum caminho para o script foi especificado!" );
 		return NULL;
-	}		
-	//scriptPath += 3;
-	//char * path = malloc( sizeof( char ) * strlen(scriptPath) - 2 );
-	//strcpy( path, scriptPath );	
+	}			
 	char * dot = strchr( scriptPath, '.' );	
 	scriptPath = strchr( scriptPath, ' ' );
 	scriptPath++;	

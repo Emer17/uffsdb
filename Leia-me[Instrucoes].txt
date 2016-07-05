@@ -349,3 +349,66 @@ Os comandos SQL e os objetos das relações (i.e. <NomeTabelas>, <NomeCampos> ..
 	ex: 
 		<TABELA> e <tabela> se referem a mesma relação.
 		<INSERT> e <insert> se referem ao mesmo comando SQL.
+		
+		
+############## LEIA-ME PARTE 5 #############################################################################################################
+=> 4 de Julho de 2016 <=
+
+Universidade Federal da Fronteira Sul – UFFS
+Curso: Ciência da Computação
+Componente Curricular: Banco de Dados II
+Professor: Dr. Denio Duarte
+Alunos: André Luiz Maso, Eduardo Ogliari, Emerson Martins, João Ricardo Barp Neto
+
+=============================================================================================================================================
+Implementação dos comandos SELECT e WHERE:
+
+> É possível passar o nome dos campos em SELECT da seguinte maneira:
+
+	SELECT <campo1>, <campo2>, <campoN> FROM <tabela>;
+	
+( É importante ressaltar que os campos devem existir na tabela para que o resultado possa ser exibido )
+
+------------------------------------------------------------------------------------------------------------------
+> Também é possível utilizar junto ao comando SELECT o comando WHERE:
+
+	SELECT <campoN> FROM <tabela> WHERE <atributo/valor> <operador> <atributo/valor> ( AND/OR opcional )
+
+> De momento, os seguintes operadores podem ser utilizados:
+	>			MAIOR
+	<			MENOR
+	<=			MENOR OU IGUAL
+	>=			MAIOR OU IGUAL
+	=			EQUIVALENTE
+	!= ou <>	NÃO-EQUIVALENTE
+
+> Os valores à esquerda e à direita do operador podem ser nomes de campos ou valores do tipo CHAR, STRING, INTEGER ou DOUBLE.
+	Exemplos:
+	
+	INTEGER:	23
+	DOUBLE:		12.45
+	CHAR:		'c'
+	STRING:		'Maria'	
+	CAMPO:		idade ( perceba a ausência de aspas simples )
+
+> Os operadores AND e OR foram implementados de tal modo que NÃO é possível especificar precedência de expressões ( como possível com parênteses por 		exemplo )
+> A ordem em que as expressões são avalliadas é da ESQUERDA para a DIREITA
+	
+Exemplos de uso:
+	SELECT nome, idade FROM pessoa WHERE nome = 'Joao' AND idade = 30 AND sexo = 'm';
+	SELECT * FROM pessoa WHERE idade >= 20 AND idade <= 30;
+	SELECT * FROM pessoa WHERE nome = 'joao' OR nome = 'Joao';
+	SELECT nome FROM produto WHERE preco != 20.45;
+
+Ou até mesmo 
+	SELECT nome,nome,nome,nome,nome,nome,nome FROM pessoa;
+
+
+
+
+
+
+
+
+
+

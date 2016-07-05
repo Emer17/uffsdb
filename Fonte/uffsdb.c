@@ -38,7 +38,7 @@
 #endif
 
 db_connected connected;
-db_options options;
+db_options GLOBAL_OPTIONS;
 select_data GLOBAL_SELECT;
 
 int main( int argc, char ** argv ){
